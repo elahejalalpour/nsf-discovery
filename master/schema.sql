@@ -11,7 +11,7 @@ delete from VNF;
 create table if not exists Host
 					 (Host_name text, Host_ip text, Host_cpu real, 
 					  Host_total_mem integer,Host_avail_mem integer, 
-					  Host_used_mem integer);
+					  Host_used_mem integer,Last_seen integer, Active integer);
 delete from Host;
 
 create table if not exists Chain (Chain_anme text, Chain_type text);

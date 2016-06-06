@@ -8,6 +8,10 @@ import json
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
+#sleeping time while wait new mesg
+
+sleeping = 1
+global seq
 
 def ipc_handler(msg,cur,publisher):
 	"""
@@ -21,7 +25,7 @@ def ipc_handler(msg,cur,publisher):
 		print(ex)
 	
 
-def msg_handler(msg,cur):
+def msg_handler(msg,cur,seq):
 	"""
 		handles messages recv from minions
 	"""
@@ -29,14 +33,16 @@ def msg_handler(msg,cur):
 	try:
 		if (msg['flag'] == 'REG'):
 			print('New Host Registered: '+msg['host'])
-			cur.execute("INSERT INTO Host VALUES(?,?,?,?,?,?)",
-							(msg['host'],msg['host_ip'],None,None,None,None))
+			cur.execute("DELETE FROM Host WHERE Host_name = ?",(msg['host'],))
+			cur.execute("INSERT INTO Host VALUES(?,?,?,?,?,?,?,?)",
+							(msg['host'],msg['host_ip'],None,None,None,None,None,1))
 		elif(msg['flag'] == 'sysinfo'):
 			cur.execute("""UPDATE Host SET Host_cpu = ? ,
 							Host_total_mem = ?,Host_avail_mem = ?,
-							Host_used_mem = ? WHERE Host_name= ?""",
+							Host_used_mem = ?,Last_seen = ?,
+							Active = ? WHERE Host_name= ?""",
 							(msg['cpu'],msg['mem_total'],msg['mem_available'],
-							msg['used'],msg['host']))
+							msg['used'],seq,1,msg['host']))
 		elif(msg['flag'] == 'new'):
 			if (msg['status'] == 'running'):
 				IP = msg['IP']
@@ -60,8 +66,12 @@ def msg_handler(msg,cur):
 	except Exception,ex:
 		print(ex)
 
-def main():
 
+def main():
+	#sequence number for alive check,
+	#interval: how many updates can a host miss before been marked inactive
+	seq = 0
+	interval = 30
 	#initialize the sqlite database
 	conn = sqlite3.connect('vnfs.db')
 	cur = conn.cursor()
@@ -92,7 +102,7 @@ def main():
 			while(True):
 				msg = syncservice.recv_json(flags=zmq.NOBLOCK)
 				syncservice.send('')
-				msg_handler(msg,cur)
+				msg_handler(msg,cur,seq)
 				conn.commit()
 		except Exception,ex:
 			#print("No New Msg from Slave!")
@@ -104,11 +114,18 @@ def main():
 				ipc.send('')
 				print(msg)
 				ipc_handler(msg,cur,publisher)
-				
 		except Exception,ex:
 			#print("No New Msg from IPC!")
 			pass
-		time.sleep(1)
+		#check for zombie host
+		cur.execute("""UPDATE Host SET Active = 0 
+							WHERE abs(Last_seen - ?) > ? AND Active = 1""",
+							(seq,interval))
+		if (seq < 500):
+			seq = seq + 1
+		else:
+			seq = 0
+		time.sleep(sleeping)
 
 if __name__ == '__main__':
     main()
