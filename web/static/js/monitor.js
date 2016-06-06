@@ -26,7 +26,7 @@ $(function() {
 				$("."+hosts[i][0]).append("<span style='color:red'>-Host Inactive-</span>");
 				map[hosts[i][0]] = false;
 			} else {
-				$("."+hosts[i][0]).append("<span style='color:green'>-Host Oline-</span>");
+				$("."+hosts[i][0]).append("<span style='color:green'>-Host Online-</span>");
 				map[hosts[i][0]] = true;
 			}
 			$("body").append("<br></br>");
