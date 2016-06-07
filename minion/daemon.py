@@ -36,6 +36,33 @@ def register():
 	syncclient.recv()
 	#print('register finished')
 	
+def cmd_helper(msg):
+	if (msg['action'] == 'start'):
+		mon.start(msg['ID'])
+	elif (msg['action'] == 'stop'):
+		mon.stop(msg['ID'])
+	elif (msg['action'] == 'restart'):
+		mon.restart(msg['ID'])
+	elif (msg['action'] == 'pause'):
+		mon.pause(msg['ID'])
+	elif (msg['action'] == 'unpause'):
+		mon.unpause(msg['ID'])
+	elif (msg['action'] == 'destroy'):
+		mon.stop(msg['ID'])
+		mon.destroy(msg['ID'])
+		del dict[msg['ID']]
+		reply = {'host' : hostname, 'ID' : msg['ID'], 
+				 'flag' : 'removed'}
+		syncclient.send_json(reply)
+		syncclient.recv()
+	elif (msg['action'] == 'deploy'):
+		ret = mon.deploy(msg['user'],msg['image_name'],msg['vnf_name'])
+	elif (msg['action'] == 'execute'):
+		response = mon.execute_in_guest(msg['ID'],msg['cmd'])
+		reply = {'host' : hostname, 'ID' : msg['ID'], 
+				 'flag' : 'reply', 'response' : response, 'cmd' : msg['cmd']}
+		syncclient.send_json(reply)
+		syncclient.recv()
 	
 def cmd_handler(msg):
 	"""
@@ -47,34 +74,11 @@ def cmd_handler(msg):
 			if (msg['ID'] == '*'):
 				containers = mon.get_containers()
 				it = iter(containers)
-			for a in it:
-				msg['ID'] = a['Id'].encode()
-				if (msg['action'] == 'start'):
-					mon.start(msg['ID'])
-				elif (msg['action'] == 'stop'):
-					mon.stop(msg['ID'])
-				elif (msg['action'] == 'restart'):
-					mon.restart(msg['ID'])
-				elif (msg['action'] == 'pause'):
-					mon.pause(msg['ID'])
-				elif (msg['action'] == 'unpause'):
-					mon.unpause(msg['ID'])
-				elif (msg['action'] == 'destroy'):
-					mon.stop(msg['ID'])
-					mon.destroy(msg['ID'])
-					del dict[msg['ID']]
-					reply = {'host' : hostname, 'ID' : msg['ID'], 
-							 'flag' : 'removed'}
-					syncclient.send_json(reply)
-					syncclient.recv()
-				elif (msg['action'] == 'deploy'):
-					ret = mon.deploy(msg['user'],msg['image_name'],msg['vnf_name'])
-				elif (msg['action'] == 'execute'):
-					response = mon.execute_in_guest(msg['ID'],msg['cmd'])
-					reply = {'host' : hostname, 'ID' : msg['ID'], 
-							 'flag' : 'reply', 'response' : response, 'cmd' : msg['cmd']}
-					syncclient.send_json(reply)
-					syncclient.recv()
+				for a in it:
+					msg['ID'] = a['Id'].encode()
+					cmd_helper(msg)
+			else:
+				cmd_helper(msg)
 	except Exception,ex:
 		#print('Exception')
 		pass
