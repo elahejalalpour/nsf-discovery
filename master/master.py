@@ -103,7 +103,6 @@ def main():
 				msg = syncservice.recv_json(flags=zmq.NOBLOCK)
 				syncservice.send('')
 				msg_handler(msg,cur,seq)
-				conn.commit()
 		except Exception,ex:
 			#print("No New Msg from Slave!")
 			pass
@@ -125,6 +124,7 @@ def main():
 			seq = seq + 1
 		else:
 			seq = 0
+		conn.commit()
 		time.sleep(sleeping)
 
 if __name__ == '__main__':
