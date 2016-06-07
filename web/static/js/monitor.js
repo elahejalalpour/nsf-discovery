@@ -19,18 +19,31 @@ $(function() {
 			//console.log(hosts[i]);
 			$("."+hosts[i][0]).remove();
 			$("body").append("<div class="+"'"+hosts[i][0]+"'>\n</div>");
-			$("."+hosts[i][0]).append("Host: "+hosts[i][0]+"    IP: "+hosts[i][1]
-											+"    CPU: "+hosts[i][2]+"%"+"    RAM: "
+			$("."+hosts[i][0]).append("Host: "+hosts[i][0]+" IP: "+hosts[i][1]
+											+" CPU: "+hosts[i][2]+"%"+" RAM: "
 											+Math.round(hosts[i][5]/hosts[i][3]*100)+"% ");
 			if(hosts[i][7] === 0) {
-				$("."+hosts[i][0]).append("<span style='color:red'>-Host Inactive-</span>");
+				$("."+hosts[i][0]).append("<span style='color:red'>-Host Inactive- </span>");
 				map[hosts[i][0]] = false;
 			} else {
-				$("."+hosts[i][0]).append("<span style='color:green'>-Host Online-</span>");
+				$("."+hosts[i][0]).append("<span style='color:green'>-Host Online- </span>");
 				map[hosts[i][0]] = true;
 			}
+			//add start button
+			$("."+hosts[i][0]).append("<button id="+hosts[i][0]+"_start>Start All</button>")
+			$("#"+hosts[i][0]+"_start")[0].addEventListener('click', function () {
+				console.log(this.id);
+				var args = this.id.split("_");
+				model.makeReq(args[0],'*',args[1]);
+			});
+			//add stop button
+			$("."+hosts[i][0]).append("<button id="+hosts[i][0]+"_stop>Stop All</button>")
+			$("#"+hosts[i][0]+"_stop")[0].addEventListener('click', function () {
+				console.log(this.id);
+				var args = this.id.split("_");
+				model.makeReq(args[0],'*',args[1]);
+			});
 			$("body").append("<br></br>");
-			
 		}
 		
 		model.getData("VNF");

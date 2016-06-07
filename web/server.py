@@ -50,7 +50,7 @@ def reply():
 	if (msg['action'] == 'start'):
 		cmd.start(msg['Host'],msg['ID'])
 	elif(msg['action'] == 'stop'):
-		cmd.stop(msg['Host'],msg['ID'])
+			cmd.stop(msg['Host'],msg['ID'])
 	elif(msg['action'] == 'restart'):
 		cmd.restart(msg['Host'],msg['ID'])
 	elif(msg['action'] == 'destroy'):
