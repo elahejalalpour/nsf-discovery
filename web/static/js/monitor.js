@@ -17,32 +17,37 @@ $(function() {
 		//add host entries
 		for(var i = 0; i < hosts.length; i++) {
 			//console.log(hosts[i]);
+			var hostname = hosts[i][0];
+			var IP = hosts[i][1];
+			var cpu = hosts[i][2];
+			var ram = Math.round(hosts[i][5]/hosts[i][3]*100);
+			var active = hosts[i][7];
 			$("."+hosts[i][0]).remove();
-			$("body").append("<div class="+"'"+hosts[i][0]+"'>\n</div>");
-			$("."+hosts[i][0]).append("Host: "+hosts[i][0]+" IP: "+hosts[i][1]
-											+" CPU: "+hosts[i][2]+"%"+" RAM: "
-											+Math.round(hosts[i][5]/hosts[i][3]*100)+"% ");
-			if(hosts[i][7] === 0) {
-				$("."+hosts[i][0]).append("<span style='color:red'>-Host Inactive- </span>");
-				map[hosts[i][0]] = false;
+			$("body").append("<div class="+"'"+hostname+"'>\n</div>");
+			$("."+hostname).append("Host: "+hostname+" IP: "+IP
+											+" CPU: "+cpu+"%"+" RAM: "+ram+"% ");
+			if(active === 0) {
+				$("."+hostname).append("<span style='color:red'>-Host Inactive- </span>");
+				map[hostname] = false;
 			} else {
-				$("."+hosts[i][0]).append("<span style='color:green'>-Host Online- </span>");
-				map[hosts[i][0]] = true;
+				$("."+hostname).append("<span style='color:green'>-Host Online- </span>");
+				map[hostname] = true;
+				//add start button
+				$("."+hostname).append("<button id="+hostname+"_start>Start All</button>")
+				$("#"+hostname+"_start")[0].addEventListener('click', function () {
+					console.log(this.id);
+					var args = this.id.split("_");
+					model.makeReq(args[0],'*',args[1]);
+				});
+				//add stop button
+				$("."+hostname).append("<button id="+hostname+"_stop>Stop All</button>")
+				$("#"+hostname+"_stop")[0].addEventListener('click', function () {
+					console.log(this.id);
+					var args = this.id.split("_");
+					model.makeReq(args[0],'*',args[1]);
+				});
 			}
-			//add start button
-			$("."+hosts[i][0]).append("<button id="+hosts[i][0]+"_start>Start All</button>")
-			$("#"+hosts[i][0]+"_start")[0].addEventListener('click', function () {
-				console.log(this.id);
-				var args = this.id.split("_");
-				model.makeReq(args[0],'*',args[1]);
-			});
-			//add stop button
-			$("."+hosts[i][0]).append("<button id="+hosts[i][0]+"_stop>Stop All</button>")
-			$("#"+hosts[i][0]+"_stop")[0].addEventListener('click', function () {
-				console.log(this.id);
-				var args = this.id.split("_");
-				model.makeReq(args[0],'*',args[1]);
-			});
+			
 			$("body").append("<br></br>");
 		}
 		
@@ -50,33 +55,36 @@ $(function() {
 		var vnfs = model.getVnf();
 		//add VNF entries
 		for(var i = 0; i < vnfs.length; i++) {
-			if(map[vnfs[i][2]]) {
+			var hostname = vnfs[i][2]
+			if(map[hostname]) {
 				//console.log(vnfs[i]);
 				var id = vnfs[i][0];
-				var name = vnfs[i][1];
-				var host = vnfs[i][2];
-				$("."+host+id).remove();
-				$("."+host).append("<div class="+"'"+host+id+"'>\n</div>");
-				$("."+host+id).append("Container ID: "+id.substring(0,11)+" Name: "+name
-												+" IP: "+vnfs[i][3]+" Status: "
-												+vnfs[i][4]+" Type: "+vnfs[i][5]+"\n");
+				var vnfname = vnfs[i][1];
+				var IP = vnfs[i][3];
+				var status = vnfs[i][4];
+				var type = vnfs[i][5];
+				$("."+hostname+id).remove();
+				$("."+hostname).append("<div class="+"'"+hostname+id+"'>\n</div>");
+				$("."+hostname+id).append("Container ID: "+id.substring(0,11)+" Name: "+vnfname
+												+" IP: "+IP+" Status: "
+												+status+" Type: "+type+"\n");
 				//add start button
-				$("."+host+id).append("<button id="+host+"_"+id+"_start>Start</button>")
-				$("#"+host+"_"+id+"_start")[0].addEventListener('click', function () {
+				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_start>Start</button>")
+				$("#"+hostname+"_"+id+"_start")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
 					model.makeReq(args[0],args[1],args[2]);
 				});
 				//add stop button
-				$("."+host+id).append("<button id="+host+"_"+id+"_stop>Stop</button>")
-				$("#"+host+"_"+id+"_stop")[0].addEventListener('click', function () {
+				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_stop>Stop</button>")
+				$("#"+hostname+"_"+id+"_stop")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
 					model.makeReq(args[0],args[1],args[2]);
 				});
 				//add destroy button
-				$("."+host+id).append("<button id="+host+"_"+id+"_destroy>Destroy</button>")
-				$("#"+host+"_"+id+"_destroy")[0].addEventListener('click', function () {
+				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_destroy>Destroy</button>")
+				$("#"+hostname+"_"+id+"_destroy")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
 					model.makeReq(args[0],args[1],args[2]);

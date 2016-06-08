@@ -37,9 +37,15 @@ def send_VNF():
 	results = cur.fetchall()
 	return jsonify(results)
 
-@app.route('/getHost', methods=['GET', 'POST'])
+@app.route('/getHost', methods=['GET'])
 def send_Host():
 	cur.execute('select * from Host')
+	results = cur.fetchall()
+	return jsonify(results)
+	
+@app.route('/getChain', methods=['GET'])
+def send_Chain():
+	cur.execute('select * from Chain')
 	results = cur.fetchall()
 	return jsonify(results)
 	
