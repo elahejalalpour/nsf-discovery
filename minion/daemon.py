@@ -113,7 +113,7 @@ def collect():
 		if dict.has_key(ID):
 			if dict[ID] != status:
 				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
-						'status' : status, 'flag' : 'update'}
+						'name' : name, 'status' : status, 'flag' : 'update'}
 				#msg = 'ID: '+ID+'\n'+dict[ID]+'-->'+status
 				if status == 'running':
 					#msg = msg + '\n' + 'IP: '+mon.get_ip(ID)
@@ -133,7 +133,7 @@ def collect():
 	msg = {'host' : hostname, 'flag' : 'sysinfo', 
 			'cpu' : psutil.cpu_percent(interval=3),
 			'mem_total' : mem[0], 'mem_available' : mem[1], 
-			'used' : mem[3]}
+			'used' : mem[3],'host_ip' : get_ip_address('eth0')}
 	syncclient.send_json(msg)
 	syncclient.recv()
 		

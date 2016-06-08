@@ -16,13 +16,14 @@ $(function() {
 		$("br").remove()
 		//add host entries
 		for(var i = 0; i < hosts.length; i++) {
-			//console.log(hosts[i]);
-			var hostname = hosts[i][0];
-			var IP = hosts[i][1];
-			var cpu = hosts[i][2];
-			var ram = Math.round(hosts[i][5]/hosts[i][3]*100);
-			var active = hosts[i][7];
-			$("."+hosts[i][0]).remove();
+			console.log(hosts[i]);
+			console.log(hosts[i]['Host_name']);
+			var hostname = hosts[i]['Host_name'];
+			var IP = hosts[i]['Host_ip'];
+			var cpu = hosts[i]['Host_cpu'];
+			var ram = Math.round(hosts[i]['Host_used_mem']/hosts[i]['Host_total_mem']*100);
+			var active = hosts[i]['Active'];
+			$("."+hostname).remove();
 			$("body").append("<div class="+"'"+hostname+"'>\n</div>");
 			$("."+hostname).append("Host: "+hostname+" IP: "+IP
 											+" CPU: "+cpu+"%"+" RAM: "+ram+"% ");
@@ -55,14 +56,14 @@ $(function() {
 		var vnfs = model.getVnf();
 		//add VNF entries
 		for(var i = 0; i < vnfs.length; i++) {
-			var hostname = vnfs[i][2]
+			var hostname = vnfs[i]['Host_name']
 			if(map[hostname]) {
 				//console.log(vnfs[i]);
-				var id = vnfs[i][0];
-				var vnfname = vnfs[i][1];
-				var IP = vnfs[i][3];
-				var status = vnfs[i][4];
-				var type = vnfs[i][5];
+				var id = vnfs[i]['Con_id'];
+				var vnfname = vnfs[i]['Con_name'];
+				var IP = vnfs[i]['VNF_ip'];
+				var status = vnfs[i]['VNF_status'];
+				var type = vnfs[i]['VNF_type'];
 				$("."+hostname+id).remove();
 				$("."+hostname).append("<div class="+"'"+hostname+id+"'>\n</div>");
 				$("."+hostname+id).append("Container ID: "+id.substring(0,11)+" Name: "+vnfname

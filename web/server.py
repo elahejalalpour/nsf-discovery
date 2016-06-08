@@ -4,12 +4,15 @@ from flask import jsonify
 import json
 import sqlite3
 import command
+import etcd
 
 #set up database connection
 conn = sqlite3.connect('../master/vnfs.db')
 cur = conn.cursor()
 
 cmd = command.CMD()
+
+etcdcli = etcd.Client()
 
 
 app = Flask(__name__)
@@ -33,20 +36,30 @@ def send_css():
     
 @app.route('/getVNF', methods=['GET'])
 def send_VNF():
-	cur.execute('select * from VNF')
-	results = cur.fetchall()
+	#cur.execute('select * from VNF')
+	#results = cur.fetchall()
+	results = []
+	r = etcdcli.read('/VNF', recursive=True, sorted=True)
+	for child in r.children:
+		results.append(json.loads(child.value))
 	return jsonify(results)
 
 @app.route('/getHost', methods=['GET'])
 def send_Host():
-	cur.execute('select * from Host')
-	results = cur.fetchall()
+	#cur.execute('select * from Host')
+	#results = cur.fetchall()
+	results = []
+	r = etcdcli.read('/Host', recursive=True, sorted=True)
+	for child in r.children:
+		results.append(json.loads(child.value))
 	return jsonify(results)
 	
 @app.route('/getChain', methods=['GET'])
 def send_Chain():
-	cur.execute('select * from Chain')
-	results = cur.fetchall()
+	results = []
+	r = etcdcli.read('/Host', recursive=True, sorted=True)
+	for child in r.children:
+		results.append(json.loads(child.value))
 	return jsonify(results)
 	
 @app.route('/request', methods=['POST'])
