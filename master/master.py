@@ -52,10 +52,6 @@ def msg_handler(msg,etcdcli,seq):
 						'Last_seen' : None, 'Active' : None}
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
-			try:
-				etcdcli.delete('/Host/test')
-			except Exception,ex:
-				pass
 		elif(msg['flag'] == 'sysinfo'):
 			'''
 			cur.execute("""UPDATE Host SET Host_cpu = ? ,
@@ -185,7 +181,7 @@ def main():
 			r = etcdcli.read('/Host', recursive=True, sorted=True)
 			for child in r.children:
 				temp = json.loads(child.value)
-				if (temp['Active'] == 1 and (temp['Last_seen'] - seq) > interval):
+				if (temp['Active'] == 1 and (abs(temp['Last_seen'] - seq)) > interval):
 					temp['Active'] = 0
 					hostname = temp['Host_name']
 					temp = json.dumps(temp)
