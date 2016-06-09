@@ -129,20 +129,12 @@ def main():
 	try:
 		#etcdcli.delete('/Host', recursive=True)
 		etcdcli.write('/Host/test',None)
-	except Exception,ex:
-		#etcdcli.write('/Host/test',None)
-		print(ex)
-	try:
-		#etcdcli.delete('/VNF', recursive=True)
+		etcdcli.delete('/Host/test')
 		etcdcli.write('/VNF/test',None)
-	except Exception,ex:
-		#etcdcli.write('/VNF/test',None)
-		print(ex)
-	try:
-		#etcdcli.delete('/Chain', recursive=True)
+		etcdcli.delete('/VNF/test')
 		etcdcli.write('/Chain/test',None)
+		etcdcli.delete('/Chain/test')
 	except Exception,ex:
-		#etcdcli.write('/Chain/test',None)
 		print(ex)
 		
 
