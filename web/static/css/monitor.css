@@ -13,9 +13,9 @@ h1 {
 }
 
 #CPU {
-	height: 5px;
+	height: 6px;
 	width: 45%;
-	margin: 0em 0em 0.2em 5%
+	margin: 0 0 0.2em 0
 }
 
 .IP {

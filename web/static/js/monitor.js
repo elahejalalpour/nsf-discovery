@@ -135,8 +135,9 @@ $(function() {
 							</div>
 							</progress>`;
 				result+="<p style='font-size:8'> Cores:</p>";
-							
+				//cores		
 				for(var j = 0; j < cpus.length; j++) {
+					result+="<span style='font-size:10pt'> ["+j+"]: </span>";
 					result+="<progress max='100' value='"+cpus[j]+"' class='css3' id='CPU'>";
 					result+=`<div class='progress-bar'>
 									<span style='width: 80%'>80%</span>
