@@ -12,6 +12,12 @@ h1 {
 	font-size: 45px;
 }
 
+#CPU {
+	height: 5px;
+	width: 45%;
+	margin: 0em 0em 0.2em 5%
+}
+
 .IP {
 	margin: 0 0 1em;
 	border-bottom: 1px solid #ccc;
@@ -48,6 +54,17 @@ h1 {
     background-color: #555;
     color: white;
 }
+/*table*/
+table, th, td {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 0px;
+}
+th {
+    text-align: left;
+}
+
 
 /* button */
 button {
