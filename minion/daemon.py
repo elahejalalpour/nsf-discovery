@@ -6,6 +6,7 @@ import psutil
 import fcntl
 import struct
 import socket
+import thread
 
 #interval = 3
 mon = minion.Monitor()
@@ -92,7 +93,7 @@ def pull():
 	#exhaust the msg queue
 		while(True):
 			msg = subscriber.recv_json(flags=zmq.NOBLOCK)
-			cmd_handler(msg)
+			thread.start_new_thread(cmd_handler, (msg,))
 	except Exception,ex:
 		#print("No New Msg!")
 		return
