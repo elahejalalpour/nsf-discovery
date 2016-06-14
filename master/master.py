@@ -128,7 +128,6 @@ def main():
 		etcdcli.write('/Host/test',None)
 		etcdcli.delete('/Host/test')
 		etcdcli.write('/VNF/test',None)
-		etcdcli.delete('/VNF/test')
 		etcdcli.write('/Chain/test',None)
 		etcdcli.delete('/Chain/test')
 	except Exception,ex:
