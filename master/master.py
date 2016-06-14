@@ -50,8 +50,8 @@ def msg_handler(msg,etcdcli):
 			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 						'Host_cpu' : None, 'Host_total_mem' : None,
 						'Host_avail_mem' : None,'Host_used_mem' : None,
-						'Last_seen' : None, 'Active' : None, 'cpus' : None,
-						'network' : None}
+						'Last_seen' : datetime.now().isoformat(), 'Active' : None, 
+						'cpus' : None,'network' : None}
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'sysinfo'):

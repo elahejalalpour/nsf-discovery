@@ -137,12 +137,13 @@ $(function() {
 				result+="<p style='font-size:8'> Cores:</p>";
 				//cores		
 				for(var j = 0; j < cpus.length; j++) {
-					result+="<span style='font-size:10pt'> ["+j+"]: </span>";
+					result+="<span style='font-size:10pt'>["+j+"]:</span>";
 					result+="<progress max='100' value='"+cpus[j]+"' class='css3' id='CPU'>";
 					result+=`<div class='progress-bar'>
 									<span style='width: 80%'>80%</span>
 								</div>
 								</progress>`;
+					if ((j % 2) === 1) result+="<br>";
 				}
 				result+="<br></br>"
 				var total_ram = Math.round(hosts[i]['Host_total_mem']/1024/1024);
@@ -155,6 +156,7 @@ $(function() {
 								<span style='width: 80%'>80%</span>
 							</div>
 							</progress>`;
+							
 				//network
 				result+="<p style='font-weight:bold;margin:0.5em 0 0.2em 0'>Network</p>";
 				result+=`<table id=network style="width:100%;font-size:10pt;">
