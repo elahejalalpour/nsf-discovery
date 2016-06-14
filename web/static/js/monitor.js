@@ -173,9 +173,8 @@ $(function() {
 			} else {
 				result+="<p>Status:"+"<span style='color:red'> Inactive</span></p>"
 			}
-			
+			//if ((i % 2) === 1) result+="<br></br><br></br><br></br>";
 			result+="</li>";
-			if ((i % 2) === 1) result+="<br></br><br></br><br></br>";
 			$('#Hosts').append(result);
 		}
 		

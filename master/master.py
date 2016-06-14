@@ -7,13 +7,14 @@ import sqlite3
 import json
 import etcd
 import traceback
+import dateutil.parser
+from datetime import datetime
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
 #sleeping time while wait new mesg
 
 sleeping = 1
-global seq
 
 def ipc_handler(msg,etcdcli,publisher):
 	"""
@@ -33,7 +34,7 @@ def ipc_handler(msg,etcdcli,publisher):
 		print(ex)
 	
 
-def msg_handler(msg,etcdcli,seq):
+def msg_handler(msg,etcdcli):
 	"""
 		handles messages recv from minions
 	"""
@@ -65,7 +66,7 @@ def msg_handler(msg,etcdcli,seq):
 			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 						'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
 						'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
-						'Last_seen' : seq, 'Active' : 1,'cpus' : msg['cpus'],
+						'Last_seen' : datetime.now().isoformat(), 'Active' : 1,'cpus' : msg['cpus'],
 						'network' : msg['network']}
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
@@ -109,10 +110,8 @@ def msg_handler(msg,etcdcli,seq):
 
 
 def main():
-	#sequence number for alive check,
-	#interval: how many updates can a host miss before been marked inactive
-	seq = 0
-	interval = 30
+	#interval: how many seconds before been marked inactive
+	interval = 5
 	#initialize the sqlite database
 	'''
 	conn = sqlite3.connect('vnfs.db')
@@ -159,7 +158,7 @@ def main():
 			while(True):
 				msg = syncservice.recv_json(flags=zmq.NOBLOCK)
 				syncservice.send('')
-				msg_handler(msg,etcdcli,seq)
+				msg_handler(msg,etcdcli)
 		except Exception,ex:
 			#print("No New Msg from Slave!")
 			pass
@@ -183,7 +182,8 @@ def main():
 			r = etcdcli.read('/Host', recursive=True, sorted=True)
 			for child in r.children:
 				temp = json.loads(child.value)
-				if (temp['Active'] == 1 and (abs(temp['Last_seen'] - seq)) > interval):
+				diff = datetime.now() - dateutil.parser.parse(temp['Last_seen'])
+				if (temp['Active'] == 1 and diff.seconds > interval):
 					temp['Active'] = 0
 					hostname = temp['Host_name']
 					temp = json.dumps(temp)
@@ -191,10 +191,6 @@ def main():
 		except Exception,ex:
 			print(ex)
 			pass
-		if (seq < 500):
-			seq = seq + 1
-		else:
-			seq = 0
 		#conn.commit()
 		time.sleep(sleeping)
 
