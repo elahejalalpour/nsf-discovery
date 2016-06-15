@@ -9,6 +9,8 @@ import etcd
 import traceback
 import dateutil.parser
 from datetime import datetime
+import networkx as nx
+from networkx.readwrite import json_graph
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -83,12 +85,9 @@ def msg_handler(msg,etcdcli):
 			vnf = {'Con_id' : msg['ID'], 'Con_name' : msg['name'],
 					'Host_name' : msg['host'], 'VNF_ip' : IP, 
 					'VNF_status' : msg['status'], 'VNF_type' : msg['image'],
-					'Chain_name' : None}
+					'Chain_name' : None, 'net_ifs' : msg['net_ifs']}
 			vnf = json.dumps(vnf)
 			try:
-				etcdcli.delete('/VNF/test')
-				etcdcli.write("/VNF",vnf,append=True)
-			except Exception,ex:
 				r = etcdcli.read('/VNF', recursive=True, sorted=True)
 				exist = False
 				for child in r.children:
@@ -100,10 +99,50 @@ def msg_handler(msg,etcdcli):
 						break
 				if (not exist):
 					etcdcli.write("/VNF",vnf,append=True)
+			except Exception,ex:
+				etcdcli.write("/VNF",vnf,append=True)
+				
+			#build graph object from chain info
+			etcdcli.write('/Chain/test',None)
+			etcdcli.delete("/Chain/",recursive=True)
+			etcdcli.write('/Chain/test',None)
+			etcdcli.delete('/Chain/test')
+			r = etcdcli.read('/VNF', recursive=True, sorted=True)
+			G=nx.Graph()
+			edges = {}
+			for child in r.children:
+				temp = json.loads(child.value)
+				node = temp['Host_name']+'_'+temp['Con_id']
+				G.add_node(node)
+				lst = temp['net_ifs']
+				for val in lst:
+					key = val['link_type']+'_'+val['link_id']
+					if (edges.has_key(key)):
+						edges[key][node] = val['if_name'];
+					else:
+						edges[key] = {node : val['if_name']}
+			#print(edges)
+			
+			for key in edges:
+				if (len(edges[key]) == 2):
+					t1 = edges[key].keys();
+					t2 = key.split('_')
+					G.add_edge(t1[0],t1[1],{'nodes' : edges[key],'link_type' : t2[0],
+													'link_id' : t2[1]})
+			data = json_graph.node_link_data(G)
+			print(data)
+			subgraphs =list(nx.connected_component_subgraphs(G))
+			try:
+				for g in subgraphs:
+					etcdcli.write("/Chain",json_graph.node_link_data(g),append=True)
+			except Exception,ex:
+				print(ex)
+				traceback.print_exc()
 			
 		else:
 			#print(msg)
 			pass
+		
 	except Exception,ex:
 		print(ex)
 		traceback.print_exc()
@@ -128,8 +167,7 @@ def main():
 		etcdcli.write('/Host/test',None)
 		etcdcli.delete('/Host/test')
 		etcdcli.write('/VNF/test',None)
-		etcdcli.write('/Chain/test',None)
-		etcdcli.delete('/Chain/test')
+		etcdcli.delete('/VNF/test')
 	except Exception,ex:
 		print(ex)
 		

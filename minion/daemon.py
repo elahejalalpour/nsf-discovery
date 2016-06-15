@@ -7,6 +7,7 @@ import fcntl
 import struct
 import socket
 import thread
+import json
 
 #interval = 3
 mon = minion.Monitor()
@@ -111,10 +112,15 @@ def collect():
 		status = mon.guest_status(ID)
 		image = a['Image']
 		name = a['Names'][0];
+		#read json chain info from home
+		chain_data = open("/home/nfuser/chain.json").read()
+		chain_data = json.loads(chain_data)
+		#push vnf info
 		if dict.has_key(ID):
 			if dict[ID] != status:
 				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
-						'name' : name, 'status' : status, 'flag' : 'update'}
+						'name' : name, 'status' : status, 'flag' : 'update',
+						'net_ifs' : chain_data['net_ifs']}
 				#msg = 'ID: '+ID+'\n'+dict[ID]+'-->'+status
 				if status == 'running':
 					#msg = msg + '\n' + 'IP: '+mon.get_ip(ID)
@@ -125,11 +131,13 @@ def collect():
 		else:
 			dict[ID] = status
 			msg = {'host' : hostname, 'ID' : ID, 'image' : image,
-						'name' : name, 'status' : status, 'flag' : 'new'}
+						'name' : name, 'status' : status, 'flag' : 'new',
+						'net_ifs' : chain_data['net_ifs']}
 			if status == 'running':
 				msg['IP'] = mon.get_ip(ID)
 			syncclient.send_json(msg)
 			syncclient.recv()
+	#push resource info
 	mem = psutil.virtual_memory()
 	msg = {'host' : hostname, 'flag' : 'sysinfo', 
 			'cpu' : psutil.cpu_percent(interval=3),

@@ -4,3 +4,4 @@ psutil
 zeromq
 flask
 python-dateutil
+networkx
