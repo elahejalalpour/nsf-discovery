@@ -30,17 +30,10 @@ def send_monitor():
 def send_model():
 	return app.send_static_file('js/model.js')
 	
-@app.route('/js/diagram.js')
-def send_diagram():
-	return app.send_static_file('js/diagram.js')
     
 @app.route('/css/monitor.css')
 def send_css():
 	return app.send_static_file('css/monitor.css')
-	
-@app.route('/css/circle.css')
-def send_css_circle():
-	return app.send_static_file('css/circle.css')
 
     
 @app.route('/getVNF', methods=['GET'])

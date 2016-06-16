@@ -10,7 +10,7 @@ import thread
 import json
 
 #interval = 3
-mon = minion.Monitor()
+mon = minion.Minion()
 dict = {}
 #set up zeromq
 context = zmq.Context()

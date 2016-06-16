@@ -44,11 +44,6 @@ def msg_handler(msg,etcdcli):
 	try:
 		if (msg['flag'] == 'REG'):
 			print('New Host Registered: '+msg['host'])
-			'''
-			cur.execute("DELETE FROM Host WHERE Host_name = ?",(msg['host'],))
-			cur.execute("INSERT INTO Host VALUES(?,?,?,?,?,?,?,?)",
-							(msg['host'],msg['host_ip'],None,None,None,None,None,1))
-			'''
 			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 						'Host_cpu' : None, 'Host_total_mem' : None,
 						'Host_avail_mem' : None,'Host_used_mem' : None,
@@ -57,14 +52,6 @@ def msg_handler(msg,etcdcli):
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'sysinfo'):
-			'''
-			cur.execute("""UPDATE Host SET Host_cpu = ? ,
-							Host_total_mem = ?,Host_avail_mem = ?,
-							Host_used_mem = ?,Last_seen = ?,
-							Active = ? WHERE Host_name= ?""",
-							(msg['cpu'],msg['mem_total'],msg['mem_available'],
-							msg['used'],seq,1,msg['host']))
-			'''
 			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 						'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
 						'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
@@ -77,11 +64,6 @@ def msg_handler(msg,etcdcli):
 				IP = msg['IP']
 			else:
 				IP = None
-			'''
-			cur.execute("INSERT INTO VNF VALUES(?,?,?,?,?,?,?)",
-							(msg['ID'],msg['name'],msg['host'],IP,msg['status'],
-							 msg['image'],None))
-			'''
 			vnf = {'Con_id' : msg['ID'], 'Con_name' : msg['name'],
 					'Host_name' : msg['host'], 'VNF_ip' : IP, 
 					'VNF_status' : msg['status'], 'VNF_type' : msg['image'],
@@ -130,7 +112,7 @@ def msg_handler(msg,etcdcli):
 					G.add_edge(t1[0],t1[1],{'nodes' : edges[key],'link_type' : t2[0],
 													'link_id' : t2[1]})
 			data = json_graph.node_link_data(G)
-			print(data)
+			#print(data)
 			subgraphs =list(nx.connected_component_subgraphs(G))
 			try:
 				for g in subgraphs:
@@ -151,15 +133,6 @@ def msg_handler(msg,etcdcli):
 def main():
 	#interval: how many seconds before been marked inactive
 	interval = 5
-	#initialize the sqlite database
-	'''
-	conn = sqlite3.connect('vnfs.db')
-	cur = conn.cursor()
-	schema = open('schema.sql', 'r').read()
-	cur.executescript(schema)
-	conn.commit()
-	'''
-	
 	#initialize etcd
 	etcdcli = etcd.Client()
 	try:
@@ -210,11 +183,6 @@ def main():
 			#print("No New Msg from IPC!")
 			pass
 		#check for zombie host
-		'''
-		cur.execute("""UPDATE Host SET Active = 0 
-							WHERE abs(Last_seen - ?) > ? AND Active = 1""",
-							(seq,interval))
-		'''
 		try:
 			r = etcdcli.read('/Host', recursive=True, sorted=True)
 			for child in r.children:
@@ -228,7 +196,6 @@ def main():
 		except Exception,ex:
 			print(ex)
 			pass
-		#conn.commit()
 		time.sleep(sleeping)
 
 if __name__ == '__main__':

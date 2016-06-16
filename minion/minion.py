@@ -9,7 +9,7 @@ import errors
 
 logger = logging.getLogger(__name__)
 
-class Monitor():
+class Minion():
     """
     @class Monitor
 
