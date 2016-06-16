@@ -235,3 +235,18 @@ class Minion():
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         with self._error_handling(errors.VNFDestroyError):
             dcx.remove_container(container=vnf_fullname, force=force)
+    
+    def images(self):
+        """
+        Get a list of images
+
+        """
+        dcx = self._get_client()
+        temp = dcx.images()
+        images=[]
+        for image in temp:
+            images.append(image['RepoTags'][0])
+        return images
+        
+        
+        

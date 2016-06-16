@@ -139,12 +139,14 @@ def collect():
 			syncclient.recv()
 	#push resource info
 	mem = psutil.virtual_memory()
+	images = mon.images()
 	msg = {'host' : hostname, 'flag' : 'sysinfo', 
 			'cpu' : psutil.cpu_percent(interval=3),
 			'mem_total' : mem[0], 'mem_available' : mem[1], 
 			'used' : mem[3],'host_ip' : get_ip_address('eth0'),
 			'cpus' : psutil.cpu_percent(interval=None, percpu=True),
-			'network' : psutil.net_io_counters(pernic=True)}
+			'network' : psutil.net_io_counters(pernic=True),
+			'images' : images}
 	syncclient.send_json(msg)
 	syncclient.recv()
 		

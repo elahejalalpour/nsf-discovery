@@ -56,7 +56,7 @@ def msg_handler(msg,etcdcli):
 						'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
 						'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
 						'Last_seen' : datetime.now().isoformat(), 'Active' : 1,'cpus' : msg['cpus'],
-						'network' : msg['network']}
+						'network' : msg['network'], 'images' : msg['images']}
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'new' or msg['flag'] == 'update'):

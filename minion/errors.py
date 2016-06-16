@@ -74,4 +74,8 @@ class VNFNameIsEmptyError(VNFConfigurationError):
 class VNFNotRunningError(HypervisorError):
     def __init__(self):
         self.errno = 716
+        
+class VNFImageError(HypervisorError):
+    def __init__(self):
+        self.errno = 717
 

@@ -41,7 +41,7 @@ $(function() {
 		model.getData("Host");
 		var hosts = model.getHost();
 		//console.log(hosts)
-		//add host entries
+		//VNF Tab
 		for(var i = 0; i < hosts.length; i++) {
 			//console.log(hosts[i]);
 			var hostname = hosts[i]['Host_name'];
@@ -49,6 +49,7 @@ $(function() {
 			var cpu = hosts[i]['Host_cpu'];
 			var ram = Math.round(hosts[i]['Host_used_mem']/hosts[i]['Host_total_mem']*100);
 			var active = hosts[i]['Active'];
+			var images = hosts[i]['images'];
 			var result = "<li class='progli Host " + hostname + "'>";
 			if (!active) {
 				cpu = 0;
@@ -126,7 +127,8 @@ $(function() {
 			result+="<p class='IP'>IP: "+IP+"</p>";
 			if (active) {
 				//cpu+ram
-				result+="<p style='margin:0 0 1em'>Status:"+"<span style='color:green'> Running</span></p>"
+				result+="<p style='margin:0 0 1em'>Status:"
+							+"<span style='color:green'> Running</span></p>"
 				result+="<p style='width:100%;font-weight:bold' data-value='"
 							+cpu+"'>CPU ("+cpus.length+" cores)</p>";
 				result+="<progress max='100' value='"+cpu+"' class='css3'>";
