@@ -38,9 +38,23 @@ $(function() {
 		$("#VNFS").empty();
 		$("#Chain").empty();
 		
+		var changed = false;
 		model.getData("Host");
 		var hosts = model.getHost();
-		//console.log(hosts)
+		model.getData("VNF");
+		var vnfs = model.getVnf();
+		//console.log(JSON.stringify(vnfs));
+		var data = JSON.stringify(vnfs);
+		//console.log("d:"+$('#fresh').text());
+		var old = $('#fresh').text();
+		
+		if (data !== old) {
+			$('#fresh').text(data);
+			changed = true;
+			$('#popup').empty()
+			console.log("VNF data changed");
+		}
+		
 		//VNF Tab
 		for(var i = 0; i < hosts.length; i++) {
 			//console.log(hosts[i]);
@@ -73,14 +87,16 @@ $(function() {
 				result+="<p>Status:"+"<span style='color:green'> Running</span></p>"
 				//add show VNF
 				if (map[hostname]) {
-					result+="<button id="+hostname+"_button class='mybutton'>Hide VNFS</button>";
+					result+="<a id="+hostname+"_button class='mybutton' href='#'>Hide VNFS</a>";
 				} else {
-					result+="<button id="+hostname+"_button class='mybutton'>Show VNFS</button>";
+					result+="<a id="+hostname+"_button class='mybutton' href='#'>Show VNFS</a>";
 				}
 				//add start button
-				result+="<button id="+hostname+"_start class='mybutton'>Start All</button>";
+				result+="<a id="+hostname+"_start class='mybutton' href='#'>Start All</a>";
 				//add stop button
-				result+="<button id="+hostname+"_stop class='mybutton'>Stop All</button>";
+				result+="<a id="+hostname+"_stop class='mybutton' href='#'>Stop All</a>";
+				//add deploy button
+				result+="<a class='mybutton' href=#"+hostname+"_deploy>Deploy</a>";
 				
 				result+="</li>";
 				$('#VNFS').append(result);
@@ -95,14 +111,58 @@ $(function() {
 				$("#"+hostname+"_start")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
-					model.makeReq(args[0],'*',args[1]);
+					model.makeReq(args[0],'*',args[1],'','','');
 				});
 				//add stop all listener
 				$("#"+hostname+"_stop")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
-					model.makeReq(args[0],'*',args[1]);
+					model.makeReq(args[0],'*',args[1],'','','');
 				});
+				//add deploy dialog box
+				if (changed) {
+					result="<div id="+hostname+"_deploy class='modalDialog'>"
+											+`<div>
+												<a href="#close" title="Close" class="close">X</a>
+												<h2>VNF Deployment</h2>`;
+					result+="<h3 style='margin: 0 0 0.8em 0'>Host: "+hostname+"</h3>";
+					result+="<label style='font-size:14pt'>Image: </label>"
+								+"<select style='margin: 0 0 0.4em 0' id='"+hostname+"_image'>";
+					for (var k = 0; k < images.length; k++) {
+						result+="<option>"+images[k]+"</option>"
+					}
+					result+="</select></label><br>"
+					
+					result+="VNF Name: <input style='margin: 0 0 0.4em 0'" 
+								+"type='text' class ='glowing-border' id='"+
+								hostname+"_vnfname'></input><br>";
+					result+="User Name: <input style='margin: 0 0 0.4em 0'"
+								+"type='text' class ='glowing-border' id='"+
+								hostname+"_username'></input><br>";
+					result+="<a href='#close' class='mybutton' id='"+hostname
+								+"_create'>Deploy It!</a>";
+				
+					result+="</div></div>";
+					$('#popup').append(result);
+				
+				
+					//add deploy listener
+					$("#"+hostname+"_create")[0].addEventListener('click', function () {
+						var args = this.id.split("_");
+						var username = $('#'+args[0]+'_username').val();
+						var image = $('#'+args[0]+'_image').val();
+						var vnfname = $('#'+args[0]+'_vnfname').val();
+						if(username === '' || vnfname === '') {
+							alert('Empty Input!');
+						} else {
+							console.log(this.id+' '+username+' '+image+' '+vnfname);
+							model.makeReq(args[0],'',args[1],image,username,vnfname);
+							$('#'+args[0]+'_username').val('');
+							$('#'+args[0]+'_vnfname').val('');
+						}
+					});
+				}	
+				
 			} else {
 				map[hostname] =false;
 				result+="<p>Status:"+"<span style='color:red'> Inactive</span></p>"
@@ -182,9 +242,7 @@ $(function() {
 			$('#Hosts').append(result);
 		}
 		
-		model.getData("VNF");
-		var vnfs = model.getVnf();
-		//add VNF entries
+		//add VNF entries under VNF Tab
 		for(var i = 0; i < vnfs.length; i++) {
 			var hostname = vnfs[i]['Host_name']
 			if(map[hostname]) {
@@ -212,21 +270,21 @@ $(function() {
 				$("#"+hostname+"_"+id+"_start")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
-					model.makeReq(args[0],args[1],args[2]);
+					model.makeReq(args[0],args[1],args[2],'','','');
 				});
 				//add stop button
 				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_stop>Stop</button>")
 				$("#"+hostname+"_"+id+"_stop")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
-					model.makeReq(args[0],args[1],args[2]);
+					model.makeReq(args[0],args[1],args[2],'','','');
 				});
 				//add destroy button
 				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_destroy>Destroy</button>")
 				$("#"+hostname+"_"+id+"_destroy")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
-					model.makeReq(args[0],args[1],args[2]);
+					model.makeReq(args[0],args[1],args[2],'','','');
 				});
 			}
 		}

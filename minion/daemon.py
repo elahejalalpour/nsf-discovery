@@ -58,6 +58,7 @@ def cmd_helper(msg):
 		syncclient.send_json(reply)
 		syncclient.recv()
 	elif (msg['action'] == 'deploy'):
+		print('deploying')
 		ret = mon.deploy(msg['user'],msg['image_name'],msg['vnf_name'])
 	elif (msg['action'] == 'execute'):
 		response = mon.execute_in_guest(msg['ID'],msg['cmd'])
@@ -82,7 +83,7 @@ def cmd_handler(msg):
 			else:
 				cmd_helper(msg)
 	except Exception,ex:
-		#print('Exception')
+		print(ex)
 		pass
 		
 	

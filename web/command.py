@@ -72,7 +72,7 @@ class CMD():
 	  	@param vnf_name name of the VNF instance
 		"""
 		msg = {'host' : host, 'user' : user, 'action' : 'deploy',
-				'image_name' : image_name, 'vnf_name' : vnf_name}
+				'image_name' : image_name, 'vnf_name' : vnf_name, 'ID' : ''}
 		self.__client.send_json(msg)
 		self.__client.recv()
 	def execute(self,host,ID,cmd):

@@ -80,6 +80,8 @@ def reply():
 		cmd.pause(msg['Host'],msg['ID'])
 	elif(msg['action'] == 'unpause'):
 		cmd.unpause(msg['Host'],msg['ID'])
+	elif(msg['action'] == 'deploy'):
+		cmd.deploy(msg['Host'],msg['username'],msg['image'],msg['vnfname'])
 		
 	return jsonify({'result' : 'command received'})
 

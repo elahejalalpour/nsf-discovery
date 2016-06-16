@@ -46,11 +46,19 @@ monitor.model = function () {
 		});
 	}
 	
-	function makeReq(host,ID,action) {
-		var data = JSON.stringify({'Host' : host,
+	function makeReq(host,ID,action,image,username,vnfname) {
+		var data;
+		if (action == 'create') {
+			data = JSON.stringify({'Host' : host,
+											'vnfname' : vnfname,
+											'image' : image,
+											'username' : username,
+											'action' : 'deploy'});
+		} else {
+			data = JSON.stringify({'Host' : host,
 											'ID' : ID,
 											'action' : action});
-		
+		}
 		$.ajax({
 			contentType: "application/json",
 			dataType: "json",
