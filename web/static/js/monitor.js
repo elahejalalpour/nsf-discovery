@@ -36,7 +36,7 @@ $(function() {
 		setTimeout(repeat, 2000);
 		$("#Hosts").empty();
 		$("#VNFS").empty();
-		$("#Chain").empty();
+		//$("#Chain").empty();
 		
 		var changed = false;
 		model.getData("Host");
@@ -87,14 +87,14 @@ $(function() {
 				result+="<p>Status:"+"<span style='color:green'> Running</span></p>"
 				//add show VNF
 				if (map[hostname]) {
-					result+="<a id="+hostname+"_button class='mybutton' href='#'>Hide VNFS</a>";
+					result+="<a id="+hostname+"_button class='mybutton'>Hide VNFS</a>";
 				} else {
-					result+="<a id="+hostname+"_button class='mybutton' href='#'>Show VNFS</a>";
+					result+="<a id="+hostname+"_button class='mybutton'>Show VNFS</a>";
 				}
 				//add start button
-				result+="<a id="+hostname+"_start class='mybutton' href='#'>Start All</a>";
+				result+="<a id="+hostname+"_start class='mybutton'>Start All</a>";
 				//add stop button
-				result+="<a id="+hostname+"_stop class='mybutton' href='#'>Stop All</a>";
+				result+="<a id="+hostname+"_stop class='mybutton'>Stop All</a>";
 				//add deploy button
 				result+="<a class='mybutton' href=#"+hostname+"_deploy>Deploy</a>";
 				
@@ -186,7 +186,7 @@ $(function() {
 			result+="<h2>"+hostname+"</h2>";
 			result+="<p class='IP'>IP: "+IP+"</p>";
 			if (active) {
-				//cpu+ram
+				//cpu
 				result+="<p style='margin:0 0 1em'>Status:"
 							+"<span style='color:green'> Running</span></p>"
 				result+="<p style='width:100%;font-weight:bold' data-value='"
@@ -207,10 +207,11 @@ $(function() {
 								</progress>`;
 					if ((j % 2) === 1) result+="<br>";
 				}
-				result+="<br></br>"
+				//result+="<br></br>"
+				//ram
 				var total_ram = Math.round(hosts[i]['Host_total_mem']/1024/1024);
 				var used_ram = Math.round(hosts[i]['Host_used_mem']/1024/1024);
-				result+="<p style='width:100%;font-weight:bold' data-value='"
+				result+="<p style='width:100%;font-weight:bold;margin:1em 0 0 0' data-value='"
 							+ram+"'>RAM (Total: "+
 							total_ram+" MB &nbspUsed: "+used_ram+" MB)</p>";
 				result+="<progress max='100' value='"+ram+"' class='css3'>";

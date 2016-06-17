@@ -190,10 +190,14 @@ max-width: 100%;
 font-family: "Expletus Sans", sans-serif;
 }
 
+#content {
+	margin: 0 0 0 20%
+}
+
 .progli {
 
 	width: 40%;
-	float: right;
+	float: left;
 	list-style-type: none;
 	
 	padding-right: 5.3333333%;
