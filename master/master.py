@@ -15,7 +15,6 @@ from networkx.readwrite import json_graph
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
 #sleeping time while wait new mesg
-
 sleeping = 1
 
 def ipc_handler(msg,etcdcli,publisher):
@@ -43,6 +42,7 @@ def msg_handler(msg,etcdcli):
 	#print(msg)
 	try:
 		if (msg['flag'] == 'REG'):
+			#A new Host joined in the management network
 			print('New Host Registered: '+msg['host'])
 			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 						'Host_cpu' : None, 'Host_total_mem' : None,
@@ -52,6 +52,7 @@ def msg_handler(msg,etcdcli):
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'sysinfo'):
+			#A Host pushed system resource info
 			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 						'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
 						'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
@@ -60,6 +61,7 @@ def msg_handler(msg,etcdcli):
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
+			#A new VNF is detected or a status change in existing VNF
 			if (msg['status'] == 'running'):
 				IP = msg['IP']
 			else:
@@ -84,7 +86,7 @@ def msg_handler(msg,etcdcli):
 			except Exception,ex:
 				etcdcli.write("/VNF",vnf,append=True)
 				
-			#build graph object from chain info
+			#build graph object from chain info when the VNF status changed
 			etcdcli.write('/Chain/test',None)
 			etcdcli.delete("/Chain/",recursive=True)
 			etcdcli.write('/Chain/test',None)
@@ -104,7 +106,10 @@ def msg_handler(msg,etcdcli):
 					else:
 						edges[key] = {node : val['if_name']}
 			#print(edges)
-			
+			'''
+				nodes : [{HostX_VNFX:ethX},{HostX_VNFX:ethX}]
+				edges : {nodes,link_type,link_id}
+			'''
 			for key in edges:
 				if (len(edges[key]) == 2):
 					t1 = edges[key].keys();

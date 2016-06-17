@@ -9,7 +9,7 @@ import socket
 import thread
 import json
 
-#interval = 3
+sleeping = 1.5
 mon = minion.Minion()
 dict = {}
 #set up zeromq
@@ -39,6 +39,9 @@ def register():
 	#print('register finished')
 	
 def cmd_helper(msg):
+	"""
+		call cooresponding API to execute commands
+	"""
 	if (msg['action'] == 'start'):
 		mon.start(msg['ID'])
 	elif (msg['action'] == 'stop'):
@@ -115,7 +118,7 @@ def collect():
 		#read json chain info from home
 		chain_data = open("/home/nfuser/chain.json").read()
 		chain_data = json.loads(chain_data)
-		#push vnf info
+		#push vnf status info
 		if dict.has_key(ID):
 			if dict[ID] != status:
 				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
@@ -137,11 +140,11 @@ def collect():
 				msg['IP'] = mon.get_ip(ID)
 			syncclient.send_json(msg)
 			syncclient.recv()
-	#push resource info
+	#push system resource info
 	mem = psutil.virtual_memory()
 	images = mon.images()
 	msg = {'host' : hostname, 'flag' : 'sysinfo', 
-			'cpu' : psutil.cpu_percent(interval=3),
+			'cpu' : psutil.cpu_percent(interval=sleeping),
 			'mem_total' : mem[0], 'mem_available' : mem[1], 
 			'used' : mem[3],'host_ip' : get_ip_address('eth0'),
 			'cpus' : psutil.cpu_percent(interval=None, percpu=True),

@@ -33,16 +33,17 @@ $(function() {
 	
 	function repeat() {
 		//repeat every 2 seconds
-		setTimeout(repeat, 2000);
+		setTimeout(repeat, 1000);
 		$("#Hosts").empty();
 		$("#VNFS").empty();
 		//$("#Chain").empty();
 		
 		var changed = false;
-		model.getData("Host");
-		var hosts = model.getHost();
+		
 		model.getData("VNF");
 		var vnfs = model.getVnf();
+		model.getData("Host");
+		var hosts = model.getHost();
 		//console.log(JSON.stringify(vnfs));
 		var data = JSON.stringify(vnfs);
 		//console.log("d:"+$('#fresh').text());
@@ -54,7 +55,6 @@ $(function() {
 			$('#popup').empty()
 			console.log("VNF data changed");
 		}
-		
 		//VNF Tab
 		for(var i = 0; i < hosts.length; i++) {
 			//console.log(hosts[i]);
@@ -266,21 +266,21 @@ $(function() {
 				result+=`<span style='font-weight: bold; 
 							font-size: 10pt'> Type: </span>`+type+"</p>";
 				$("."+hostname+id).append(result);
-				//add start button
+				//add start button and listener
 				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_start>Start</button>")
 				$("#"+hostname+"_"+id+"_start")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
 					model.makeReq(args[0],args[1],args[2],'','','');
 				});
-				//add stop button
+				//add stop button and listener
 				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_stop>Stop</button>")
 				$("#"+hostname+"_"+id+"_stop")[0].addEventListener('click', function () {
 					console.log(this.id);
 					var args = this.id.split("_");
 					model.makeReq(args[0],args[1],args[2],'','','');
 				});
-				//add destroy button
+				//add destroy button and listener
 				$("."+hostname+id).append("<button id="+hostname+"_"+id+"_destroy>Destroy</button>")
 				$("#"+hostname+"_"+id+"_destroy")[0].addEventListener('click', function () {
 					console.log(this.id);

@@ -1,9 +1,8 @@
 
 // Establish a namespace
 var monitor = monitor || {};
-
 /*
- * Create a model object within the electionViz namespace.
+ * Create a model object within the monitor namespace.
  */
 monitor.model = function () {
 	"use strict";
@@ -12,23 +11,25 @@ monitor.model = function () {
 	var hosts;
 	
 	function getHost() {
-		return hosts;
+		//return host data get from ajax
+		if (typeof hosts === 'undefined') {
+			return [];
+		} else {
+			return hosts;
+		}
 	}
 	
 	function getVnf() {
-		return vnfs;
+		//return vnf data get from ajax
+		if (typeof vnfs === 'undefined') {
+			return [];
+		} else {
+			return vnfs;
+		}
 	}
 	
 	function getData(type) {
-	/*
-		var data = JSON.stringify({
-					"candidates": candidatePositions,
-					"size": size,
-					"numVoters": numVoters,
-					"sigma": sigma
-		});
-		console.log(data);
-	*/
+		//ajax call get different kind of data
 		$.ajax({
 			contentType: "application/json",
 			dataType: "json",
@@ -47,6 +48,7 @@ monitor.model = function () {
 	}
 	
 	function makeReq(host,ID,action,image,username,vnfname) {
+		//send command from frontend to server
 		var data;
 		if (action == 'create') {
 			data = JSON.stringify({'Host' : host,
@@ -80,6 +82,7 @@ monitor.model = function () {
 	}
 	
 	return {
+		//public functions
 		test : test,
 		getData : getData,
 		getHost : getHost,
