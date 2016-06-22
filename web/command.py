@@ -92,3 +92,4 @@ class CMD():
 		chain_data = json.loads(chain_data)
 		print(chain_data)
 		self.__client.send_json({'action' : 'create_chain', 'data' : chain_data})
+		self.__client.recv()

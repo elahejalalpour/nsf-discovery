@@ -69,6 +69,9 @@ def cmd_helper(msg):
 				 'flag' : 'reply', 'response' : response, 'cmd' : msg['cmd']}
 		syncclient.send_json(reply)
 		syncclient.recv()
+	elif (msg['action'] == 'create_chain'):
+		#To be finished
+		print(msg)
 	
 def cmd_handler(msg):
 	"""
@@ -77,6 +80,9 @@ def cmd_handler(msg):
 	try:
 		if (hostname == msg['host'] or msg['host'] == '*'):
 			print(msg)
+			if (msg['action'] == 'create_chain'):
+				cmd_helper(msg)
+				return
 			if (msg['ID'] == '*'):
 				containers = mon.get_containers()
 				it = iter(containers)

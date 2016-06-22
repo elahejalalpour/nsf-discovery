@@ -11,6 +11,7 @@ import dateutil.parser
 from datetime import datetime
 import networkx as nx
 from networkx.readwrite import json_graph
+from copy import deepcopy
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -21,9 +22,113 @@ def ipc_handler(msg,etcdcli,publisher):
 	"""
 		handles messages from IPC(typically commands)
 	"""
-	if (msg['action' == 'create_chain']):
-		print msg;
-		
+	if (msg['action'] == 'create_chain'):
+		print msg
+		try:
+			chain = {}
+			is_possible = True
+			hosts = []
+			results = etcdcli.read('/Host', recursive=True, sorted=True)
+			for child in results.children:
+				hosts.append(json.loads(child.value))
+			nodes = msg['data']['nodes']
+			links = msg['data']['links']
+			
+			for node in nodes:
+				temp = {'container_name' : node['vnf_name'],
+							'cpu_share' : node['cpu_share'],
+							'cpuset_cpus': None,
+							'memory' : node['memory'],
+							'aggregate_band' : 0,
+							'vnf_type' : node['vnf_type'],
+							'action' : 'create_chain',
+							'host' : None,
+							'net_ifs_num' : 0,
+							'net_ifs' : []}
+				chain[node['id']] = temp;
+			
+			for link in range(len(links)):
+				link_id = json.loads(etcdcli.read('/link_id').value)
+				temp = {'if_name' : None,
+							'link_type' : None,
+							'link_id' : link_id,
+							'tunnel_endpoint' : None,
+							'bandwidth' : links[link]['bandwidth']}
+				temp['if_name'] = 'eth' + str(chain[links[link]['source']]['net_ifs_num'])
+				chain[links[link]['source']]['net_ifs_num']+=1
+				chain[links[link]['source']]['aggregate_band']+=links[link]['bandwidth']
+				chain[links[link]['source']]['net_ifs'].append(deepcopy(temp))
+				temp['if_name'] = 'eth' + str(chain[links[link]['target']]['net_ifs_num'])
+				chain[links[link]['target']]['net_ifs_num']+=1
+				chain[links[link]['target']]['aggregate_band']+=links[link]['bandwidth']
+				chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
+				links[link]['id'] = link_id
+				etcdcli.write('/link_id',link_id+1)
+			for ID in chain:
+				cpu_share = chain[ID]['cpu_share']
+				memory = chain[ID]['memory']
+				bandwidth = chain[ID]['aggregate_band']
+				for host in range(len(hosts)):
+					if (hosts[host]['resource']['memory'] == None):
+						hosts[host]['resource']['memory'] = hosts[host]['Host_avail_mem']/1024/1024
+					if (memory > hosts[host]['resource']['memory'] or
+							bandwidth > hosts[host]['resource']['bandwidth']):
+						continue
+					k = 0
+					for cpu in hosts[host]['resource']['cpus']:
+						if (cpu < cpu_share):
+							k+=1
+							continue
+						hosts[host]['resource']['cpus'][k]-=cpu_share
+						chain[ID]['cpuset_cpus'] = k
+						break
+					if (chain[ID]['cpuset_cpus'] == None):
+						continue
+					hosts[host]['resource']['memory']-=memory
+					hosts[host]['resource']['bandwidth']-=bandwidth
+					chain[ID]['host'] = hosts[host]['Host_name']
+					break
+				if (chain[ID]['host'] == None):
+					is_possible = False
+					break
+			if (is_possible):
+				#update resource info
+				for host in hosts:
+					etcdcli.write('/Host/'+host['Host_name'],json.dumps(host))
+				
+				for link in links:
+					if (chain[link['source']]['host'] == chain[link['target']]['host']):
+						source = chain[link['source']]['net_ifs']
+						for index in range(len(source)):
+							if (source[index]['link_id'] == link['id']):
+								chain[link['source']]['net_ifs'][index]['link_type'] = 'local'
+						target = chain[link['target']]['net_ifs']
+						for index in range(len(target)):
+							if (target[index]['link_id'] == link['id']):
+								chain[link['target']]['net_ifs'][index]['link_type'] = 'local'
+					else:
+						source = chain[link['source']]['net_ifs']
+						for index in range(len(source)):
+							if (source[index]['link_id'] == link['id']):
+								chain[link['source']]['net_ifs'][index]['link_type'] = 'vxlan'
+								chain[link['source']]['net_ifs'][index]['tunnel_endpoint'] = chain[link['target']]['host']
+						target = chain[link['target']]['net_ifs']
+						for index in range(len(target)):
+							if (target[index]['link_id'] == link['id']):
+								chain[link['target']]['net_ifs'][index]['link_type'] = 'vxlan'
+								chain[link['target']]['net_ifs'][index]['tunnel_endpoint'] = chain[link['source']]['host']
+				
+				for ID in chain:
+					print(chain[ID])
+					print('############################################')
+					publisher.send_json(chain[ID])
+			else:
+				print("Insufficient Resource!")
+				
+		except Exception,ex:
+			print(ex)
+			traceback.print_exc()
+			
 	else:
 		publisher.send_json(msg)
 		try:
@@ -37,6 +142,7 @@ def ipc_handler(msg,etcdcli,publisher):
 						etcdcli.delete(child.key)
 		except Exception,ex:
 			print(ex)
+			traceback.print_exc()
 	
 
 def msg_handler(msg,etcdcli):
@@ -66,11 +172,12 @@ def msg_handler(msg,etcdcli):
 			except Exception,ex:
 				#entry does not exist
 				resource = {}
-				resource['bandwith'] = 10000;
-				resource['cpu_share'] = [];
+				resource['bandwidth'] = 10000;
+				resource['memory'] = None;
+				resource['cpus'] = [];
 				i = 0
 				while (i < msg['cpus']):
-					resource['cpu_share'].append({i:150})
+					resource['cpus'].append(150)
 					i+=1
 				host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 							'Host_cpu' : None, 'Host_total_mem' : None,
@@ -99,11 +206,12 @@ def msg_handler(msg,etcdcli):
 				print(ex)
 				traceback.print_exc()
 				resource = {}
-				resource['bandwith'] = 10000;
-				resource['cpu_share'] = [];
+				resource['bandwidth'] = 10000;
+				resource['memory'] = None;
+				resource['cpus'] = [];
 				i = 0
-				while (i < len(msg['cpus'])):
-					resource['cpu_share'].append({i:150})
+				while (i < msg['cpus']):
+					resource['cpus'].append(150)
 					i+=1
 				host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
 							'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
@@ -239,7 +347,7 @@ def main():
 			while(True):
 				msg = ipc.recv_json(flags=zmq.NOBLOCK)
 				ipc.send('')
-				print(msg)
+				#print(msg)
 				ipc_handler(msg,etcdcli,publisher)
 		except Exception,ex:
 			#print("No New Msg from IPC!")
