@@ -1,4 +1,5 @@
 import zmq
+import json
 
 '''
 	This class defines various types of commands
@@ -85,3 +86,9 @@ class CMD():
 		msg = {'host' : host,'ID' : ID, 'action' : 'execute', 'cmd' : cmd}
 		self.__client.send_json(msg)
 		self.__client.recv()
+	def create_chain(self):
+		#read json chain info from home
+		chain_data = open("/home/nfuser/chain.json").read()
+		chain_data = json.loads(chain_data)
+		print(chain_data)
+		self.__client.send_json({'action' : 'create_chain', 'data' : chain_data})

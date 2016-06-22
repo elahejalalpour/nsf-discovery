@@ -28,10 +28,11 @@ def get_ip_address(ifname):
 
 def register():
 	"""
-		Register slave with master
+		Register minion with master
 	"""
 	msg = {'flag' : 'REG','host' : hostname,
-			'host_ip' : get_ip_address('eth0')}
+			'host_ip' : get_ip_address('eth0'),
+			'cpus' : len(psutil.cpu_percent(interval=None, percpu=True))}
 	# send a synchronization request
 	syncclient.send_json(msg)
 	# wait for synchronization reply

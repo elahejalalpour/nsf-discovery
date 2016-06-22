@@ -19,20 +19,24 @@ sleeping = 1
 
 def ipc_handler(msg,etcdcli,publisher):
 	"""
-		handles messages from IPC(tpically commands)
+		handles messages from IPC(typically commands)
 	"""
-	publisher.send_json(msg)
-	try:
-		if (msg['action'] == 'destroy'):
-			#cur.execute("DELETE FROM VNF WHERE Con_id=? AND Host_name=?",(msg['ID'],msg['host']))
-			r = etcdcli.read('/VNF', recursive=True, sorted=True)
-			for child in r.children:
-				temp = json.loads(child.value)
-				if (temp['Host_name'] == msg['host'] and 
-				temp['Con_id'] == msg['ID']):
-					etcdcli.delete(child.key)
-	except Exception,ex:
-		print(ex)
+	if (msg['action' == 'create_chain']):
+		print msg;
+		
+	else:
+		publisher.send_json(msg)
+		try:
+			if (msg['action'] == 'destroy'):
+				#cur.execute("DELETE FROM VNF WHERE Con_id=? AND Host_name=?",(msg['ID'],msg['host']))
+				r = etcdcli.read('/VNF', recursive=True, sorted=True)
+				for child in r.children:
+					temp = json.loads(child.value)
+					if (temp['Host_name'] == msg['host'] and 
+					temp['Con_id'] == msg['ID']):
+						etcdcli.delete(child.key)
+		except Exception,ex:
+			print(ex)
 	
 
 def msg_handler(msg,etcdcli):
@@ -44,20 +48,68 @@ def msg_handler(msg,etcdcli):
 		if (msg['flag'] == 'REG'):
 			#A new Host joined in the management network
 			print('New Host Registered: '+msg['host'])
-			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
-						'Host_cpu' : None, 'Host_total_mem' : None,
-						'Host_avail_mem' : None,'Host_used_mem' : None,
-						'Last_seen' : datetime.now().isoformat(), 'Active' : None, 
-						'cpus' : None,'network' : None}
+			try:
+				#entry exists
+				host = etcdcli.read('/Host/'+msg['host']).value
+				host = json.loads(host)
+				host['Host_name'] = msg['host'];
+				host['Host_ip'] = msg['host_ip'];
+				host['Host_cpu'] = None;
+				host['Host_total_mem'] = None;
+				host['Host_avail_mem'] = None;
+				host['Host_used_mem'] = None;
+				host['Last_seen'] = datetime.now().isoformat();
+				host['Active'] = None;
+				host['cpus'] = None;
+				host['network'] = None;
+				host['images'] = msg['images'];
+			except Exception,ex:
+				#entry does not exist
+				resource = {}
+				resource['bandwith'] = 10000;
+				resource['cpu_share'] = [];
+				i = 0
+				while (i < msg['cpus']):
+					resource['cpu_share'].append({i:150})
+					i+=1
+				host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
+							'Host_cpu' : None, 'Host_total_mem' : None,
+							'Host_avail_mem' : None,'Host_used_mem' : None,
+							'Last_seen' : datetime.now().isoformat(), 'Active' : None, 
+							'cpus' : None,'network' : None,'images' : None,'resource' : resource}
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'sysinfo'):
 			#A Host pushed system resource info
-			host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
-						'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
-						'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
-						'Last_seen' : datetime.now().isoformat(), 'Active' : 1,'cpus' : msg['cpus'],
-						'network' : msg['network'], 'images' : msg['images']}
+			try:
+				host = etcdcli.read('/Host/'+msg['host']).value
+				host = json.loads(host)
+				host['Host_name'] = msg['host'];
+				host['Host_ip'] = msg['host_ip'];
+				host['Host_cpu'] = msg['cpu'];
+				host['Host_total_mem'] = msg['mem_total'];
+				host['Host_avail_mem'] = msg['mem_available'];
+				host['Host_used_mem'] = msg['used'];
+				host['Last_seen'] = datetime.now().isoformat();
+				host['Active'] = 1;
+				host['cpus'] = msg['cpus'];
+				host['network'] = msg['network'];
+				host['images'] = msg['images'];
+			except Exception,ex:	
+				print(ex)
+				traceback.print_exc()
+				resource = {}
+				resource['bandwith'] = 10000;
+				resource['cpu_share'] = [];
+				i = 0
+				while (i < len(msg['cpus'])):
+					resource['cpu_share'].append({i:150})
+					i+=1
+				host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
+							'Host_cpu' : msg['cpu'], 'Host_total_mem' : msg['mem_total'],
+							'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
+							'Last_seen' : datetime.now().isoformat(), 'Active' : 1,'cpus' : msg['cpus'],
+							'network' : msg['network'], 'images' : msg['images'],'resource' : resource}
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
@@ -141,6 +193,10 @@ def main():
 	#initialize etcd
 	etcdcli = etcd.Client()
 	try:
+		etcdcli.read('link_id')
+	except Exception,ex:
+		etcdcli.write('link_id',0)
+	try:
 		#etcdcli.delete('/Host', recursive=True)
 		etcdcli.write('/Host/test',None)
 		etcdcli.delete('/Host/test')
@@ -148,6 +204,7 @@ def main():
 		etcdcli.delete('/VNF/test')
 	except Exception,ex:
 		print(ex)
+		traceback.print_exc()
 		
 
 	#initialize the ZeroMQ
@@ -200,6 +257,7 @@ def main():
 					etcdcli.write("/Host/"+hostname,temp)
 		except Exception,ex:
 			print(ex)
+			traceback.print_exc()
 			pass
 		time.sleep(sleeping)
 
