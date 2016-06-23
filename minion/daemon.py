@@ -72,6 +72,7 @@ def cmd_helper(msg):
 	elif (msg['action'] == 'create_chain'):
 		#To be finished
 		print(msg)
+		print('########################################')
 	
 def cmd_handler(msg):
 	"""
@@ -79,7 +80,7 @@ def cmd_handler(msg):
 	"""
 	try:
 		if (hostname == msg['host'] or msg['host'] == '*'):
-			print(msg)
+			#print(msg)
 			if (msg['action'] == 'create_chain'):
 				cmd_helper(msg)
 				return

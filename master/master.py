@@ -43,6 +43,7 @@ def ipc_handler(msg,etcdcli,publisher):
 							'vnf_type' : node['vnf_type'],
 							'action' : 'create_chain',
 							'host' : None,
+							'host_ip' : None,
 							'net_ifs_num' : 0,
 							'net_ifs' : []}
 				chain[node['id']] = temp;
@@ -87,6 +88,7 @@ def ipc_handler(msg,etcdcli,publisher):
 					hosts[host]['resource']['memory']-=memory
 					hosts[host]['resource']['bandwidth']-=bandwidth
 					chain[ID]['host'] = hosts[host]['Host_name']
+					chain[ID]['host_ip'] = hosts[host]['Host_ip']
 					break
 				if (chain[ID]['host'] == None):
 					is_possible = False
@@ -111,12 +113,14 @@ def ipc_handler(msg,etcdcli,publisher):
 						for index in range(len(source)):
 							if (source[index]['link_id'] == link['id']):
 								chain[link['source']]['net_ifs'][index]['link_type'] = 'vxlan'
-								chain[link['source']]['net_ifs'][index]['tunnel_endpoint'] = chain[link['target']]['host']
+								chain[link['source']]['net_ifs'][index] \
+									['tunnel_endpoint'] = chain[link['target']]['host_ip']
 						target = chain[link['target']]['net_ifs']
 						for index in range(len(target)):
 							if (target[index]['link_id'] == link['id']):
 								chain[link['target']]['net_ifs'][index]['link_type'] = 'vxlan'
-								chain[link['target']]['net_ifs'][index]['tunnel_endpoint'] = chain[link['source']]['host']
+								chain[link['target']]['net_ifs'][index] \
+									['tunnel_endpoint'] = chain[link['source']]['host_ip']
 				
 				for ID in chain:
 					print(chain[ID])
@@ -168,7 +172,7 @@ def msg_handler(msg,etcdcli):
 				host['Active'] = None;
 				host['cpus'] = None;
 				host['network'] = None;
-				host['images'] = msg['images'];
+				host['images'] = None;
 			except Exception,ex:
 				#entry does not exist
 				resource = {}
@@ -210,7 +214,7 @@ def msg_handler(msg,etcdcli):
 				resource['memory'] = None;
 				resource['cpus'] = [];
 				i = 0
-				while (i < msg['cpus']):
+				while (i < len(msg['cpus'])):
 					resource['cpus'].append(150)
 					i+=1
 				host = {'Host_name' : msg['host'], 'Host_ip' : msg['host_ip'],
@@ -218,6 +222,7 @@ def msg_handler(msg,etcdcli):
 							'Host_avail_mem' : msg['mem_available'],'Host_used_mem' : msg['used'],
 							'Last_seen' : datetime.now().isoformat(), 'Active' : 1,'cpus' : msg['cpus'],
 							'network' : msg['network'], 'images' : msg['images'],'resource' : resource}
+
 			host = json.dumps(host)
 			etcdcli.write('/Host/'+msg['host'],host)
 		elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
