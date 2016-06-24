@@ -1,11 +1,10 @@
 import requests
-
 import logging
+import os
 from contextlib import contextmanager
-
 import docker
-
 import errors
+from bash_wrapper import execute_bash_command
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +94,17 @@ class Minion():
         """
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         return inspect_data['Id'].encode('ascii')
+    
+    def get_container_pid(self, vnf_name):
+        """
+        Returns a container's PID.
+        
+            @param vnf_name name of the VNF instance whose PID is being queried.
+
+            @return PID of the running container
+        """
+        dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
+        return inspect_data['State']['Pid']
 
     def get_ip(self, vnf_name):
         """
@@ -235,6 +245,39 @@ class Minion():
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         with self._error_handling(errors.VNFDestroyError):
             dcx.remove_container(container=vnf_fullname, force=force)
+
+    def symlink_container_netns(self, vnf_name):
+        """
+        Creates a symbolik link of the container's namespace to
+        /var/run/netns/<container_pid> in order to expose the network namespace.
+
+        @param vnf_name Name of the VNF
+        """
+        # First, check if /var/run/netns directory exists or not. This directory
+        # is required to expose the network namespace of a running process. If
+        # the directory does not exist, then create it.
+        vnf_container_pid = str(self.get_container_pid(vnf_name))
+        if not os.path.exists('/var/run/netns'):
+            with self._error_handling(errors.BashExecutionError):
+                bash_command = "sudo mkdir -p /var/run/netns"
+                (return_code, output, errput) = execute_bash_command(bash_command)
+                if return_code <> 0:
+                    raise Exception(return_code, errput)
+
+        # Check if the container's network namespace is already exposed or not.
+        # If it is not exposed then create a symbolic link of it's namespace
+        # located inside /proc/<pid> to /var/run/netns/<pid>. This will expose
+        # the container's network namespace for further operations. 
+        #
+        # Note: Docker does not expose a container's network namespace by
+        # default.
+        if not os.path.lexists('/var/run/netns/' + vnf_container_pid):
+            with self._error_handling(errors.BashExecutionError):
+                bash_command = "sudo ln -s /proc/" + vnf_container_pid + "/ns/net /var/run/netns/" + vnf_container_pid
+                (return_code, output, errput) = execute_bash_command(bash_command)
+                if return_code <> 0:
+                    raise Exception(return_code, errput)
+
     
     def images(self):
         """
