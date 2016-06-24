@@ -8,17 +8,17 @@ import struct
 import socket
 import thread
 import json
+import argparse
 
 sleeping = 1.5
 mon = minion.Minion()
 dict = {}
 #set up zeromq
+master = '10.0.1.100'
+interface = 'eth0'
 context = zmq.Context()
 subscriber = context.socket(zmq.SUB)
-subscriber.connect('tcp://10.0.1.100:5561')
-subscriber.setsockopt(zmq.SUBSCRIBE,'')
 syncclient = context.socket(zmq.REQ)
-syncclient.connect('tcp://10.0.1.100:5562')
 hostname = platform.node()
 
 def get_ip_address(ifname):
@@ -31,7 +31,7 @@ def register():
 		Register minion with master
 	"""
 	msg = {'flag' : 'REG','host' : hostname,
-			'host_ip' : get_ip_address('eth0'),
+			'host_ip' : get_ip_address(interface),
 			'cpus' : len(psutil.cpu_percent(interval=None, percpu=True))}
 	# send a synchronization request
 	syncclient.send_json(msg)
@@ -168,11 +168,26 @@ def repeat():
 		A scheduler repeat exec collect() every interval 
 		amount of time
 	"""
+	print(master)
 	register()
 	while (True):
 		collect()
 		#time.sleep(interval)
 	#threading.Timer(interval, repeat).start()
     
-repeat()
-print("finished")
+def main():
+	repeat()
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--master", help="IP of the master")
+	parser.add_argument("--interface", help="interface of minion")
+	args = parser.parse_args()
+	if (args.master != None):
+		master = args.master
+	if (args.interface != None):
+		interface = args.interface
+	subscriber.connect('tcp://'+master+':5561')
+	subscriber.setsockopt(zmq.SUBSCRIBE,'')
+	syncclient.connect('tcp://'+master+':5562')
+	main()
