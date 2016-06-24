@@ -11,6 +11,10 @@ class HypervisorError(nfioError):
 class VNFConfigurationError(nfioError):
     pass
 
+class BashExecutionError(nfioError):
+    def __init__(self):
+        self.errno = 801
+
 class HypervisorConnectionError(HypervisorError):
     def __init__(self):
         self.errno = 701
