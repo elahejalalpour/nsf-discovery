@@ -138,6 +138,21 @@ class Minion():
                                    ["/bin/bash", "-c", cmd], stdout=True, stderr=False)
             return response
 
+    def is_interface_attached(self, vnf_name, veth_interface_name):
+        """
+        Checks if a veth interface is already attached to a container's network
+        namespace.
+
+        @param vnf_name Name of the VNF.
+        @veth_interface_name Name of the veth interface.
+
+        @returns True if veth_interface_name is attached to vnf_name's network
+        namespace, False otherwise.
+        """
+        bash_command = "ip link | grep -c " + veth_interface_name
+        response = self.execute_in_guest(vnf_name, bash_command)
+        return True if int(response) > 0 else False
+
     def guest_status(self, vnf_name):
         """
         Returns the status of a docker container.
