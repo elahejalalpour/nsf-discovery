@@ -129,17 +129,17 @@ def collect():
 		#push vnf status info
 		if dict.has_key(ID):
 			if dict[ID] != status:
+				#vnf is in the record but status changed
 				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
 						'name' : name, 'status' : status, 'flag' : 'update',
 						'net_ifs' : chain_data['net_ifs']}
-				#msg = 'ID: '+ID+'\n'+dict[ID]+'-->'+status
 				if status == 'running':
-					#msg = msg + '\n' + 'IP: '+mon.get_ip(ID)
 					msg['IP'] = mon.get_ip(ID)
 				syncclient.send_json(msg)
 				syncclient.recv()
 				dict[ID] = status
 		else:
+			#vnf is not in the record,create a new entry
 			dict[ID] = status
 			msg = {'host' : hostname, 'ID' : ID, 'image' : image,
 						'name' : name, 'status' : status, 'flag' : 'new',
