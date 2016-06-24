@@ -124,7 +124,8 @@ def collect():
 		image = a['Image']
 		name = a['Names'][0];
 		#read json chain info from home
-		chain_data = open("/home/nfuser/chain.json").read()
+		# chain_data = open("/home/nfuser/chain.json").read()
+        chain_data = '{"net_ifs":[]}'
 		chain_data = json.loads(chain_data)
 		#push vnf status info
 		if dict.has_key(ID):
