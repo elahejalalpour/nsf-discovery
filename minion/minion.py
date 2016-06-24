@@ -8,13 +8,15 @@ from bash_wrapper import execute_bash_command
 
 logger = logging.getLogger(__name__)
 
+
 class Minion():
+
     """
     @class Monitor
 
     This class provides methods for monitoring docker containers.
     """
-      
+
     def __init__(self):
         """
         @brief Instantiates a Monitor object.
@@ -26,16 +28,16 @@ class Minion():
     def _error_handling(self, nfioError):
         """
         @beief convert docker-py exceptions to nfio exceptions
-        
-        This code block is used to catch docker-py docker-py exceptions 
-        (from error.py), log them, and then raise nfio related 
-        exceptions. 
 
-        @param nfioError A Exception type from nfio's errors module 
+        This code block is used to catch docker-py docker-py exceptions
+        (from error.py), log them, and then raise nfio related
+        exceptions.
+
+        @param nfioError A Exception type from nfio's errors module
         """
         try:
             yield
-        except Exception, ex:
+        except Exception as ex:
             #logger.error(ex.message, exc_info=False)
             print(ex.message)
             raise nfioError
@@ -43,9 +45,9 @@ class Minion():
     def _is_empty(self, string):
         """
         @brief checks whether a string is empty or None
-    
+
         @param string input string
-      
+
         @returns True if string is empty, otherwise False
         """
         return string is None or string.strip() == ""
@@ -53,7 +55,7 @@ class Minion():
     def _validate_image_name(self, image_name):
         if self._is_empty(image_name):
             raise errors.VNFImageNameIsEmptyError
-    
+
     def _validate_cont_name(self, cont_name):
         if self._is_empty(cont_name):
             raise errors.VNFNameIsEmptyError
@@ -61,12 +63,12 @@ class Minion():
     def _get_client(self):
         """
         Returns a Docker client.
-        
-        @return A docker client object that can be used to communicate 
+
+        @return A docker client object that can be used to communicate
             with the docker daemon on the host
         """
         with self._error_handling(errors.HypervisorConnectionError):
-          return docker.Client(base_url='unix://var/run/docker.sock')
+            return docker.Client(base_url='unix://var/run/docker.sock')
 
     def _lookup_vnf(self, vnf_name):
         self._validate_cont_name(vnf_name)
@@ -78,7 +80,7 @@ class Minion():
     def get_containers(self):
         """
         Returns all container's INFO.
-          
+
           @return information of all containers in a list.
         """
         dcx = self._get_client()
@@ -87,18 +89,18 @@ class Minion():
     def get_id(self, vnf_name):
         """
         Returns a container's ID.
-        
+
           @param vnf_name name of the VNF instance whose ID is being queried
-          
+
           @return docker container ID.
         """
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         return inspect_data['Id'].encode('ascii')
-    
+
     def get_container_pid(self, vnf_name):
         """
         Returns a container's PID.
-        
+
             @param vnf_name name of the VNF instance whose PID is being queried.
 
             @return PID of the running container
@@ -109,12 +111,12 @@ class Minion():
     def get_ip(self, vnf_name):
         """
         Returns a container's IP address.
-        
+
           @param vnf_name name of the VNF instance whose ID is being queried
-          
+
           @return docker container's IP.
         """
-        if self.guest_status( vnf_name) != 'running':
+        if self.guest_status(vnf_name) != 'running':
             raise errors.VNFNotRunningError
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         return inspect_data['NetworkSettings']['IPAddress'].encode('ascii')
@@ -132,8 +134,8 @@ class Minion():
         if self.guest_status(vnf_name) != 'running':
             raise errors.VNFNotRunningError
         with self._error_handling(errors.VNFCommandExecutionError):
-            response = dcx.execute(vnf_fullname, 
-                ["/bin/bash", "-c", cmd], stdout=True, stderr=False)
+            response = dcx.execute(vnf_fullname,
+                                   ["/bin/bash", "-c", cmd], stdout=True, stderr=False)
             return response
 
     def guest_status(self, vnf_name):
@@ -147,19 +149,20 @@ class Minion():
         """
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         return inspect_data['State']['Status'].encode('ascii')
+
     def start(self, vnf_name, is_privileged=True):
         """
         Starts a docker container.
 
         @param vnf_name name of the VNF
-        @param is_privileged if True then the container is started in 
+        @param is_privileged if True then the container is started in
             privileged mode
         """
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         with self._error_handling(errors.VNFStartError):
             dcx.start(container=vnf_fullname,
-                dns=self.__dns_list,
-                privileged=is_privileged)
+                      dns=self.__dns_list,
+                      privileged=is_privileged)
 
     def restart(self, vnf_name):
         """
@@ -183,7 +186,7 @@ class Minion():
         with self._error_handling(errors.VNFStopError):
             dcx.stop(container=vnf_fullname)
 
-    def pause(self,vnf_name):
+    def pause(self, vnf_name):
         """
         Pauses a docker container.
 
@@ -194,7 +197,7 @@ class Minion():
         with self._error_handling(errors.VNFPauseError):
             dcx.pause(container=vnf_fullname)
 
-    def unpause(self,vnf_name):
+    def unpause(self, vnf_name):
         """Unpauses a docker container.
 
         @param user name of the user
@@ -203,16 +206,16 @@ class Minion():
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         with self._error_handling(errors.VNFUnpauseError):
             dcx.unpause(container=vnf_fullname)
-            
-    def deploy(self,user,image_name, vnf_name, is_privileged=True):
+
+    def deploy(self, user, image_name, vnf_name, is_privileged=True):
         """
         Deploys a docker container.
 
-        
+
         @param user name of the user who owns the VNF
         @param image_name docker image name for the VNF
         @param vnf_name name of the VNF instance
-        @param is_privileged if True then the container is deployed in 
+        @param is_privileged if True then the container is deployed in
             privileged mode
 
         @returns docker container ID
@@ -235,11 +238,11 @@ class Minion():
         """
         Destroys a docker container.
 
-        @param host IP address or hostname of the machine/VM where 
+        @param host IP address or hostname of the machine/VM where
               the docker container is deployed
         @param user name of the user
         @param vnf_name name of the VNF
-        @param force if set to False then a running VNF will not 
+        @param force if set to False then a running VNF will not
               be destroyed. default is True
         """
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
@@ -260,25 +263,27 @@ class Minion():
         if not os.path.exists('/var/run/netns'):
             with self._error_handling(errors.BashExecutionError):
                 bash_command = "sudo mkdir -p /var/run/netns"
-                (return_code, output, errput) = execute_bash_command(bash_command)
-                if return_code <> 0:
+                (return_code, output, errput) = execute_bash_command(
+                    bash_command)
+                if return_code != 0:
                     raise Exception(return_code, errput)
 
         # Check if the container's network namespace is already exposed or not.
         # If it is not exposed then create a symbolic link of it's namespace
         # located inside /proc/<pid> to /var/run/netns/<pid>. This will expose
-        # the container's network namespace for further operations. 
+        # the container's network namespace for further operations.
         #
         # Note: Docker does not expose a container's network namespace by
         # default.
         if not os.path.lexists('/var/run/netns/' + vnf_container_pid):
             with self._error_handling(errors.BashExecutionError):
-                bash_command = "sudo ln -s /proc/" + vnf_container_pid + "/ns/net /var/run/netns/" + vnf_container_pid
-                (return_code, output, errput) = execute_bash_command(bash_command)
-                if return_code <> 0:
+                bash_command = "sudo ln -s /proc/" + vnf_container_pid + \
+                    "/ns/net /var/run/netns/" + vnf_container_pid
+                (return_code, output, errput) = execute_bash_command(
+                    bash_command)
+                if return_code != 0:
                     raise Exception(return_code, errput)
 
-    
     def images(self):
         """
         Get a list of images
@@ -286,10 +291,7 @@ class Minion():
         """
         dcx = self._get_client()
         temp = dcx.images()
-        images=[]
+        images = []
         for image in temp:
             images.append(image['RepoTags'][0])
         return images
-        
-        
-        
