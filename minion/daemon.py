@@ -75,7 +75,7 @@ def cmd_helper(msg):
         syncclient.recv()
     elif (msg['action'] == 'create_chain'):
         # To be finished
-        print("Request received to deploy chain: \n")
+        print "Request received to deploy chain: \n"
         print dir(msg)
         # print msg['data']
         # print(json.dumps(msg))
@@ -88,7 +88,7 @@ def cmd_handler(msg):
     """
     try:
         if (hostname == msg['host'] or msg['host'] == '*'):
-            # print(msg)
+            print(msg)
             if (msg['action'] == 'create_chain'):
                 cmd_helper(msg)
                 return
