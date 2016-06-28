@@ -3,8 +3,8 @@ from container_driver import ContainerDriver
 class ProvisioningAgent():
     def __init__(self):
         self.__container_handle = ContainerDriver()
-    @staticmethod
-    def provision_single_vnf(vnf_config):
+
+    def provision_single_vnf(self, vnf_config):
         memory = vnf_config['memory']
         cpu_share = vnf_config['cpu_share']
         cpuset_cpus = vnf_config['cpuset_cpus']
@@ -15,8 +15,7 @@ class ProvisioningAgent():
                 vnf_image, vnf_name = container_name)
 
 
-    @staticmethod
-    def provision_local_chain(chain_config):
+    def provision_local_chain(self, chain_config):
         for vnf_config in chain_config:
             ProvisioningAgent.provision_single_vnf(vnf_config)
         
