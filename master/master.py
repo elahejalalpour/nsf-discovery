@@ -71,7 +71,7 @@ def ipc_handler(msg, etcdcli, publisher):
                 chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
                 links[link]['id'] = link_id
                 etcdcli.write('/link_id', link_id + 1)
-
+            unique_hosts = set()
             for ID in chain:
                 cpu_share = chain[ID]['cpu_share']
                 memory = chain[ID]['memory']
@@ -100,6 +100,7 @@ def ipc_handler(msg, etcdcli, publisher):
                     hosts[host]['resource']['bandwidth'] -= bandwidth
                     chain[ID]['host'] = hosts[host]['Host_name']
                     chain[ID]['host_ip'] = hosts[host]['Host_ip']
+                    unique_hosts.add(chain[ID]['host'])
                     break
 
                 if (chain[ID]['host'] == None):
@@ -142,14 +143,22 @@ def ipc_handler(msg, etcdcli, publisher):
                                     link['target']]['net_ifs'][index]['link_type'] = 'vxlan'
                                 chain[link['target']]['net_ifs'][index] \
                                     ['tunnel_endpoint'] = chain[link['source']]['host_ip']
+                
+                for host in unique_hosts:
+                    message = {'action' : 'create_chain', 'host' : host, 'data'
+                            : []}
+                    for ID in chain:
+                        message['data'].append(chain[ID])
+                    publisher.send_json(message)
+
                 #chain_list = []
                 #for ID in chain:
                 #    chain_list.append(chain[ID])
                 #print json.dumps(chain_list)
                 #publisher.send_json(chain_list)
-                message = {'action':'create_chain'}
-                message['data'] = chain
-                publisher.send_json(message)
+                # message = {'action':'create_chain'}
+                # message['data'] = chain
+                # publisher.send_json(message)
                 # for ID in chain:
                 #	print(chain[ID])
                 #	print('############################################')

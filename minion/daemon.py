@@ -76,7 +76,6 @@ def cmd_helper(msg):
     elif (msg['action'] == 'create_chain'):
         # To be finished
         print "Request received to deploy chain: \n"
-        print dir(msg)
         # print msg['data']
         # print(json.dumps(msg))
         print("\n")
@@ -113,7 +112,6 @@ def pull():
         # exhaust the msg queue
         while(True):
             msg = subscriber.recv_json(flags=zmq.NOBLOCK)
-            print msg
             thread.start_new_thread(cmd_handler, (msg,))
     except Exception, ex:
         #print("No New Msg!")
