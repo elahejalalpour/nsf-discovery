@@ -76,7 +76,7 @@ def cmd_helper(msg):
     elif (msg['action'] == 'create_chain'):
         # To be finished
         print("Request received to deploy chain: \n")
-        print(msg)
+        print(json.dumps(msg))
         print("\n")
 
 
