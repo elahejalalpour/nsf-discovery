@@ -13,6 +13,7 @@ class ProvisioningAgent():
 
         self.__container_handle.deploy(user = "sr2chowd", image_name =
                 vnf_image, vnf_name = container_name)
+        self.__container_handle.start(vnf_name = "sr2chowd-" + container_name)
 
 
     def provision_local_chain(self, chain_config):
