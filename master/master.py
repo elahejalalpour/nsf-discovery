@@ -80,9 +80,10 @@ def ipc_handler(msg, etcdcli, publisher):
                     if (hosts[host]['resource']['memory'] == None):
                         hosts[host]['resource']['memory'] = hosts[
                             host]['Host_avail_mem'] / 1024 / 1024
-                    if (memory > hosts[host]['resource']['memory'] or
+                    avail_memory = hosts[host]['Host_avail_mem'] / 1024 / 1024
+                    if (memory > avail_memory or
                             bandwidth > hosts[host]['resource']['bandwidth']):
-                        print "Not enough memory\n"
+                        print "Not enough memory/bandwidth\n"
                         continue
                     k = 0
                     for cpu in hosts[host]['resource']['cpus']:
@@ -95,7 +96,7 @@ def ipc_handler(msg, etcdcli, publisher):
                     if (chain[ID]['cpuset_cpus'] == None):
                         print "No CPU found\n"
                         continue
-                    hosts[host]['resource']['memory'] -= memory
+                    hosts[host]['resource']['memory'] = avail_memory - memory
                     hosts[host]['resource']['bandwidth'] -= bandwidth
                     chain[ID]['host'] = hosts[host]['Host_name']
                     chain[ID]['host_ip'] = hosts[host]['Host_ip']
