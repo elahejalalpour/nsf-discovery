@@ -9,6 +9,7 @@ import etcd
 import traceback
 import dateutil.parser
 from datetime import datetime
+import ipaddress
 import networkx as nx
 from networkx.readwrite import json_graph
 from copy import deepcopy
@@ -24,6 +25,8 @@ def ipc_handler(msg, etcdcli, publisher):
             handles messages from IPC(typically commands)
     """
     if (msg['action'] == 'create_chain'):
+        base_ip = ipaddress.ip_address('192.168.215.2')
+        k = 0
         print json.dumps(msg)
         try:
             chain = {}
@@ -56,7 +59,8 @@ def ipc_handler(msg, etcdcli, publisher):
                         'link_type': None,
                         'link_id': link_id,
                         'tunnel_endpoint': None,
-                        'bandwidth': links[link]['bandwidth']}
+                        'bandwidth': links[link]['bandwidth'],
+                        'ip_address': str(base_ip + k) + "/24"}
                 temp['if_name'] = 'eth' + \
                     str(chain[links[link]['source']]['net_ifs_num'])
                 chain[links[link]['source']]['net_ifs_num'] += 1
@@ -71,6 +75,8 @@ def ipc_handler(msg, etcdcli, publisher):
                 chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
                 links[link]['id'] = link_id
                 etcdcli.write('/link_id', link_id + 1)
+                etcdcli.write('/ip_address', temp['ip_address']
+                k = k + 1
             unique_hosts = set()
             for ID in chain:
                 cpu_share = chain[ID]['cpu_share']
