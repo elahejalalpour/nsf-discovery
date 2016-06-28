@@ -32,6 +32,7 @@ def ipc_handler(msg, etcdcli, publisher):
             results = etcdcli.read('/Host', recursive=True, sorted=True)
             for child in results.children:
                 hosts.append(json.loads(child.value))
+            print hosts
             nodes = msg['data']['nodes']
             links = msg['data']['links']
 
