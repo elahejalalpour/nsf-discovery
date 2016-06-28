@@ -1,4 +1,4 @@
-import minion
+from container_driver import ContainerDriver
 import time
 import threading
 import zmq
@@ -12,7 +12,7 @@ import json
 import argparse
 
 sleeping = 1.5
-mon = minion.Minion()
+mon = ContainerDriver()
 dict = {}
 # set up zeromq
 master = '10.0.1.100'
@@ -75,8 +75,8 @@ def cmd_helper(msg):
         syncclient.recv()
     elif (msg['action'] == 'create_chain'):
         # To be finished
-        print(msg)
-        print('########################################')
+        print("Request received to deploy chain: \n")
+        print(msg + "\n")
 
 
 def cmd_handler(msg):
