@@ -74,6 +74,8 @@ def ipc_handler(msg, etcdcli, publisher):
                 cpu_share = chain[ID]['cpu_share']
                 memory = chain[ID]['memory']
                 bandwidth = chain[ID]['aggregate_band']
+                print ID
+                print hosts
                 for host in range(len(hosts)):
                     if (hosts[host]['resource']['memory'] == None):
                         hosts[host]['resource']['memory'] = hosts[
@@ -96,9 +98,11 @@ def ipc_handler(msg, etcdcli, publisher):
                     chain[ID]['host'] = hosts[host]['Host_name']
                     chain[ID]['host_ip'] = hosts[host]['Host_ip']
                     break
+
                 if (chain[ID]['host'] == None):
                     is_possible = False
                     break
+
             if (is_possible):
                 # update resource info
                 for host in hosts:
