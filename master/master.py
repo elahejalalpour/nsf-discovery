@@ -32,7 +32,6 @@ def ipc_handler(msg, etcdcli, publisher):
             results = etcdcli.read('/Host', recursive=True, sorted=True)
             for child in results.children:
                 hosts.append(json.loads(child.value))
-            print hosts
             nodes = msg['data']['nodes']
             links = msg['data']['links']
 
@@ -73,6 +72,7 @@ def ipc_handler(msg, etcdcli, publisher):
                 etcdcli.write('/link_id', link_id + 1)
 
             for ID in chain:
+                print ID
                 cpu_share = chain[ID]['cpu_share']
                 memory = chain[ID]['memory']
                 bandwidth = chain[ID]['aggregate_band']
@@ -82,6 +82,7 @@ def ipc_handler(msg, etcdcli, publisher):
                             host]['Host_avail_mem'] / 1024 / 1024
                     if (memory > hosts[host]['resource']['memory'] or
                             bandwidth > hosts[host]['resource']['bandwidth']):
+                        print "Not enough memory\n"
                         continue
                     k = 0
                     for cpu in hosts[host]['resource']['cpus']:
@@ -92,6 +93,7 @@ def ipc_handler(msg, etcdcli, publisher):
                         chain[ID]['cpuset_cpus'] = k
                         break
                     if (chain[ID]['cpuset_cpus'] == None):
+                        print "No CPU found\n"
                         continue
                     hosts[host]['resource']['memory'] -= memory
                     hosts[host]['resource']['bandwidth'] -= bandwidth
