@@ -397,7 +397,7 @@ def main():
             while(True):
                 msg = ipc.recv_json(flags=zmq.NOBLOCK)
                 ipc.send('')
-                # print(msg)
+                print(msg)
                 ipc_handler(msg, etcdcli, publisher)
         except Exception, ex:
             #print("No New Msg from IPC!")
