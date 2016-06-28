@@ -113,6 +113,7 @@ def pull():
         # exhaust the msg queue
         while(True):
             msg = subscriber.recv_json(flags=zmq.NOBLOCK)
+            print msg
             thread.start_new_thread(cmd_handler, (msg,))
     except Exception, ex:
         #print("No New Msg!")
