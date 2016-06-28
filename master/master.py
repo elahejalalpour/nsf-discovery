@@ -26,10 +26,10 @@ def ipc_handler(msg, etcdcli, publisher):
     """
     msg = json.dumps(msg)
     if (msg['action'] == u'create_chain'):
-        base_ip = ipaddress.ip_address('192.168.215.2')
         k = 0
         print msg
         try:
+            base_ip = ipaddress.ip_address('192.168.215.2')
             chain = {}
             is_possible = True
             hosts = []
