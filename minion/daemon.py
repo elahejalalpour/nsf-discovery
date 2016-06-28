@@ -1,4 +1,5 @@
 from container_driver import ContainerDriver
+from provisioning_agent import ProvisioningAgent
 import time
 import threading
 import zmq
@@ -76,6 +77,7 @@ def cmd_helper(msg):
     elif (msg['action'] == 'create_chain'):
         # To be finished
         print "Request received to deploy chain: \n"
+        ProvisioningAgent.provision_local_chain(msg['data'])
         # print msg['data']
         # print(json.dumps(msg))
         print("\n")
