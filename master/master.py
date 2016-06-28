@@ -32,6 +32,7 @@ def ipc_handler(msg, etcdcli, publisher):
             results = etcdcli.read('/Host', recursive=True, sorted=True)
             for child in results.children:
                 hosts.append(json.loads(child.value))
+            print hosts
             nodes = msg['data']['nodes']
             links = msg['data']['links']
 
@@ -70,12 +71,11 @@ def ipc_handler(msg, etcdcli, publisher):
                 chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
                 links[link]['id'] = link_id
                 etcdcli.write('/link_id', link_id + 1)
+
             for ID in chain:
                 cpu_share = chain[ID]['cpu_share']
                 memory = chain[ID]['memory']
                 bandwidth = chain[ID]['aggregate_band']
-                print ID
-                print hosts
                 for host in range(len(hosts)):
                     if (hosts[host]['resource']['memory'] == None):
                         hosts[host]['resource']['memory'] = hosts[
