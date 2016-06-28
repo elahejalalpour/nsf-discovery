@@ -23,7 +23,7 @@ def ipc_handler(msg,etcdcli,publisher):
 		handles messages from IPC(typically commands)
 	"""
 	if (msg['action'] == 'create_chain'):
-		print msg
+		print json.dumps(msg)
 		try:
 			chain = {}
 			is_possible = True
@@ -121,11 +121,15 @@ def ipc_handler(msg,etcdcli,publisher):
 								chain[link['target']]['net_ifs'][index]['link_type'] = 'vxlan'
 								chain[link['target']]['net_ifs'][index] \
 									['tunnel_endpoint'] = chain[link['source']]['host_ip']
-				
-				for ID in chain:
-					print(chain[ID])
-					print('############################################')
-					publisher.send_json(chain[ID])
+
+                chain_list = [chain[ID] for ID in chain]
+                print json.dumps(chain_list)
+                publisher_send_json(chain_list)
+
+				#for ID in chain:
+				#	print(chain[ID])
+				#	print('############################################')
+				#	publisher.send_json(chain[ID])
 			else:
 				print("Insufficient Resource!")
 				
