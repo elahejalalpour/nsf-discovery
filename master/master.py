@@ -24,8 +24,7 @@ def ipc_handler(msg, etcdcli, publisher):
     """
             handles messages from IPC(typically commands)
     """
-    print json.dumps(msg)
-    if (msg['action'] == 'create_chain'):
+    if (msg['action'] == u'create_chain'):
         base_ip = ipaddress.ip_address('192.168.215.2')
         k = 0
         print json.dumps(msg)
