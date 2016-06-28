@@ -82,7 +82,8 @@ def reply():
 		cmd.unpause(msg['Host'],msg['ID'])
 	elif(msg['action'] == 'deploy'):
 		cmd.deploy(msg['Host'],msg['username'],msg['image'],msg['vnfname'])
-		
+    elif(msg['create_chain'] == 'deploy_chain'):
+        cmd.create_chain()
 	return jsonify({'result' : 'command received'})
 
 if __name__ == "__main__":
