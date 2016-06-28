@@ -72,7 +72,6 @@ def ipc_handler(msg, etcdcli, publisher):
                 etcdcli.write('/link_id', link_id + 1)
 
             for ID in chain:
-                print ID
                 cpu_share = chain[ID]['cpu_share']
                 memory = chain[ID]['memory']
                 bandwidth = chain[ID]['aggregate_band']
@@ -86,11 +85,10 @@ def ipc_handler(msg, etcdcli, publisher):
                         continue
                     k = 0
                     for cpu in hosts[host]['resource']['cpus']:
-                        print cpu, cpu_share
-                        if (cpu < cpu_share):
+                        if ((150 - cpu) < cpu_share):
                             k += 1
                             continue
-                        hosts[host]['resource']['cpus'][k] -= cpu_share
+                        hosts[host]['resource']['cpus'][k] += cpu_share
                         chain[ID]['cpuset_cpus'] = k
                         break
                     if (chain[ID]['cpuset_cpus'] == None):
