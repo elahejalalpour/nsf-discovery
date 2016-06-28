@@ -121,8 +121,9 @@ def ipc_handler(msg,etcdcli,publisher):
 								chain[link['target']]['net_ifs'][index]['link_type'] = 'vxlan'
 								chain[link['target']]['net_ifs'][index] \
 									['tunnel_endpoint'] = chain[link['source']]['host_ip']
-
-                chain_list = [chain[ID] for ID in chain]
+                chain_list = []
+                for ID in chain:
+                    chain_list.append(chain[ID])
                 print json.dumps(chain_list)
                 publisher_send_json(chain_list)
 
