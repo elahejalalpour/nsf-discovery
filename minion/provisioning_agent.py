@@ -17,5 +17,5 @@ class ProvisioningAgent():
 
     def provision_local_chain(self, chain_config):
         for vnf_config in chain_config:
-            ProvisioningAgent.provision_single_vnf(vnf_config)
+            self.provision_single_vnf(vnf_config)
         
