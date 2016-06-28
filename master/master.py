@@ -86,6 +86,7 @@ def ipc_handler(msg, etcdcli, publisher):
                         continue
                     k = 0
                     for cpu in hosts[host]['resource']['cpus']:
+                        print cpu, cpu_share
                         if (cpu < cpu_share):
                             k += 1
                             continue
