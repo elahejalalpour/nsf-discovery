@@ -2,7 +2,7 @@ import logging
 from bash_wrapper import execute_bash_command
 from ovs_driver import OVSDriver
 from veth_driver import VethDriver
-from minion import Minion
+from container_driver import ContainerDriver
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class ChainDriver():
 
     def __init__(self):
-        self.__minion_handler = Minion()
+        self.__container_handler = ContainerDriver()
 
     def connect_container_across_hosts(
             self,
@@ -41,10 +41,10 @@ class ChainDriver():
         with RollbackContext() as rollback:
 
             # get container pid
-            nid = self.__minion_handler.get_container_pid(container_name)
+            nid = self.__container_handler.get_container_pid(container_name)
 
             # symlink docker netspace
-            self.__minion_handler.symlink_container_netspace(nid)
+            self.__container_handler.symlink_container_netspace(nid)
 
             # create veth pair
             #(veth_endpoint_a, veth_endpoint_b) = \
@@ -136,10 +136,10 @@ class ChainDriver():
         # THIS is for CONTAINER_A
 
         # get container pid
-        nid = self.__minion_handler.get_container_pid(container_a_name)
+        nid = self.__container_handler.get_container_pid(container_a_name)
 
         # symlink docker netspace
-        self.__minion_handler.symlink_container_netns(nid)
+        self.__container_handler.symlink_container_netns(nid)
 
         # create veth pair >>revisit !! 
         # (veth_endpoint_a, veth_endpoint_b) = \
@@ -173,10 +173,10 @@ class ChainDriver():
         # THIS is for CONTAINER_B
 
         # get container pid
-        nid = self.__minion_handler.get_container_pid(container_b_name)
+        nid = self.__container_handler.get_container_pid(container_b_name)
 
         # symlink docker netspace
-        self.__minion_handler.symlink_container_netns(str(nid))
+        self.__container_handler.symlink_container_netns(str(nid))
 
         # create veth pair >>> must revisit !!!
         # (veth_endpoint_a, veth_endpoint_b) = \
