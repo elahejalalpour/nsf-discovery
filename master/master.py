@@ -145,7 +145,9 @@ def ipc_handler(msg, etcdcli, publisher):
                 #    chain_list.append(chain[ID])
                 #print json.dumps(chain_list)
                 #publisher.send_json(chain_list)
-                publisher.send_json(chain)
+                message = {'action':'create_chain'}
+                message['data'] = chain
+                publisher.send_json(message)
                 # for ID in chain:
                 #	print(chain[ID])
                 #	print('############################################')
