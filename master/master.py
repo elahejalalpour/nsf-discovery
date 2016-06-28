@@ -24,6 +24,7 @@ def ipc_handler(msg, etcdcli, publisher):
     """
             handles messages from IPC(typically commands)
     """
+    print json.dumps(msg)
     if (msg['action'] == 'create_chain'):
         base_ip = ipaddress.ip_address('192.168.215.2')
         k = 0
@@ -75,7 +76,7 @@ def ipc_handler(msg, etcdcli, publisher):
                 chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
                 links[link]['id'] = link_id
                 etcdcli.write('/link_id', link_id + 1)
-                etcdcli.write('/ip_address', temp['ip_address']
+                etcdcli.write('/ip_address', temp['ip_address'])
                 k = k + 1
             unique_hosts = set()
             for ID in chain:
