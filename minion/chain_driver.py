@@ -29,6 +29,7 @@ class ChainDriver():
         """
         ovs_bridge_name = "ovs-br-" + str(link_id)
         OVSDriver.create_bridge(ovs_bridge_name)
+        OVSDriver.set_bridge_of_version(ovs_bridge_name, "OpenFlow13")
         chain_rollback.push(OVSDriver.delete_bridge, ovs_bridge_name)
         
         OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
