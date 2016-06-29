@@ -12,20 +12,20 @@ class ProvisioningAgent():
         #memory = vnf_config['memory']
         #cpu_share = vnf_config['cpu_share']
         #cpuset_cpus = vnf_config['cpuset_cpus']
-        container_name = vnf_config['container_name']
-        vnf_image = vnf_config['vnf_type']
-        print "c_name = " + container_name + ", image = " + vnf_image
+        #container_name = vnf_config['container_name']
+        #vnf_image = vnf_config['vnf_type']
+        #print "c_name = " + container_name + ", image = " + vnf_image
         #ip_address = vnf_config['ip_address']
 
         self.__container_handle.deploy(
             user="sr2chowd",
-            image_name=vnf_image,
-            vnf_name=container_name)
+            image_name=vnf_config['vnf_type'],
+            vnf_name=vnf_config['container_name'])
         container_name = "sr2chowd-" + container_name
         self.__container_handle.start(vnf_name=container_name)
 
-        #cont_pid = str(self.__container_handle.get_container_pid(container_name))
-        #print "Container " + container_name + " started with pid " + cont_pid
+        cont_pid = str(self.__container_handle.get_container_pid(container_name))
+        print "Container " + container_name + " started with pid " + cont_pid
         #self.__container_handler.symlink_container_netns(container_name)
         #veth_cn, veth_vs = self.generate_unique_veth_endpoints(container_name,
         #        self.__default_ovs_bridge)
