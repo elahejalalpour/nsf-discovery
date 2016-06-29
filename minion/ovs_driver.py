@@ -74,8 +74,7 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-        return int(output) > 0 ? True:
-            False
+        return int(output) > 0 ? True: False
 
     @staticmethod
     def get_openflow_port_number(ovs_bridge_name, veth_interface_name):
