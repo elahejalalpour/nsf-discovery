@@ -44,7 +44,7 @@ class ChainDriver():
         VethDriver.enable_veth_interface(veth_vs_container_b)
 
 
-    def connect_container_across_hosts(
+    def connect_containers_across_hosts(
             self,
             container_name,
             veth_cn_container,

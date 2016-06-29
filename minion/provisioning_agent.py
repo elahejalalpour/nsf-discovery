@@ -133,7 +133,7 @@ class ProvisioningAgent():
                     print remote_container_ip
                     tunnel_id = str(link_id)
                     tunnel_interface_name = self.__default_tunnel_interface
-                    self.__chain_driver.connect_containers_across_host(a,
+                    self.__chain_driver.connect_containers_across_hosts(a,
                             veth_cn, veth_vs, ovs_bridge_name, container_ip_net,
                             remote_container_ip, tunnel_id,
                             tunnel_interface_name, chain_rollback)
