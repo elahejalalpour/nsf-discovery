@@ -59,7 +59,7 @@ class ProvisioningAgent():
             present_in_host = VethDriver.is_interface_present(veth_endpoint_a)
             present_in_ovs = OVSDriver.is_interface_attached(ovs_bridge_name,
                                                              veth_endpoint_a)
-            present_in_container = VethDriver.is_interface_attached(veth_endpoint_b,
+            present_in_container = VethDriver.is_interface_present(veth_endpoint_b,
                                                                     netns=container_pid)
 
             if present_in_host or present_in_ovs or present_in_container:
