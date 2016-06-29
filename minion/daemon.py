@@ -1,5 +1,6 @@
 from container_driver import ContainerDriver
 from provisioning_agent import ProvisioningAgent
+from ovs_driver import OVSDriver
 import time
 import threading
 import zmq
@@ -208,6 +209,8 @@ if __name__ == '__main__':
     interface = args.interface
     default_ovs_bridge = args.default_ovs_bridge
     default_tunnel_interface = args.default_tunnel_interface
+    OVSDriver.set_bridge_of_version(default_ovs_bridge, "OpenFlow13")
+    OVSDriver.set_bridge_fail_mode(default_ovs_bridge, "secure")
     subscriber.connect('tcp://' + master + ':5561')
     subscriber.setsockopt(zmq.SUBSCRIBE, '')
     syncclient.connect('tcp://' + master + ':5562')
