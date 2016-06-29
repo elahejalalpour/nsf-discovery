@@ -94,17 +94,12 @@ class ProvisioningAgent():
                         links[link_id]["veth_cn_b"] = net_conf["veth_cn"]
 
             for (link_id, link) in links.iteritems():
-                print link
                 if link["link_type"] == "local":
                     a, b = link["endpoint_a"], link["endpoint_b"]
-                    print a, b
                     veth_vs_a = link["veth_vs_a"]
                     veth_vs_b = link["veth_vs_b"]
-                    print veth_vs_a, veth_vs_b
-                    ovs_bridge_name = "ovs-br-" + str(link_id)
-                    print ovs_bridge_name
-                    self.__chain_driver.connect_containers_inside_host(a["container_name"],
-                            veth_vs_a, b["container_name"], veth_vs_a,
+                    self.__chain_driver.connect_containers_inside_host(a,
+                            veth_vs_a, veth_vs_a, link_id, chain_rollback)
                             ovs_bridge_name, chain_rollback)
             chain_rollback.commitAll()
 
