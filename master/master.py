@@ -25,7 +25,10 @@ def ipc_handler(msg, etcdcli, publisher):
             handles messages from IPC(typically commands)
     """
     msg = json.dumps(msg)
-    if (msg['action'] == 'create_chain'):
+    print msg['action']
+    if msg['action'] <> 'create_chain':
+        print 'boo-hoo'
+    if msg['action'] == 'create_chain':
         k = 0
         print msg
         try:
