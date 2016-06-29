@@ -100,7 +100,6 @@ class ProvisioningAgent():
                     veth_vs_b = link["veth_vs_b"]
                     self.__chain_driver.connect_containers_inside_host(a,
                             veth_vs_a, veth_vs_a, link_id, chain_rollback)
-                            ovs_bridge_name, chain_rollback)
             chain_rollback.commitAll()
 
     def generate_unique_veth_endpoints(self, container_name, ovs_bridge_name):
