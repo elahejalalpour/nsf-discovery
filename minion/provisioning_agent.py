@@ -69,12 +69,13 @@ class ProvisioningAgent():
                 print vnf_config
                 updated_chain_config.append(
                         self.provision_single_vnf(vnf_config, chain_rollback))
-            chain_rollback.commitAll()
-
+            
             # Identify the links
             links = {}
+            print type(updated_chain_config)
             for vnf_contig in updated_chain_config:
                 net_config = vnf_config['net_ifs']
+                print type(net_config)
                 if net_config['link_id'] not in links.keys():
                     link[net_config["link_id"]] = {"link_type" : net_config["link_type"]}
                     link[net_config["link_id"]]["endpoint_a"] = vnf_config["container_name"]
@@ -93,7 +94,8 @@ class ProvisioningAgent():
                     ovs_bridge_name = "ovs-br-" + str(link_id)
                     self.__chain_driver.connect_containers_inside_host(a["container_name"],
                             veth_vs_a, b["container_name"], veth_vs_a,
-                            ovs_bridge_name)
+                            ovs_bridge_name, chain_rollback)
+            chain_rollback.commitAll()
 
     def generate_unique_veth_endpoints(self, container_name, ovs_bridge_name):
         veth_endpoint_a = ""
