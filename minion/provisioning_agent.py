@@ -32,7 +32,7 @@ class ProvisioningAgent():
             VethDriver.move_veth_interface_to_netns(veth_cn, netns = cont_pid)
             VethDriver.update_mtu_at_veth_interface(veth_cn, 1436, netns = cont_pid)
             VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
-            VethDriver.assign_ip_to_veth_interface(veth_cn, vnf_config['ip_address'], netns =
+            VethDriver.assign_ip_to_veth_interface(veth_cn, net_config['ip_address'], netns =
                     cont_pid)
             VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
 
