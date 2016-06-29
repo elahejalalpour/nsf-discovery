@@ -24,14 +24,14 @@ def ipc_handler(msg, etcdcli, publisher):
     """
             handles messages from IPC(typically commands)
     """
-    msg = json.dumps(msg)
-    print msg
-    print msg['action']
-    if msg['action'] <> 'create_chain':
+    mssg = json.dumps(msg)
+    print mssg
+    print mssg['action']
+    if mssg['action'] <> 'create_chain':
         print 'boo-hoo'
-    if msg['action'] == 'create_chain':
+    if mssg['action'] == 'create_chain':
         k = 0
-        print msg
+        print mssg
         try:
             base_ip = ipaddress.ip_address('192.168.215.2')
             chain = {}
@@ -41,8 +41,8 @@ def ipc_handler(msg, etcdcli, publisher):
             for child in results.children:
                 hosts.append(json.loads(child.value))
             print hosts
-            nodes = msg['data']['nodes']
-            links = msg['data']['links']
+            nodes = mssg['data']['nodes']
+            links = mssg['data']['links']
 
             for node in nodes:
                 temp = {'container_name': node['vnf_name'],
