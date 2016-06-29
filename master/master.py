@@ -152,6 +152,8 @@ def ipc_handler(msg, etcdcli, publisher):
                                 targets = chain[link['target']]['net_ifs']
                                 for idx in range(len(targets)):
                                     if targets[idx]['link_id'] == source[index]['link_id']:
+                                        print source
+                                        print targets
                                         source['remote_container_ip'] = targets[idx]['ip_address']
                                         break
 
