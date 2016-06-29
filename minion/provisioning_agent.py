@@ -23,19 +23,19 @@ class ProvisioningAgent():
         container_name = "sr2chowd-" + container_name
         self.__container_handle.start(vnf_name=container_name)
 
-        cont_pid = str(self.__container_handle.get_container_pid(container_name))
-        print "Container " + container_name + " started with pid " + cont_pid
-        self.__container_handler.symlink_container_netns(container_name)
-        veth_cn, veth_vs = self.generate_unique_veth_endpoints(container_name,
-                self.__default_ovs_bridge)
+        #cont_pid = str(self.__container_handle.get_container_pid(container_name))
+        #print "Container " + container_name + " started with pid " + cont_pid
+        #self.__container_handler.symlink_container_netns(container_name)
+        #veth_cn, veth_vs = self.generate_unique_veth_endpoints(container_name,
+        #        self.__default_ovs_bridge)
        
-        VethDriver.create_veth_pair(veth_cn, veth_vs)
-        VethDriver.move_veth_interface_to_netns(veth_cn, netns = cont_pid)
-        VethDriver.update_mtu_at_veth_interface(veth_cn, 1436, netns = cont_pid)
-        VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
-        VethDriver.assign_ip_to_veth_interface(veth_cn, ip_address, netns =
-                cont_pid)
-        VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+        #VethDriver.create_veth_pair(veth_cn, veth_vs)
+        #VethDriver.move_veth_interface_to_netns(veth_cn, netns = cont_pid)
+        #VethDriver.update_mtu_at_veth_interface(veth_cn, 1436, netns = cont_pid)
+        #VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+        #VethDriver.assign_ip_to_veth_interface(veth_cn, ip_address, netns =
+        #        cont_pid)
+        #VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
 
 
     def provision_local_chain(self, chain_config):
