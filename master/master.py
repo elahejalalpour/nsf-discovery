@@ -64,22 +64,26 @@ def ipc_handler(msg, etcdcli, publisher):
                         'tunnel_endpoint': None,
                         'bandwidth': links[link]['bandwidth'],
                         'ip_address': str(base_ip + k) + "/24"}
+                k = k + 1
                 temp['if_name'] = 'eth' + \
                     str(chain[links[link]['source']]['net_ifs_num'])
                 chain[links[link]['source']]['net_ifs_num'] += 1
                 chain[links[link]['source']][
                     'aggregate_band'] += links[link]['bandwidth']
                 chain[links[link]['source']]['net_ifs'].append(deepcopy(temp))
+                etcdcli.write('/source/ip_address', temp['ip_address'])
                 temp['if_name'] = 'eth' + \
                     str(chain[links[link]['target']]['net_ifs_num'])
                 chain[links[link]['target']]['net_ifs_num'] += 1
                 chain[links[link]['target']][
                     'aggregate_band'] += links[link]['bandwidth']
+                temp['ip_address'] = str(base_ip + k) + "/24"
+                k = k + 1
                 chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
                 links[link]['id'] = link_id
                 etcdcli.write('/link_id', link_id + 1)
-                etcdcli.write('/ip_address', temp['ip_address'])
-                k = k + 1
+                etcdcli.write('/target/ip_address', temp['ip_address'])
+
             unique_hosts = set()
             for ID in chain:
                 cpu_share = chain[ID]['cpu_share']
