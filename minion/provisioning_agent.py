@@ -40,7 +40,7 @@ class ProvisioningAgent():
 
         for net_config in vnf_config['net_ifs']:
             print net_config
-            veth_cn, veth_vs = self.generate_unique_veth_endpoints(container_name,
+            veth_vs, veth_cn = self.generate_unique_veth_endpoints(container_name,
                     self.__default_ovs_bridge)
             print "Creating veth pair (" + veth_cn + ", " + veth_vs + ")\n" 
             VethDriver.create_veth_pair(veth_cn, veth_vs)
@@ -74,20 +74,21 @@ class ProvisioningAgent():
             links = {}
             print updated_chain_config
             for vnf_contig in updated_chain_config:
-                net_configs = vnf_config['net_ifs']
-                for net_config in net_configs:
+                for net_config in vnf_config['net_ifs']:
                     print net_config
-                    if net_config['link_id'] not in links.keys():
-                        links[net_config["link_id"]] = {"link_type" : net_config["link_type"]}
-                        links[net_config["link_id"]]["endpoint_a"] = vnf_config["container_name"]
-                        links[net_config["link_id"]]["veth_vs_a"] =  net_config["veth_vs"]
-                        links[net_config["link_id"]]["veth_cn_a"] =  net_config["veth_cn"]
+                    link_id = net_config['link_id']
+                    if link_id not in links.keys():
+                        links[link_id] = {"link_type" : net_config["link_type"]}
+                        links[link_id]["endpoint_a"] = vnf_config["container_name"]
+                        links[link_id]["veth_vs_a"] =  net_config["veth_vs"]
+                        links[link_id]["veth_cn_a"] =  net_config["veth_cn"]
                     else:
-                        links[net_config["link_id"]]["endpoint_b"] = vnf_config["container_name"]
-                        links[net_config["link_id"]]["veth_vs_b"] = net_config["veth_vs"]
-                        links[net_config["link_id"]]["veth_cn_b"] = net_config["veth_cn"]
+                        links[link_id]["endpoint_b"] = vnf_config["container_name"]
+                        links[link_id]["veth_vs_b"] = net_config["veth_vs"]
+                        links[link_id]["veth_cn_b"] = net_config["veth_cn"]
 
             for (link_id, link) in links.iteritems():
+                print type(link)
                 if link["link_type"] == "local":
                     a, b = link["endpoint_a"], link["endpoint_b"]
                     veth_vs_a = link["veth_vs_a"]
