@@ -98,13 +98,14 @@ class ProvisioningAgent():
                     net_conf = vnf_conf['net_ifs'][j]
                     print net_conf
                     link_id = net_conf['link_id']
+                    print link_id
                     if link_id not in links.keys():
                         links[link_id] = {"link_type" : net_conf["link_type"]}
                         links[link_id]["endpoint_a"] = vnf_conf["container_name"]
                         links[link_id]["veth_vs_a"] =  net_conf["veth_vs"]
                         links[link_id]["veth_cn_a"] =  net_conf["veth_cn"]
                         links[link_id]["a_ip_address"] = net_conf["ip_address"]
-                        if net_conf["link_type"] == "remote":
+                        if net_conf["link_type"] <> "local":
                             links[link_id]["remote_container_ip"] =\
                                 net_conf["remote_container_ip"]
                     else:
