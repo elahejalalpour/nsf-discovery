@@ -21,7 +21,7 @@ class ProvisioningAgent():
             user="sr2chowd",
             image_name=vnf_config['vnf_type'],
             vnf_name=vnf_config['container_name'])
-        container_name = "sr2chowd-" + container_name
+        container_name = "sr2chowd-" + vnf_config['container_name']
         self.__container_handle.start(vnf_name=container_name)
 
         cont_pid = str(self.__container_handle.get_container_pid(container_name))
