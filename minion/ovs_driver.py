@@ -57,6 +57,7 @@ class OVSDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
+    @staticmethod
     def install_flow_rule(ovs_bridge_name, rule):
         """
         Install an Openflow rule in the OVS bridge
