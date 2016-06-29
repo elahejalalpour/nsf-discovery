@@ -9,14 +9,6 @@ class ProvisioningAgent():
         self.__default_ovs_bridge = ovs_bridge_name
 
     def provision_single_vnf(self, vnf_config):
-        #memory = vnf_config['memory']
-        #cpu_share = vnf_config['cpu_share']
-        #cpuset_cpus = vnf_config['cpuset_cpus']
-        #container_name = vnf_config['container_name']
-        #vnf_image = vnf_config['vnf_type']
-        #print "c_name = " + container_name + ", image = " + vnf_image
-        #ip_address = vnf_config['ip_address']
-
         self.__container_handle.deploy(
             user="sr2chowd",
             image_name=vnf_config['vnf_type'],
@@ -26,20 +18,20 @@ class ProvisioningAgent():
 
         cont_pid = str(self.__container_handle.get_container_pid(container_name))
         print "Container " + container_name + " started with pid " + cont_pid
-        self.__container_handler.symlink_container_netns(container_name)
+        self.__container_handle.symlink_container_netns(container_name)
 
         for net_config in vnf_config['net_ifs']:
             print net_config
-            #veth_cn, veth_vs = self.generate_unique_veth_endpoints(container_name,
-            #        self.__default_ovs_bridge)
-        
-            #VethDriver.create_veth_pair(veth_cn, veth_vs)
-            #VethDriver.move_veth_interface_to_netns(veth_cn, netns = cont_pid)
-            #VethDriver.update_mtu_at_veth_interface(veth_cn, 1436, netns = cont_pid)
-            #VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
-            #VethDriver.assign_ip_to_veth_interface(veth_cn, vnf_config['ip_address'], netns =
-            #        cont_pid)
-            #VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+            veth_cn, veth_vs = self.generate_unique_veth_endpoints(container_name,
+                    self.__default_ovs_bridge)
+            print "Creating veth pair (" + veth_cn + ", " + veth_vs + ")\n" 
+            VethDriver.create_veth_pair(veth_cn, veth_vs)
+            VethDriver.move_veth_interface_to_netns(veth_cn, netns = cont_pid)
+            VethDriver.update_mtu_at_veth_interface(veth_cn, 1436, netns = cont_pid)
+            VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+            VethDriver.assign_ip_to_veth_interface(veth_cn, vnf_config['ip_address'], netns =
+                    cont_pid)
+            VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
 
 
     def provision_local_chain(self, chain_config):
