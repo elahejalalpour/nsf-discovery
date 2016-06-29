@@ -31,13 +31,39 @@ class OVSDriver():
             raise Exception(return_code, errput)
 
     @staticmethod
+    def set_bridge_of_version(ovs_bridge_name, of_version = "OpenFlow13"):
+        """
+        Set the OpenFlow protocol version for an OVS bridge.
+
+        @param ovs_bridge_name Name of the ovs bridge
+        @param of_version OpenFlow Protocl Version (OpenFlow10, OpenFlow11,
+        OpenFlow12, OpenFlow13 and so on). Default is OpenFlow13.
+        """
+        bash_command = "ovs-vsctl set bridge " + ovs_bridge_name + " protocols=" + of_version
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+
+    @staticmethod
+    def set_bridge_fail_mode(ovs_bridge_name, fail_mode = "secure"):
+        """
+        Sets the configured failure mode for the ovs bridge.
+
+        @param ovs_bridge_name Name of the ovs bridge.
+        @param fail_mode Failure mode for the bridge (standalone or secure).
+        """
+        bash_command = "ovs-vsctl set-fail-mode " + ovs_bridge_name + " " + fail_mode
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+
     def install_flow_rule(ovs_bridge_name, rule):
         """
         Install an Openflow rule in the OVS bridge
         @param ovs_bridge_name Name of the OVS bridge.
         @param rule The Openflow rule to install.
         """
-        bash_command = "sudo ovs-ofctl -O add-flow " + \
+        bash_command = "sudo ovs-ofctl -O OpenFlow13 add-flow " + \
             ovs_bridge_name + " " + rule
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
@@ -50,7 +76,7 @@ class OVSDriver():
         @param ovs_bridge_name Name of the OVS bridge.
         @param rule The rule to remove.
         """
-        bash_command = "sudo ovs-ofctl -O del-flow " + \
+        bash_command = "sudo ovs-ofctl -O OpenFlow13 del-flow " + \
             ovs_bridge_name + " " + rule
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
