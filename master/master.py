@@ -33,7 +33,7 @@ def ipc_handler(msg, etcdcli, publisher):
         k = 0
         print mssg
         try:
-            base_ip = ipaddress.ip_address('192.168.215.2')
+            # base_ip = ipaddress.ip_address('192.168.215.2')
             chain = {}
             is_possible = True
             hosts = []
@@ -64,8 +64,9 @@ def ipc_handler(msg, etcdcli, publisher):
                         'link_type': None,
                         'link_id': link_id,
                         'tunnel_endpoint': None,
-                        'bandwidth': links[link]['bandwidth'],
-                        'ip_address': str(base_ip + k) + "/24"}
+                        'bandwidth': links[link]['bandwidth']
+                        #'ip_address': str(base_ip + k) + "/24"}
+                        }
                 temp['if_name'] = 'eth' + \
                     str(chain[links[link]['source']]['net_ifs_num'])
                 chain[links[link]['source']]['net_ifs_num'] += 1
