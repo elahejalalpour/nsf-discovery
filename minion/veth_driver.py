@@ -169,3 +169,15 @@ class VethDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
+
+    @staticmethod
+    def is_interface_present(veth_interface, netns = "root"):
+        bash_command = "sudo "
+        if netns <> "root":
+            bash_command += "ip netns exec " + netns + " "
+        bash_command += "ip link | grep -c " + veth_interface
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+        return int(output) > 0
+
