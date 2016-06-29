@@ -72,6 +72,7 @@ class ProvisioningAgent():
             
             # Identify the links
             links = {}
+            print updated_chain_config
             for vnf_contig in updated_chain_config:
                 net_configs = vnf_config['net_ifs']
                 for net_config in net_configs:
@@ -83,8 +84,8 @@ class ProvisioningAgent():
                         links[net_config["link_id"]]["veth_cn_a"] =  net_config["veth_cn"]
                     else:
                         links[net_config["link_id"]]["endpoint_b"] = vnf_config["container_name"]
-                        links[net_config["link_id"]]["veth_vs_b"] = vnf_config["veth_vs"]
-                        links[net_config["link_id"]]["veth_cn_b"] = vnf_config["veth_cn"]
+                        links[net_config["link_id"]]["veth_vs_b"] = net_config["veth_vs"]
+                        links[net_config["link_id"]]["veth_cn_b"] = net_config["veth_cn"]
 
             for (link_id, link) in links.iteritems():
                 if link["link_type"] == "local":
