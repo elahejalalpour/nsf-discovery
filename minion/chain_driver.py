@@ -11,15 +11,48 @@ class ChainDriver():
 
     def __init__(self):
         self.__container_handler = ContainerDriver()
+    
+    def connect_containers_inside_host(self, container_a_name,
+            veth_vs_container_a, container_b_name, veth_vs_container_b,
+            ovs_bridge_name, chain_rollback):
+        """
+        Connects two containers within the same physical hosts by a
+        bi-directional link.
+
+        @param container_a_name Name of one of the containers in the pair
+        @param veth_vs_container_a Loose end of container a's veth pair link
+        @param container_b_name Name of the other container in the pair
+        @param veth_vs_container_b Loos end of container_b's veth pair link
+        @param ovs_bridge_name Name of the isolated ovs bridge that will connect
+        container_a and container_b
+        @param chain_rollback Global rollback object
+        """
+        OVSDriver.create_bridge(ovs_bridge_name)
+        chain_rollback.push(OVSDriver.delete_bridge, ovs_bridge_name)
+        
+        OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
+                veth_vs_container_a)
+        chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
+                veth_vs_container_a)
+        VethDriver.enable_veth_endpoint(veth_vs_container_a)
+
+        OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
+                veth_vs_container_b)
+        chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
+                veth_vs_container_b)
+        VethDriver.enable_veth_endpoint(veth_vs_container_b)
+
 
     def connect_container_across_hosts(
             self,
             container_name,
+            veth_cn_container,
+            veth_vs_container,
             ovs_bridge_name,
             container_ip_net,
+            remote_container_ip,
             tunnel_id,
-            tunnel_of_port,
-            remote_container_ip):
+            tunnel_interface_name):
         """Connects two containers on different hosts thru GRE tunnel.
 
         Arguments: (All arguments must be passed as strings)
@@ -40,54 +73,21 @@ class ChainDriver():
 
         with RollbackContext() as rollback:
 
-            # get container pid
-            nid = self.__container_handler.get_container_pid(container_name)
-
-            # symlink docker netspace
-            self.__container_handler.symlink_container_netspace(nid)
-
-            # create veth pair
-            #(veth_endpoint_a, veth_endpoint_b) = \
-            #    generate_unique_veth_endpoints(
-            #    container_name,
-            #    ovs_bridge_name)
-            VethDriver.create_veth_pair(veth_endpoint_a, veth_endpoint_b)
-            rollback.push(VethDriver.delete_veth_endpoint, veth_endpoint_a)
-            rollback.push(VethDriver.delete_veth_endpoint, veth_endpoint_b)
-
             # attach veth_endpoint_a to ovs
-            OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_endpoint_a)
+            OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_vs_container)
             rollback.push(
                 OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
-                veth_endpoint_a)
+                veth_vs_container)
 
-            # attach veth_endpoint_b to container
-            VethDriver.move_veth_interface_to_netns(veth_endpoint_b, nid)
-
-            # update mtu for container veth endpoint to account for tunneling
-            # overhead.
-            VethDriver.update_mtu_at_veth_interface(veth_endpoint_b, 1436, nid)
-
-            # enable veth pair
-            VethDriver.enable_veth_interface(veth_endpoint_a)
-            VethDriver.enable_veth_interface(veth_endpoint_b, netns=str(nid))
-
-            # assign ip address to veth_endpoint_b
-            VethDriver.assign_ip_to_veth_interface(
-                    veth_endpoint_b, container_ip_net, str(nid))
-            rollback.push(VethDriver.delete_ip_from_veth_interface, veth_endpoint_b,
-                          container_ip_net, str(nid))
-
-            # enable veth pair (just a precaution)
-            VethDriver.enable_veth_interface(veth_endpoint_a)
-            VethDriver.enable_veth_interface(veth_endpoint_b, netns=str(nid))
+            VethDriver.enable_veth_interface(veth_vs_container)
 
             # find the openflow port for this container
-            container_of_port = OVSDriver.get_openflow_port_number(
-                                        ovs_bridge_name, veth_endpoint_a)
+            container_of_port = str(OVSDriver.get_openflow_port_number(
+                                        ovs_bridge_name, veth_cn_container))
 
             tunnel_id = str(tunnel_id)
-            tunnel_of_port = str(tunnel_of_port)
+            tunnel_of_port = str(OVSDriver.get_openflow_port_number(ovs_bridge_name,
+                tunnel_interface_name)
             container_ip = container_ip_net.split("\\")[0]
 
             # install rule to forward regular traffic
@@ -128,85 +128,3 @@ class ChainDriver():
             rollback.commitAll()
 
 
-    def connect_container_within_host(container_a_name, container_a_ip_net,
-      container_b_name, container_b_ip_net, ovs_bridge_name):
-      
-      with RollbackContext() as rollback:
-
-        # THIS is for CONTAINER_A
-
-        # get container pid
-        nid = self.__container_handler.get_container_pid(container_a_name)
-
-        # symlink docker netspace
-        self.__container_handler.symlink_container_netns(nid)
-
-        # create veth pair >>revisit !! 
-        # (veth_endpoint_a, veth_endpoint_b) = \
-        #  generate_unique_veth_endpoints(container_a_name, ovs_bridge_name)
-        VethDriver.create_veth_pair(veth_endpoint_a, veth_endpoint_b)
-        rollback.push(VethDriver.delete_veth_interface, veth_endpoint_a)
-        rollback.push(VethDriver.delete_veth_interface, veth_endpoint_b)
-
-        # attach veth_endpoint_a to ovs bridge
-        OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_endpoint_a)
-        rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
-                veth_endpoint_a)
-
-        # attach veth_endpoint_b to container
-        VethDriver.move_veth_interface_to_netns(veth_endpoint_b, nid)
-        
-        # enable veth pair
-        VethDriver.enable_veth_interface(veth_endpoint_a)
-        VethDriver.enable_veth_interface(veth_endpoint_b, ns = str(nid))
-
-        # assign ip address to veth_endpoint_b
-        VethDriver.assign_ip_to_veth_interface(veth_endpoint_b, container_a_ip_net,
-                netns = str(nid))
-        rollback.push(VethDriver.delete_ip_from_veth_interface, veth_endpoint_b, 
-                       container_a_ip_net, netns = str(nid))
-
-        # enable veth pair (just a precaution)
-        VethDriver.enable_veth_interface(veth_endpoint_a)
-        VethDriver.enable_veth_interface(veth_endpoint_b, netns = str(nid))
-
-        # THIS is for CONTAINER_B
-
-        # get container pid
-        nid = self.__container_handler.get_container_pid(container_b_name)
-
-        # symlink docker netspace
-        self.__container_handler.symlink_container_netns(str(nid))
-
-        # create veth pair >>> must revisit !!!
-        # (veth_endpoint_a, veth_endpoint_b) = \
-        #  generate_unique_veth_endpoints(container_b_name, ovs_bridge_name)
-        VethDriver.create_veth_pair(veth_endpoint_a, veth_endpoint_b)
-        rollback.push(VethDriver.delete_veth_interface, veth_endpoint_a)
-        rollback.push(VethDriver.delete_veth_interface, veth_endpoint_b)
-
-        # attach veth_endpoint_a to ovs bridge
-        OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_endpoint_a)
-        rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
-                veth_endpoint_a)
-
-        # attach veth_endpoint_b to container
-        VethDriver.move_veth_interface_to_netns(veth_endpoint_b, netns =
-                str(nid))
-        
-        # enable veth pair
-        VethDriver.enable_veth_interface(veth_endpoint_a)
-        VethDriver.enable_veth_interface(veth_endpoint_b, netns = str(nid))
-
-        # assign ip address to veth_endpoint_b
-        VethDriver.assign_ip_to_veth_interface(veth_endpoint_b,
-                container_b_ip_net, netns = str(nid))
-        rollback.push(VethDriver.delete_ip_from_veth_endpoint, veth_endpoint_b, 
-                        container_a_ip_net, netns = str(nid))
-
-        # enable veth pair (just a precaution)
-        VethDriver.enable_veth_interface(veth_endpoint_a)
-        VethDriver.enable_veth_interface(veth_endpoint_b, netns = str(nid))
-
-        # All operations successfull, so commit them all!
-        rollback.commitAll()

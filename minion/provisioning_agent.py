@@ -3,6 +3,7 @@ from bash_wrapper import execute_bash_command
 from random import randint
 from veth_driver import VethDriver
 from ovs_driver import OVSDriver
+from chain_driver import ChainDriver
 from rollbackcontext import RollbackContext
 
 
@@ -11,6 +12,7 @@ class ProvisioningAgent():
     def __init__(self, ovs_bridge_name = "ovs-br0"):
         self.__container_handle = ContainerDriver()
         self.__default_ovs_bridge = ovs_bridge_name
+        self.__chain_driver = ChainDriver()
 
     def provision_single_vnf(self, vnf_config, chain_rollback):
         # Deploy the container.
@@ -31,6 +33,7 @@ class ProvisioningAgent():
         # /var/run/netns
         cont_pid = str(self.__container_handle.get_container_pid(container_name))
         print "Container " + container_name + " started with pid " + cont_pid
+        vnf_config["container_name"] = container_name
         self.__container_handle.symlink_container_netns(container_name)
         chain_rollback.push(self.__container_handle.symlink_container_netns,
                 self.__container_handle, container_name)
@@ -54,14 +57,43 @@ class ProvisioningAgent():
                     net_config['ip_address'], netns = cont_pid)
 
             VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+            net_config["veth_cn"] = veth_cn
+            net_config["veth_vs"] = veth_vs
+        return vnf_config
 
     def provision_local_chain(self, chain_config):
         with RollbackContext() as chain_rollback:
+            updated_chain_config = []
             for vnf_config in chain_config:
                 print "####################"
                 print vnf_config
-                self.provision_single_vnf(vnf_config, chain_rollback)
+                updated_chain_config.append(
+                        self.provision_single_vnf(vnf_config, chain_rollback))
             chain_rollback.commitAll()
+
+            # Identify the links
+            links = {}
+            for vnf_contig in updated_chain_config:
+                net_config = vnf_config['net_ifs']
+                if net_config['link_id'] not in links.keys():
+                    link[net_config["link_id"]] = {"link_type" : net_config["link_type"]}
+                    link[net_config["link_id"]]["endpoint_a"] = vnf_config["container_name"]
+                    link[net_config["link_id"]]["veth_vs_a"] =  net_config["veth_vs"]
+                    link[net_config["link_id"]]["veth_cn_a"] =  net_config["veth_cn"]
+                else:
+                    link[net_config["link_id"]]["endpoint_b"] = vnf_config["container_name"]
+                    link[net_config["link_id"]]["veth_vs_b"] = vnf_config["veth_vs"]
+                    link[net_config["link_id"]]["veth_cn_b"] = vnf_config["veth_cn"]
+
+            for (link_id, link) in link.iteritems():
+                if link["link_type"] == "local":
+                    a, b = link["endpoint_a"], link["endpoint_b"]
+                    veth_vs_a = link["veth_vs_a"]
+                    veth_vs_b = link["veth_vs_b"]
+                    ovs_bridge_name = "ovs-br-" + str(link_id)
+                    self.__chain_driver.connect_containers_inside_host(a["container_name"],
+                            veth_vs_a, b["container_name"], veth_vs_a,
+                            ovs_bridge_name)
 
     def generate_unique_veth_endpoints(self, container_name, ovs_bridge_name):
         veth_endpoint_a = ""

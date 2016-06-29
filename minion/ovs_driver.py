@@ -7,6 +7,30 @@ logger = logging.getLogger(__name__)
 class OVSDriver():
 
     @staticmethod
+    def create_bridge(ovs_bridge_name):
+        """
+        Creates an OVS bridge
+
+        @param ovs_bridge_name Name of the bridge to create.
+        """
+        bash_command = "sudo ovs-vsctl add-br " + ovs_bridge_name
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+
+    @staticmethod
+    def delete_bridge(ovs_bridge_name):
+        """
+        Delete an existing ovs bridge.
+        
+        @param ovs_bridge_name Name of the ovs bridge to delete.
+        """
+        bash_command = "sudo ovs-vsctl del-br " + ovs_bridge_name
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+
+    @staticmethod
     def install_flow_rule(ovs_bridge_name, rule):
         """
         Install an Openflow rule in the OVS bridge
