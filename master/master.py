@@ -63,7 +63,7 @@ def ipc_handler(msg, etcdcli, publisher):
                         'link_id': link_id,
                         'tunnel_endpoint': None,
                         'bandwidth': links[link]['bandwidth'],
-                        'ip_address': str(base_ip + k) + "/24"}
+                        'ip_address': str(base_ip + k) + "\/24"}
                 temp['if_name'] = 'eth' + \
                     str(chain[links[link]['source']]['net_ifs_num'])
                 chain[links[link]['source']]['net_ifs_num'] += 1
