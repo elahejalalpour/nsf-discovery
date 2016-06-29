@@ -35,7 +35,7 @@ class ChainDriver():
                 veth_vs_container_a)
         chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
                 veth_vs_container_a)
-        VethDriver.enable_veth_endpoint(veth_vs_container_a)
+        VethDriver.enable_veth_interface(veth_vs_container_a)
 
         OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
                 veth_vs_container_b)
