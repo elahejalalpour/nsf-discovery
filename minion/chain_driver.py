@@ -48,7 +48,6 @@ class ChainDriver():
     def connect_containers_across_hosts(
             self,
             container_name,
-            veth_cn_container,
             veth_vs_container,
             ovs_bridge_name,
             container_ip_net,
@@ -61,8 +60,6 @@ class ChainDriver():
 
         (All arguments must be passed as strings)
         @param container_name Name of the docker container.
-        @param veth_cn_container Name of the veth interface connected with
-        the container.
         @param veth_vs_container Name of the veth interface connected with
         the ovs bridge.
         @param ovs_bridge_name The bridge used for tunneling
@@ -88,9 +85,10 @@ class ChainDriver():
 
         VethDriver.enable_veth_interface(veth_vs_container)
 
-        # find the openflow port for this container
+        # find the openflow port where the container is attached to the ovs
+        # bridge.
         container_of_port = str(OVSDriver.get_openflow_port_number(
-                                    ovs_bridge_name, veth_cn_container))
+                                    ovs_bridge_name, veth_vs_container))
 
         tunnel_id = str(tunnel_id)
         tunnel_of_port = str(OVSDriver.get_openflow_port_number(ovs_bridge_name,
