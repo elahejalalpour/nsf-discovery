@@ -9,12 +9,12 @@ class ProvisioningAgent():
         self.__default_ovs_bridge = ovs_bridge_name
 
     def provision_single_vnf(self, vnf_config):
-        memory = vnf_config['memory']
-        cpu_share = vnf_config['cpu_share']
-        cpuset_cpus = vnf_config['cpuset_cpus']
+        #memory = vnf_config['memory']
+        #cpu_share = vnf_config['cpu_share']
+        #cpuset_cpus = vnf_config['cpuset_cpus']
         container_name = vnf_config['container_name']
         vnf_image = vnf_config['vnf_type']
-        ip_address = vnf_config['ip_address']
+        #ip_address = vnf_config['ip_address']
 
         self.__container_handle.deploy(
             user="sr2chowd",
