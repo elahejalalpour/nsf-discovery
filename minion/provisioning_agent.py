@@ -70,13 +70,17 @@ class ProvisioningAgent():
                 print vnf_config
                 updated_chain_config.append(copy.deepcopy(
                         self.provision_single_vnf(vnf_config, chain_rollback)))
+
             
+            print "####################"
             # identify the links
             links = {}
             print updated_chain_config
-            for vnf_conf in updated_chain_config:
-                print vnf_config
-                for net_conf in vnf_conf['net_ifs']:
+            for i in range(0, len(updated_chain_config)):
+                vnf_conf = updated_chain_config[i]
+                print vnf_conf
+                for j in range(0, len(vnf_conf['net_ifs'])):
+                    net_conf = vnf_conf['net_ifs'][j]
                     print net_conf
                     link_id = net_conf['link_id']
                     if link_id not in links.keys():
