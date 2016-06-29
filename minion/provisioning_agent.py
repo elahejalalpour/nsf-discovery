@@ -1,5 +1,6 @@
 from container_driver import ContainerDriver
 from bash_wrapper import execute_bash_command
+from random import randint
 
 
 class ProvisioningAgent():
