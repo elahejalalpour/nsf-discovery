@@ -146,16 +146,26 @@ def ipc_handler(msg, etcdcli, publisher):
                         for index in range(len(source)):
                             if (source[index]['link_id'] == link['id']):
                                 chain[
-                                    link['source']]['net_ifs'][index]['link_type'] = 'vxlan'
+                                    link['source']]['net_ifs'][index]['link_type'] = 'gre'
                                 chain[link['source']]['net_ifs'][index] \
                                     ['tunnel_endpoint'] = chain[link['target']]['host_ip']
+                                targets = chain[link['target']]['net_ifs']
+                                for idx in range(len(targets)):
+                                    if targets[idx]['link_id'] == source[index]['link_id']:
+                                        source['remote_container_ip'] = targets[idx]['ip_address']
+                                        break
+
                         target = chain[link['target']]['net_ifs']
                         for index in range(len(target)):
                             if (target[index]['link_id'] == link['id']):
                                 chain[
-                                    link['target']]['net_ifs'][index]['link_type'] = 'vxlan'
+                                    link['target']]['net_ifs'][index]['link_type'] = 'gre'
                                 chain[link['target']]['net_ifs'][index] \
                                     ['tunnel_endpoint'] = chain[link['source']]['host_ip']
+                                sources = chain[link['source']]['net_ifs']
+                                for idx in range(len(sources)):
+                                    if sources[idx]['link_id'] == target[index]['link_id']:
+                                        target['remote_container_ip'] = sources[idx]['ip_address']
                 
                 for host in unique_hosts:
                     message = {'action' : 'create_chain', 'host' : host, 'data'
