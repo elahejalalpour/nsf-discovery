@@ -72,19 +72,18 @@ class ProvisioningAgent():
             
             # Identify the links
             links = {}
-            print type(updated_chain_config)
             for vnf_contig in updated_chain_config:
-                net_config = vnf_config['net_ifs']
-                print type(net_config)
-                if net_config['link_id'] not in links.keys():
-                    link[net_config["link_id"]] = {"link_type" : net_config["link_type"]}
-                    link[net_config["link_id"]]["endpoint_a"] = vnf_config["container_name"]
-                    link[net_config["link_id"]]["veth_vs_a"] =  net_config["veth_vs"]
-                    link[net_config["link_id"]]["veth_cn_a"] =  net_config["veth_cn"]
-                else:
-                    link[net_config["link_id"]]["endpoint_b"] = vnf_config["container_name"]
-                    link[net_config["link_id"]]["veth_vs_b"] = vnf_config["veth_vs"]
-                    link[net_config["link_id"]]["veth_cn_b"] = vnf_config["veth_cn"]
+                net_configs = vnf_config['net_ifs']
+                for net_config in net_configs:
+                    if net_config['link_id'] not in links.keys():
+                        link[net_config["link_id"]] = {"link_type" : net_config["link_type"]}
+                        link[net_config["link_id"]]["endpoint_a"] = vnf_config["container_name"]
+                        link[net_config["link_id"]]["veth_vs_a"] =  net_config["veth_vs"]
+                        link[net_config["link_id"]]["veth_cn_a"] =  net_config["veth_cn"]
+                    else:
+                        link[net_config["link_id"]]["endpoint_b"] = vnf_config["container_name"]
+                        link[net_config["link_id"]]["veth_vs_b"] = vnf_config["veth_vs"]
+                        link[net_config["link_id"]]["veth_cn_b"] = vnf_config["veth_cn"]
 
             for (link_id, link) in link.iteritems():
                 if link["link_type"] == "local":
