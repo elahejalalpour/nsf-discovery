@@ -105,7 +105,7 @@ class ProvisioningAgent():
                         links[link_id]["veth_cn_a"] =  net_conf["veth_cn"]
                         links[link_id]["a_ip_address"] = net_conf["ip_address"]
                         if net_conf["link_type"] == "remote":
-                            links[link_id]["remote_container_ip"] =
+                            links[link_id]["remote_container_ip"] =\
                                 net_conf["remote_container_ip"]
                     else:
                         links[link_id]["endpoint_b"] = vnf_conf["container_name"]
@@ -128,7 +128,7 @@ class ProvisioningAgent():
                     veth_cn = link["veth_cn_a"]
                     ovs_bridge_name = self.__default_ovs_bridge
                     container_ip_net = link["a_ip_address"]
-                    remote_container_ip = link["remote_container_ip"]
+                    remote_container_ip = link["remote_container_ip"].split("/")[0]
                     tunnel_id = str(link_id)
                     tunnel_interface_name = self.__default_tunnel_interface
                     self.__chain_driver.connect_containers_across_host(a,
