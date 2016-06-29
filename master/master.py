@@ -1,6 +1,7 @@
 #
 #  Synchronized publisher
 #
+import copy
 import zmq
 import time
 import sqlite3
@@ -24,7 +25,7 @@ def ipc_handler(msg, etcdcli, publisher):
     """
             handles messages from IPC(typically commands)
     """
-    mssg = json.dumps(msg)
+    mssg = json.dumps(copy.deepcopy(msg))
     print mssg
     print 'hello'
     print mssg['action']
