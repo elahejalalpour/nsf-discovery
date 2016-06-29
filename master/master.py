@@ -96,10 +96,10 @@ def ipc_handler(msg, etcdcli, publisher):
                         continue
                     k = 0
                     for cpu in hosts[host]['resource']['cpus']:
-                        if ((150 - cpu) < cpu_share):
+                        if (cpu < cpu_share):
                             k += 1
                             continue
-                        hosts[host]['resource']['cpus'][k] += cpu_share
+                        hosts[host]['resource']['cpus'][k] -= cpu_share
                         chain[ID]['cpuset_cpus'] = k
                         break
                     if (chain[ID]['cpuset_cpus'] == None):
