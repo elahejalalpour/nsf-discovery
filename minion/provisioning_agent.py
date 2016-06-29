@@ -40,7 +40,7 @@ class ProvisioningAgent():
             print vnf_config
             self.provision_single_vnf(vnf_config)
 
-    def generate_unique_veth_endpoints(container_name, ovs_bridge_name):
+    def generate_unique_veth_endpoints(self, container_name, ovs_bridge_name):
         veth_endpoint_a = ""
         veth_endpoint_b = ""
         container_pid = self.__container_handle.get_container_pid(
