@@ -23,13 +23,25 @@ Run master:
 ```
 python master/master.py
 ```
+Run the web server on the same node as the master:
+```
+python web/server.py
+```
 
 Run minion:
 
 ```
-python minon/daemon.py --master <master's_ip_address> --interface
-<ethernet_interface_to_use>
+python minon/daemon.py --master <master's_ip_address> --interface <ethernet_interface_to_use>
 ```
+
+Use provided chain.json file as the chain configuration. 
+Keep the file in location /home/nfuser/chain.json
+
+To deploy a chain use the following curl command:
+```
+curl -H "Content-Type: application/json" -X POST -d '{"action":"deploy_chain"}' http://localhost:5000/request
+```
+
 
 
 
