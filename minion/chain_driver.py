@@ -53,78 +53,80 @@ class ChainDriver():
             container_ip_net,
             remote_container_ip,
             tunnel_id,
-            tunnel_interface_name):
-        """Connects two containers on different hosts thru GRE tunnel.
+            tunnel_interface_name,
+            chain_rollback):
+        """
+        Connects two containers on different hosts thru GRE tunnel.
 
-        Arguments: (All arguments must be passed as strings)
-            container_name: name of the docker container
-            ovs_bridge_name: the bridge used for tunneling
-            container_ip_net: IP and network prefix (e.g., 192.168.100.101/24)
-            tunnel_id: ID of the tunnel connecting this container to the other
-            tunnel_of_port: OpenFlow port number where the tunnel to the other
-              host is connected
-            remote_container_ip: IP of the container at the other end of the
-            tunnel (e.g., 192.168.100.102) no net-prefic here.
+        (All arguments must be passed as strings)
+        @param container_name Name of the docker container.
+        @param veth_cn_container Name of the veth interface connected with
+        the container.
+        @param veth_vs_container Name of the veth interface connected with
+        the ovs bridge.
+        @param ovs_bridge_name The bridge used for tunneling
+        @param container_ip_net IP and network prefix (e.g., 192.168.100.101/24)
+        @param remote_container_ip IP of the container at the other end of the
+        tunnel (e.g., 192.168.100.102) no net-prefic here.
+        @param tunnel_id ID of the tunnel connecting this container to the other
+        @param tunnel_interface_name Name of the tunneling interface on
+        this host.
+        @param chain_rollback The global rollback context.
 
         Assumption;
             1. GRE tunnels are pre-established
             2. OVS bridges are operation in secure failure mode
             3. The container 'container_name' is already deployed and is running
-         """
+        """
 
-        with RollbackContext() as rollback:
+        # attach veth_endpoint_a to ovs
+        OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_vs_container)
+        chain_rollback.push(
+            OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
+            veth_vs_container)
 
-            # attach veth_endpoint_a to ovs
-            OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_vs_container)
-            rollback.push(
-                OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
-                veth_vs_container)
+        VethDriver.enable_veth_interface(veth_vs_container)
 
-            VethDriver.enable_veth_interface(veth_vs_container)
+        # find the openflow port for this container
+        container_of_port = str(OVSDriver.get_openflow_port_number(
+                                    ovs_bridge_name, veth_cn_container))
 
-            # find the openflow port for this container
-            container_of_port = str(OVSDriver.get_openflow_port_number(
-                                        ovs_bridge_name, veth_cn_container))
+        tunnel_id = str(tunnel_id)
+        tunnel_of_port = str(OVSDriver.get_openflow_port_number(ovs_bridge_name,
+            tunnel_interface_name))
+        container_ip = container_ip_net.split("/")[0]
 
-            tunnel_id = str(tunnel_id)
-            tunnel_of_port = str(OVSDriver.get_openflow_port_number(ovs_bridge_name,
-                tunnel_interface_name))
-            container_ip = container_ip_net.split("/")[0]
+        # install rule to forward regular traffic
+        egress_forwarding_rule = "in_port=" + container_of_port + \
+            ",actions=set_tunnel:" + tunnel_id + \
+                ",output:" + tunnel_of_port
+        OVSDriver.install_flow_rule(
+                                ovs_bridge_name,
+                                egress_forwarding_rule)
+        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
+                        egress_forwarding_rule)
 
-            # install rule to forward regular traffic
-            egress_forwarding_rule = "in_port=" + container_of_port + \
-                ",actions=set_tunnel:" + tunnel_id + \
-                    ",output:" + tunnel_of_port
-            OVSDriver.install_flow_rule(
-                                    ovs_bridge_name,
-                                    egress_forwarding_rule)
-            rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                            egress_forwarding_rule)
+        ingress_forwarding_rule = "in_port=" + tunnel_of_port + ",tun_id=" + \
+                tunnel_id + ",actions=output:" + container_of_port
+        OVSDriver.install_flow_rule(ovs_bridge_name, ingress_forwarding_rule)
 
-            ingress_forwarding_rule = "in_port=" + tunnel_of_port + ",tun_id=" + \
-                    tunnel_id + ",actions=output:" + container_of_port
-            OVSDriver.install_flow_rule(ovs_bridge_name, ingress_forwarding_rule)
+        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
+                ingress_forwarding_rule)
 
-            rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                    ingress_forwarding_rule)
+        # install rule to handle arp traffic
+        egress_arp_rule = "in_port=" + container_of_port + ",arp,nw_dst='"\
+            + remote_container_ip + "'" + \
+                ",actions=set_tunnel:" + tunnel_id\
+            + ",output:" + tunnel_of_port
+        OVSDriver.install_flow_rule(ovs_bridge_name, egress_arp_rule)
+        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
+                egress_arp_rule)
 
-            # install rule to handle arp traffic
-            egress_arp_rule = "in_port=" + container_of_port + ",arp,nw_dst='"\
-                + remote_container_ip + "'" + \
-                    ",actions=set_tunnel:" + tunnel_id\
-                + ",output:" + tunnel_of_port
-            OVSDriver.install_flow_rule(ovs_bridge_name, egress_arp_rule)
-            rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                    egress_arp_rule)
-
-            ingress_arp_rule = "in_port=" + tunnel_of_port + ",arp,nw_dst='" +\
-                    container_ip + "'" + ",tun_id=" + tunnel_id +\
-                    ",actions=output:" + container_of_port
-            OVSDriver.install_flow_rule(ovs_bridge_name, ingress_arp_rule)
-            rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                    ingress_arp_rule)
-
-            # All operations successfull, so commit them all!
-            rollback.commitAll()
+        ingress_arp_rule = "in_port=" + tunnel_of_port + ",arp,nw_dst='" +\
+                container_ip + "'" + ",tun_id=" + tunnel_id +\
+                ",actions=output:" + container_of_port
+        OVSDriver.install_flow_rule(ovs_bridge_name, ingress_arp_rule)
+        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
+                ingress_arp_rule)
 
 
