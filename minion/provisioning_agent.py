@@ -126,7 +126,6 @@ class ProvisioningAgent():
                 else:
                     a = link["endpoint_a"]
                     veth_vs = link["veth_vs_a"]
-                    veth_cn = link["veth_cn_a"]
                     ovs_bridge_name = self.__default_ovs_bridge
                     container_ip_net = link["a_ip_address"]
                     remote_container_ip = link["remote_container_ip"].split("/")[0]
@@ -134,7 +133,7 @@ class ProvisioningAgent():
                     tunnel_id = str(link_id)
                     tunnel_interface_name = self.__default_tunnel_interface
                     self.__chain_driver.connect_containers_across_hosts(a,
-                            veth_cn, veth_vs, ovs_bridge_name, container_ip_net,
+                            veth_vs, ovs_bridge_name, container_ip_net,
                             remote_container_ip, tunnel_id,
                             tunnel_interface_name, chain_rollback)
 
