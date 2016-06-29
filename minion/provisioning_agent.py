@@ -1,5 +1,6 @@
 from container_driver import ContainerDriver
 from bash_wrapper import execute_bash_command
+import copy
 from random import randint
 from veth_driver import VethDriver
 from ovs_driver import OVSDriver
@@ -67,13 +68,14 @@ class ProvisioningAgent():
             for vnf_config in chain_config:
                 print "####################"
                 print vnf_config
-                updated_chain_config.append(
-                        self.provision_single_vnf(vnf_config, chain_rollback))
+                updated_chain_config.append(copy.deepcopy(
+                        self.provision_single_vnf(vnf_config, chain_rollback)))
             
             # Identify the links
             links = {}
             print updated_chain_config
             for vnf_contig in updated_chain_config:
+                print vnf_config
                 for net_config in vnf_config['net_ifs']:
                     print net_config
                     link_id = net_config['link_id']
