@@ -152,12 +152,9 @@ def ipc_handler(msg, etcdcli, publisher):
                                 chain[link['source']]['net_ifs'][index] \
                                     ['tunnel_endpoint'] = chain[link['target']]['host_ip']
                                 targets = chain[link['target']]['net_ifs']
-                                print "SOURCE:"
-                                print source[index]
-                                print type(source[index])
                                 for idx in range(len(targets)):
                                     if targets[idx]['link_id'] == source[index]['link_id']:
-                                        source['remote_container_ip'] = targets[idx]['ip_address']
+                                        source[index]['remote_container_ip'] = targets[idx]['ip_address']
                                         break
 
                         target = chain[link['target']]['net_ifs']
@@ -170,7 +167,8 @@ def ipc_handler(msg, etcdcli, publisher):
                                 sources = chain[link['source']]['net_ifs']
                                 for idx in range(len(sources)):
                                     if sources[idx]['link_id'] == target[index]['link_id']:
-                                        target['remote_container_ip'] = sources[idx]['ip_address']
+                                        target[index]['remote_container_ip'] = sources[idx]['ip_address']
+                                        break
                 
                 for host in unique_hosts:
                     message = {'action' : 'create_chain', 'host' : host, 'data'
