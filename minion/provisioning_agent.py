@@ -60,7 +60,7 @@ class ProvisioningAgent():
             for vnf_config in chain_config:
                 print "####################"
                 print vnf_config
-                self.provision_single_vnf(vnf_config)
+                self.provision_single_vnf(vnf_config, chain_rollback)
             chain_rollback.commitAll()
 
     def generate_unique_veth_endpoints(self, container_name, ovs_bridge_name):
