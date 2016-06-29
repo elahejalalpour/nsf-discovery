@@ -87,11 +87,11 @@ class ChainDriver():
 
             tunnel_id = str(tunnel_id)
             tunnel_of_port = str(OVSDriver.get_openflow_port_number(ovs_bridge_name,
-                tunnel_interface_name)
-            container_ip = container_ip_net.split("\\")[0]
+                tunnel_interface_name))
+            container_ip = container_ip_net.split("/")[0]
 
             # install rule to forward regular traffic
-            egress_forwarding_rule = "in_port=" + container_of_port +
+            egress_forwarding_rule = "in_port=" + container_of_port + \
                 ",actions=set_tunnel:" + tunnel_id + \
                     ",output:" + tunnel_of_port
             OVSDriver.install_flow_rule(
@@ -100,26 +100,25 @@ class ChainDriver():
             rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
                             egress_forwarding_rule)
 
-            ingress_forwarding_rule = "in_port=" + tunnel_of_port + ",tun_id=" +
+            ingress_forwarding_rule = "in_port=" + tunnel_of_port + ",tun_id=" + \
                     tunnel_id + ",actions=output:" + container_of_port
-            OVSDriver.install_flow_rule(ovs_bridge_name,
-                    ingress_forwarding_rule)
+            OVSDriver.install_flow_rule(ovs_bridge_name, ingress_forwarding_rule)
 
             rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
                     ingress_forwarding_rule)
 
             # install rule to handle arp traffic
-            egress_arp_rule = "in_port=" + container_of_port + ",arp,nw_dst='"
+            egress_arp_rule = "in_port=" + container_of_port + ",arp,nw_dst='"\
                 + remote_container_ip + "'" + \
-                    ",actions=set_tunnel:" + tunnel_id
+                    ",actions=set_tunnel:" + tunnel_id\
                 + ",output:" + tunnel_of_port
             OVSDriver.install_flow_rule(ovs_bridge_name, egress_arp_rule)
             rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
                     egress_arp_rule)
 
-            ingress_arp_rule = "in_port=" + tunnel_of_port + ",arp,nw_dst='" +
-                    container_ip + "'" + ",tun_id=" + tunnel_id +
-                    ",actions=output:" + container_of_port)
+            ingress_arp_rule = "in_port=" + tunnel_of_port + ",arp,nw_dst='" +\
+                    container_ip + "'" + ",tun_id=" + tunnel_id +\
+                    ",actions=output:" + container_of_port
             OVSDriver.install_flow_rule(ovs_bridge_name, ingress_arp_rule)
             rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
                     ingress_arp_rule)
