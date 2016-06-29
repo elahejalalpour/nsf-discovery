@@ -56,7 +56,7 @@ class ProvisioningAgent():
             veth_endpoint_a = "veth" + str(veth_id) + "-vs"
             veth_endpoint_b = "veth" + str(veth_id) + "-cn"
 
-            present_in_host = VethDriver.is_interface_attached(veth_endpoint_a)
+            present_in_host = VethDriver.is_interface_present(veth_endpoint_a)
             present_in_ovs = OVSDriver.is_interface_attached(ovs_bridge_name,
                                                              veth_endpoint_a)
             present_in_container = VethDriver.is_interface_attached(veth_endpoint_b,
