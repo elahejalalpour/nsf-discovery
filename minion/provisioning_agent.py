@@ -14,6 +14,7 @@ class ProvisioningAgent():
         #cpuset_cpus = vnf_config['cpuset_cpus']
         container_name = vnf_config['container_name']
         vnf_image = vnf_config['vnf_type']
+        print "c_name = " + container_name + ", image = " + vnf_image
         #ip_address = vnf_config['ip_address']
 
         self.__container_handle.deploy(
