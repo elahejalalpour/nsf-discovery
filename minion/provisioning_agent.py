@@ -46,8 +46,8 @@ class ProvisioningAgent():
     def generate_unique_veth_endpoints(self, container_name, ovs_bridge_name):
         veth_endpoint_a = ""
         veth_endpoint_b = ""
-        container_pid = self.__container_handle.get_container_pid(
-            container_name)
+        container_pid = str(self.__container_handle.get_container_pid(
+            container_name))
         while(True):
             # generate a 4-digit random number
             veth_id = randint(100, 999)
