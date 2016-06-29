@@ -31,7 +31,7 @@ def ipc_handler(msg, etcdcli, publisher):
         k = 0
         print mssg
         try:
-            base_ip = ipaddress.ip_address('192.168.215.2')
+            base_ip = ipaddress.ip_address(u'192.168.215.2')
             chain = {}
             is_possible = True
             hosts = []
