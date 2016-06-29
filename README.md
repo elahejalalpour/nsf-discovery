@@ -42,6 +42,14 @@ To deploy a chain use the following curl command:
 curl -H "Content-Type: application/json" -X POST -d '{"action":"deploy_chain"}' http://localhost:5000/request
 ```
 
+If master cannot deploy chain for insufficient resources then stop etcd and 
+remove the persistant data it is storing:
+
+```
+rm -rf /var/etcd/*
+```
+
+
 
 
 
