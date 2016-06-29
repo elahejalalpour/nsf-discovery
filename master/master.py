@@ -31,7 +31,7 @@ def ipc_handler(msg, etcdcli, publisher):
         k = 0
         print mssg
         try:
-            base_ip = ipaddress.ip_address(u'192.168.215.2')
+            base_ip = ipaddress.ip_address(u'192.168.0.2')
             chain = {}
             is_possible = True
             hosts = []
@@ -78,7 +78,7 @@ def ipc_handler(msg, etcdcli, publisher):
                 chain[links[link]['target']][
                     'aggregate_band'] += links[link]['bandwidth']
                 temp['ip_address'] = str(base_ip + k) + "/24"
-                k = k + 1
+                k = k + 256
                 chain[links[link]['target']]['net_ifs'].append(deepcopy(temp))
                 links[link]['id'] = link_id
                 etcdcli.write('/link_id', link_id + 1)
