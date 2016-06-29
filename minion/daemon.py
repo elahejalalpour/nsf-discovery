@@ -18,6 +18,8 @@ dict = {}
 # set up zeromq
 master = '10.0.1.100'
 interface = 'eth0'
+default_ovs_bridge = 'ovs-br0'
+default_tunnel_interface = 'gre0'
 context = zmq.Context()
 subscriber = context.socket(zmq.SUB)
 syncclient = context.socket(zmq.REQ)
@@ -77,7 +79,8 @@ def cmd_helper(msg):
     elif (msg['action'] == 'create_chain'):
         # To be finished
         print "Request received to deploy chain: \n"
-        pa = ProvisioningAgent()
+        pa = ProvisioningAgent(ovs_bridge_name = default_ovs_bridge,
+                tunnel_interface_name = default_tunnel_interface)
         pa.provision_local_chain(msg['data'])
         # print msg['data']
         # print(json.dumps(msg))
@@ -192,13 +195,19 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--master", help="IP of the master")
-    parser.add_argument("--interface", help="interface of minion")
+    parser.add_argument("--master", help = "IP address of the master", 
+                        default = "127.0.0.1")
+    parser.add_argument("--interface", help = "Communication interface of\
+                        minion, e.g., eth0", default = "eth0")
+    parser.add_argument("--default_ovs_bridge", help = "Name of the default ovs\
+                        bridge", default = "ovs-br0")
+    parser.add_argument("--default_tunnel_interface", help = "Name of the \
+                        tunnel interface", default = "gre0")
     args = parser.parse_args()
-    if (args.master is not None):
-        master = args.master
-    if (args.interface is not None):
-        interface = args.interface
+    master = args.master
+    interface = args.interface
+    default_ovs_bridge = args.default_ovs_bridge
+    default_tunnel_interface = args.default_tunnel_interface
     subscriber.connect('tcp://' + master + ':5561')
     subscriber.setsockopt(zmq.SUBSCRIBE, '')
     syncclient.connect('tcp://' + master + ':5562')
