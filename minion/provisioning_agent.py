@@ -24,7 +24,7 @@ class ProvisioningAgent():
 
         # Start the container 
         self.__container_handle.start(vnf_name=container_name)
-        chain_rollback.push(self.__container_handle.stop, self._container_handle,
+        chain_rollback.push(self.__container_handle.stop, self.__container_handle,
                 container_name)
 
         # Retrieve container pid and create symlink to netns under
