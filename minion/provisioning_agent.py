@@ -129,6 +129,7 @@ class ProvisioningAgent():
                     ovs_bridge_name = self.__default_ovs_bridge
                     container_ip_net = link["a_ip_address"]
                     remote_container_ip = link["remote_container_ip"].split("/")[0]
+                    print remote_container_ip
                     tunnel_id = str(link_id)
                     tunnel_interface_name = self.__default_tunnel_interface
                     self.__chain_driver.connect_containers_across_host(a,
