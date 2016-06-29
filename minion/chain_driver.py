@@ -14,7 +14,7 @@ class ChainDriver():
     
     def connect_containers_inside_host(self, container_a_name,
             veth_vs_container_a, container_b_name, veth_vs_container_b,
-            ovs_bridge_name, chain_rollback):
+            link_id, chain_rollback):
         """
         Connects two containers within the same physical hosts by a
         bi-directional link.
@@ -23,10 +23,11 @@ class ChainDriver():
         @param veth_vs_container_a Loose end of container a's veth pair link
         @param container_b_name Name of the other container in the pair
         @param veth_vs_container_b Loos end of container_b's veth pair link
-        @param ovs_bridge_name Name of the isolated ovs bridge that will connect
+        @param link_id Id of the link connecting container_a and container_b
         container_a and container_b
         @param chain_rollback Global rollback object
         """
+        ovs_bridge_name = "ovs-br-" + str(link_id)
         OVSDriver.create_bridge(ovs_bridge_name)
         chain_rollback.push(OVSDriver.delete_bridge, ovs_bridge_name)
         
