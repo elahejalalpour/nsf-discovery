@@ -75,6 +75,7 @@ class ProvisioningAgent():
             for vnf_contig in updated_chain_config:
                 net_configs = vnf_config['net_ifs']
                 for net_config in net_configs:
+                    print net_config
                     if net_config['link_id'] not in links.keys():
                         link[net_config["link_id"]] = {"link_type" : net_config["link_type"]}
                         link[net_config["link_id"]]["endpoint_a"] = vnf_config["container_name"]
