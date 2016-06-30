@@ -334,7 +334,7 @@ def msg_handler(msg, etcdcli):
                 print "Child JSON: "
                 print temp
                 node = temp['Host_name'] + '_' + temp['Con_id']
-                G.add_node(node)
+                G.add_node(node, name = temp['Con_name'])
                 lst = temp['net_ifs']
                 print "lst:"
                 print lst
