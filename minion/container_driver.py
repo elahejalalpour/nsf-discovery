@@ -323,3 +323,13 @@ class ContainerDriver():
         for image in temp:
             images.append(image['RepoTags'][0])
         return images
+
+    def get_container_net_ifaces(self, container_name):
+        with self._error_handling(errors.BashExecutionError):
+            bash_command = "docker exec sr2chowd-fw0 ip link | grep -o veth[0-9]*-cn"
+            (return_code, output, errput) = execute_bash_command(
+                bash_command)
+            if return_code != 0:
+                raise Exception(return_code, errput)
+        return output.split()
+        

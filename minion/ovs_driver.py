@@ -149,3 +149,52 @@ class OVSDriver():
         if len(output) <= 0:
             return "-1"
         return output.strip()
+
+    @staticmethod
+    def get_tunnel_port_number(ovs_bridge_name, veth_interface_name):
+        veth_openflow_port = OVSDriver.get_openflow_port_number(ovs_bridge_name,
+            veth_interface_name)
+        if veth_openflow_port == '-1':
+            return '-1'
+        bash_command = "sudo ovs-ofctl -O OpenFlow13 dump-flows " + \
+            ovs_bridge_name + " | grep -o in_port=" + veth_openflow_port + \
+            ".*set_tunnel:[x0-9]* | grep -v arp | grep -o tunnel:[x0-9]* | " + \
+            "sed 's/.*:\(.*\)/\\1/'"
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+        try:
+            tunnel_port = str(int(output.strip(), 16))
+            return tunnel_port
+        except:
+            return '-1'
+
+    @staticmethod
+    def get_ovs_bridges_and_ports():
+
+        bridges_and_ports = {}
+
+        bash_command = 'sudo ovs-vsctl show | grep -o Bridge.*".*" ' + \
+            ' | grep -o \\".*\\"'
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+        output = output.replace('"', '')
+        ovs_bridges = output.split()
+
+        for ovs_bridge in ovs_bridges:
+            bash_command = "sudo ovs-vsctl list-ports " + ovs_bridge
+            (return_code, output, errput) = execute_bash_command(bash_command)
+            if return_code <> 0:
+                raise Exception(return_code, errput)
+            ovs_ports = output.split()
+            bridges_and_ports[ovs_bridge] = ovs_ports
+
+        return bridges_and_ports
+
+        
+      
+
+
+
+

@@ -1,6 +1,7 @@
 from container_driver import ContainerDriver
 from provisioning_agent import ProvisioningAgent
 from ovs_driver import OVSDriver
+from discovery_agent import DiscoveryAgent
 import time
 import threading
 import zmq
@@ -131,31 +132,34 @@ def collect():
 		on the server
    """
 	pull()
-	containers = mon.get_containers()
+
+        discovery_agent = DiscoveryAgent()
+        partial_view = discovery_agent.discover()
+	
+        containers = mon.get_containers()
 	it = iter(containers)
 	for a in it:
 		ID = a['Id'].encode()
 		status = mon.guest_status(ID)
 		image = a['Image']
-		name = a['Names'][0];
+		name = a['Names'][0][1:].encode('ascii');
 		#read json chain info from home
-
-                ## adding chain discovery code here 
-                container_name = name[1:]
-                print 'container name:', container_name
-                
-
 		#chain_data = open("/home/nfuser/chain.json").read()
-		#chain_data = json.loads(chain_data)
-                chain_data = {}
-                chain_data['net_ifs'] = ""
+    
+                #read net_ifs info from partial_view read from discovery module
+                current_container = None
+                for container in partial_view['containers']:
+                    if container['container_id'] == name:
+                        current_container = container
+                        break
+                net_ifs = current_container['net_ifs']
 		#push vnf status info
 		if dict.has_key(ID):
 			if dict[ID] != status:
 				#vnf is in the record but status changed
 				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
 						'name' : name, 'status' : status, 'flag' : 'update',
-						'net_ifs' : chain_data['net_ifs']}
+						'net_ifs' : net_ifs}
 				if status == 'running':
 					msg['IP'] = mon.get_ip(ID)
 				syncclient.send_json(msg)
@@ -166,7 +170,7 @@ def collect():
 			dict[ID] = status
 			msg = {'host' : hostname, 'ID' : ID, 'image' : image,
 						'name' : name, 'status' : status, 'flag' : 'new',
-						'net_ifs' : chain_data['net_ifs']}
+						'net_ifs' : net_ifs}
 			if status == 'running':
 				msg['IP'] = mon.get_ip(ID)
 			syncclient.send_json(msg)
