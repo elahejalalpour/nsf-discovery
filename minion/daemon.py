@@ -151,10 +151,10 @@ def collect():
         for container in partial_view['containers']:
             if container['container_id'] == name:
                 current_container = container
-                    break
-            print current_container
-            if current_container is not None:
-                net_ifs = current_container['net_ifs']
+                break
+        print current_container
+        if current_container is not None:
+            net_ifs = current_container['net_ifs']
         # push vnf status info
         if dict.has_key(ID):
             if dict[ID] != status:
