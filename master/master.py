@@ -365,7 +365,7 @@ def msg_handler(msg, etcdcli):
                 for g in subgraphs:
                     etcdcli.write(
                         "/Chain",
-                        json_graph.node_link_data(g),
+                        json.dumps(json_graph.node_link_data(g)),
                         append=True)
             except Exception, ex:
                 print(ex)
