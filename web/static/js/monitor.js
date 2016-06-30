@@ -30,7 +30,48 @@ $(function() {
 			$('#Chain').removeProp('hidden');
 	});
 	
-	
+  function drawChain(chain) {
+    nodes = [];
+    links = [];
+    var LENGTH_MAIN = 350,
+        LENGTH_SERVER = 150,
+        LENGTH_SUB = 50,
+        WIDTH_SCALE = 2,
+        GREEN = 'green',
+        RED = '#C5000B',
+        ORANGE = 'orange',
+    for (var i = 0; i < chain['nodes'].length; ++i) {
+      nodes.push(){id: i, group: 'container'};  
+    }
+
+    for (var i = 0; i < chain['links'].length; ++i) {
+      s = chains['links'][i]['source'];
+      t = chains['link'][i]['target'];
+      links.push({from: s, to: t, length: LENGTH_MAIN, width: WIDTH_SCALE * 6, label: '0.71 mbps'})
+    }
+    chain_canvas = document.getElemenById('Chain');
+    render_data = {
+      nodes: nodes,
+      edges: links
+    };
+    var options = {
+      nodes: {
+        scaling: {min: 12, max: 16}
+      },
+      edges: {
+        color: RED,
+        smooth: true
+      },
+      groups: {
+        'container': {
+          shape: 'triangle',
+          color: GREEN
+        }
+      }
+    };
+    chain_drawing = new vis.Network(chain_canvas, render_data, options);
+  }
+
 	function repeat() {
 		//repeat every 2 seconds
 		setTimeout(repeat, 5000);
@@ -57,6 +98,10 @@ $(function() {
 			$('#popup').empty()
 			console.log("VNF data changed");
 		}
+    // Chains Tab
+    for (var i = 0; i < chains.length; ++i) {
+      drawChain(chains[i])
+    }
 		//VNF Tab
 		for(var i = 0; i < hosts.length; i++) {
 			//console.log(hosts[i]);
