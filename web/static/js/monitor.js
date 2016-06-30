@@ -44,7 +44,9 @@ $(function() {
 		var vnfs = model.getVnf();
 		model.getData("Host");
 		var hosts = model.getHost();
-		//console.log(JSON.stringify(vnfs));
+    model.getData("Chain");
+    var chains = model.getChains();
+		console.log(JSON.stringify(chains));
 		var data = JSON.stringify(vnfs);
 		//console.log("d:"+$('#fresh').text());
 		var old = $('#fresh').text();

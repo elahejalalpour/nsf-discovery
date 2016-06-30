@@ -9,6 +9,7 @@ monitor.model = function () {
 	//private vars
 	var vnfs;
 	var hosts;
+  var chains;
 	
 	function getHost() {
 		//return host data get from ajax
@@ -28,6 +29,15 @@ monitor.model = function () {
 		}
 	}
 	
+  function getChains() {
+    //return chain data from ajax call
+    if (typeof chains == 'undefined') {
+      return [];
+    } else {
+      return chains;
+    }
+  }
+
 	function getData(type) {
 		//ajax call get different kind of data
 		$.ajax({
@@ -36,9 +46,12 @@ monitor.model = function () {
 			url: "http://localhost:5000/get"+type,
 			method: 'GET',
 			success: function (json) {
-				//console.log(json);
+        if (type == "Chain") {
+				  console.log(json);
+        }
 				if(type === "Host") hosts = json;
-				else vnfs = json;
+				else if (type === "VNF") vnfs = json;
+        else if (type === "Chain") chains = json;
 			},
 			error: function (request, status, error) {
 				alert("Web Service is Unavailable: " +
