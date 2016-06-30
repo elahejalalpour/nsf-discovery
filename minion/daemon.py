@@ -126,58 +126,65 @@ def pull():
 
 
 def collect():
-    """
-            Collect various information of all containers
-            on the server
-"""
-    pull()
-    containers = mon.get_containers()
-    it = iter(containers)
-    for a in it:
-        ID = a['Id'].encode()
-        status = mon.guest_status(ID)
-        image = a['Image']
-        name = a['Names'][0]
-        # read json chain info from home
-        # chain_data = open("/home/nfuser/chain.json").read()
-        chain_data = '{"net_ifs":[]}'
-        chain_data = json.loads(chain_data)
-        # push vnf status info
-        if dict.has_key(ID):
-            if dict[ID] != status:
-                # vnf is in the record but status changed
-                msg = {'host': hostname, 'ID': ID, 'image': image,
-                       'name': name, 'status': status, 'flag': 'update',
-                       'net_ifs': chain_data['net_ifs']}
-                if status == 'running':
-                    msg['IP'] = mon.get_ip(ID)
-                syncclient.send_json(msg)
-                syncclient.recv()
-                dict[ID] = status
-        else:
-            # vnf is not in the record,create a new entry
-            dict[ID] = status
-            msg = {'host': hostname, 'ID': ID, 'image': image,
-                   'name': name, 'status': status, 'flag': 'new',
-                   'net_ifs': chain_data['net_ifs']}
-            if status == 'running':
-                msg['IP'] = mon.get_ip(ID)
-            syncclient.send_json(msg)
-            syncclient.recv()
-    # push system resource info
-    mem = psutil.virtual_memory()
-    images = mon.images()
-    msg = {'host': hostname, 'flag': 'sysinfo',
-           'cpu': psutil.cpu_percent(interval=sleeping),
-           'mem_total': mem[0], 'mem_available': mem[1],
-           'used': mem[3], 'host_ip': get_ip_address(interface),
-           'cpus': psutil.cpu_percent(interval=None, percpu=True),
-           'network': psutil.net_io_counters(pernic=True),
-           'images': images}
-    syncclient.send_json(msg)
-    syncclient.recv()
+	"""
+		Collect various information of all containers 
+		on the server
+   """
+	pull()
+	containers = mon.get_containers()
+	it = iter(containers)
+	for a in it:
+		ID = a['Id'].encode()
+		status = mon.guest_status(ID)
+		image = a['Image']
+		name = a['Names'][0];
+		#read json chain info from home
 
+                ## adding chain discovery code here 
+                container_name = name[1:]
+                print 'container name:', container_name
+                
 
+		#chain_data = open("/home/nfuser/chain.json").read()
+		#chain_data = json.loads(chain_data)
+                chain_data = {}
+                chain_data['net_ifs'] = ""
+		#push vnf status info
+		if dict.has_key(ID):
+			if dict[ID] != status:
+				#vnf is in the record but status changed
+				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
+						'name' : name, 'status' : status, 'flag' : 'update',
+						'net_ifs' : chain_data['net_ifs']}
+				if status == 'running':
+					msg['IP'] = mon.get_ip(ID)
+				syncclient.send_json(msg)
+				syncclient.recv()
+				dict[ID] = status
+		else:
+			#vnf is not in the record,create a new entry
+			dict[ID] = status
+			msg = {'host' : hostname, 'ID' : ID, 'image' : image,
+						'name' : name, 'status' : status, 'flag' : 'new',
+						'net_ifs' : chain_data['net_ifs']}
+			if status == 'running':
+				msg['IP'] = mon.get_ip(ID)
+			syncclient.send_json(msg)
+			syncclient.recv()
+	#push system resource info
+	mem = psutil.virtual_memory()
+	images = mon.images()
+	msg = {'host' : hostname, 'flag' : 'sysinfo', 
+			'cpu' : psutil.cpu_percent(interval=sleeping),
+			'mem_total' : mem[0], 'mem_available' : mem[1], 
+			'used' : mem[3],'host_ip' : get_ip_address('eth0'),
+			'cpus' : psutil.cpu_percent(interval=None, percpu=True),
+			'network' : psutil.net_io_counters(pernic=True),
+			'images' : images}
+	syncclient.send_json(msg)
+	syncclient.recv()
+		
+		
 def repeat():
     """
             A scheduler repeat exec collect() every interval
