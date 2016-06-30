@@ -23,11 +23,11 @@ class DiscoveryAgent():
         #print ovs_bridges_and_ports
 
         containers = self.__container_driver.get_containers()
-        print containers
         for container in containers:
             container_dict = {}
 
             container_name = container[u'Names'][0][1:].encode('ascii')
+            print container_name
             container_dict['container_id'] = container_name
 
             net_ifaces_list = []
@@ -35,18 +35,20 @@ class DiscoveryAgent():
                 self.__container_driver.get_container_net_ifaces(
                 container_name)
             for net_iface in container_net_ifaces:
+                ovs_net_iface = self.__get_ovs_veth_endpoint(net_iface)
                 net_iface_dict = {}
                 net_iface_dict['if_name'] = net_iface
                 for ovs_bridge in ovs_bridges_and_ports:
                     if ovs_bridge == self.__tunnel_bridge_name:
-                        if self.__get_ovs_veth_endpoint(net_iface) in \
+                        if ovs_net_iface in \
                             ovs_bridges_and_ports[ovs_bridge]:
                             net_iface_dict['link_type'] ='gre'
+                        
                             net_iface_dict['link_id'] = \
                                 self.__ovs_driver.get_tunnel_port_number(
-                                    ovs_bridge, net_iface)
+                                    ovs_bridge, ovs_net_iface)
                     else:
-                        if self.__get_ovs_veth_endpoint(net_iface) in \
+                        if ovs_net_iface in \
                             ovs_bridges_and_ports[ovs_bridge]:
                             net_iface_dict['link_type'] ='internal'
                             net_iface_dict['link_id'] = ovs_bridge
