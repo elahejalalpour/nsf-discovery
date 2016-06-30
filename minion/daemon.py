@@ -14,7 +14,7 @@ import thread
 import json
 import argparse
 
-sleeping = 1.5
+sleeping = 5
 mon = ContainerDriver()
 dict = {}
 # set up zeromq
