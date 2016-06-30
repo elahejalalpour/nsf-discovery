@@ -39,16 +39,17 @@ $(function() {
         WIDTH_SCALE = 2,
         GREEN = 'green',
         RED = '#C5000B',
+        BLACK = '#090909',
         ORANGE = 'orange';
     console.log(chain)
     for (var i = 0; i < chain['nodes'].length; ++i) {
-      nodes.push({id: i, group: 'container'});  
+      nodes.push({id: i, group: 'container', value: 20});  
     }
 
     for (var i = 0; i < chain['links'].length; ++i) {
       var s = chain['links'][i]['source'];
       var t = chain['links'][i]['target'];
-      links.push({from: s, to: t, length: LENGTH_MAIN, width: WIDTH_SCALE * 6, label: '0.71 mbps'})
+      links.push({from: s, to: t, length: LENGTH_SUB / 20, color: BLACK, width: WIDTH_SCALE * 2})
     }
     var chain_canvas = document.getElementById('Chain');
     var render_data = {
@@ -56,8 +57,15 @@ $(function() {
       edges: links
     };
     var options = {
+      autoResize: true,
+      height: '50%',
+      width: '50%',
+      physics:{
+        barnesHut:{gravitationalConstant:-30000},
+        stabilization: {iterations:2500}
+      },
       nodes: {
-        scaling: {min: 12, max: 16}
+        scaling: {min: 20, max: 40}
       },
       edges: {
         color: RED,
@@ -65,8 +73,8 @@ $(function() {
       },
       groups: {
         'container': {
-          shape: 'triangle',
-          color: GREEN
+          shape: 'circularImage',
+          image: 'images/docker.png'
         }
       }
     };
