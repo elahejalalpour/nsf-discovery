@@ -154,7 +154,8 @@ def ipc_handler(msg, etcdcli, publisher):
                                 targets = chain[link['target']]['net_ifs']
                                 for idx in range(len(targets)):
                                     if targets[idx]['link_id'] == source[index]['link_id']:
-                                        source[index]['remote_container_ip'] = targets[idx]['ip_address']
+                                        source[index]['remote_container_ip'] = targets[
+                                            idx]['ip_address']
                                         break
 
                         target = chain[link['target']]['net_ifs']
@@ -167,29 +168,30 @@ def ipc_handler(msg, etcdcli, publisher):
                                 sources = chain[link['source']]['net_ifs']
                                 for idx in range(len(sources)):
                                     if sources[idx]['link_id'] == target[index]['link_id']:
-                                        target[index]['remote_container_ip'] = sources[idx]['ip_address']
+                                        target[index]['remote_container_ip'] = sources[
+                                            idx]['ip_address']
                                         break
-                
+
                 for host in unique_hosts:
-                    message = {'action' : 'create_chain', 'host' : host, 'data'
-                            : []}
+                    message = {
+                        'action': 'create_chain', 'host': host, 'data': []}
                     for ID in chain:
                         if chain[ID]['host'] == host:
                             message['data'].append(chain[ID])
                     publisher.send_json(message)
 
                 #chain_list = []
-                #for ID in chain:
+                # for ID in chain:
                 #    chain_list.append(chain[ID])
-                #print json.dumps(chain_list)
-                #publisher.send_json(chain_list)
+                # print json.dumps(chain_list)
+                # publisher.send_json(chain_list)
                 # message = {'action':'create_chain'}
                 # message['data'] = chain
                 # publisher.send_json(message)
                 # for ID in chain:
-                #	print(chain[ID])
-                #	print('############################################')
-                #	publisher.send_json(chain[ID])
+                #   print(chain[ID])
+                #   print('############################################')
+                #   publisher.send_json(chain[ID])
             else:
                 print("Insufficient Resource!")
 
@@ -346,9 +348,9 @@ def msg_handler(msg, etcdcli):
                         edges[key] = {node: val['if_name']}
             # print(edges)
             '''
-				nodes : [{HostX_VNFX:ethX},{HostX_VNFX:ethX}]
-				edges : {nodes,link_type,link_id}
-			'''
+                nodes : [{HostX_VNFX:ethX},{HostX_VNFX:ethX}]
+                edges : {nodes,link_type,link_id}
+            '''
             for key in edges:
                 if (len(edges[key]) == 2):
                     t1 = edges[key].keys()

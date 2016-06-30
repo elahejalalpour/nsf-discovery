@@ -45,7 +45,7 @@ def register():
     syncclient.send_json(msg)
     # wait for synchronization reply
     syncclient.recv()
-    #print('register finished')
+    # print('register finished')
 
 
 def cmd_helper(msg):
@@ -81,8 +81,8 @@ def cmd_helper(msg):
     elif (msg['action'] == 'create_chain'):
         # To be finished
         print "Request received to deploy chain: \n"
-        pa = ProvisioningAgent(ovs_bridge_name = default_ovs_bridge,
-                tunnel_interface_name = default_tunnel_interface)
+        pa = ProvisioningAgent(ovs_bridge_name=default_ovs_bridge,
+                tunnel_interface_name=default_tunnel_interface)
         pa.provision_local_chain(msg['data'])
         # print msg['data']
         # print(json.dumps(msg))
@@ -122,31 +122,31 @@ def pull():
             msg = subscriber.recv_json(flags=zmq.NOBLOCK)
             thread.start_new_thread(cmd_handler, (msg,))
     except Exception, ex:
-        #print("No New Msg!")
+        # print("No New Msg!")
         return
 
 
 def collect():
-	"""
-		Collect various information of all containers 
-		on the server
-   """
-	pull()
+    """
+        Collect various information of all containers
+        on the server
+    """
+    pull()
 
     discovery_agent = DiscoveryAgent()
     partial_view = discovery_agent.discover()
-	
-    containers = mon.get_containers()
-	it = iter(containers)
-	for a in it:
-		ID = a['Id'].encode()
-		status = mon.guest_status(ID)
-		image = a['Image']
-		name = a['Names'][0][1:].encode('ascii');
-		#read json chain info from home
-		#chain_data = open("/home/nfuser/chain.json").read()
     
-        #read net_ifs info from partial_view read from discovery module
+    containers = mon.get_containers()
+    it = iter(containers)
+    for a in it:
+        ID = a['Id'].encode()
+        status = mon.guest_status(ID)
+        image = a['Image']
+        name = a['Names'][0][1:].encode('ascii');
+        # read json chain info from home
+        # chain_data = open("/home/nfuser/chain.json").read()
+    
+        # read net_ifs info from partial_view read from discovery module
         current_container = None
         for container in partial_view['containers']:
             if container['container_id'] == name:
@@ -155,46 +155,46 @@ def collect():
             print current_container
             if current_container is not None:
                 net_ifs = current_container['net_ifs']
-		#push vnf status info
-		if dict.has_key(ID):
-			if dict[ID] != status:
-				#vnf is in the record but status changed
-				msg = {'host' : hostname, 'ID' : ID, 'image' : image,
-						'name' : name, 'status' : status, 'flag' : 'update',
-						'net_ifs' : net_ifs}
-				if status == 'running':
-					msg['IP'] = mon.get_ip(ID)
-				syncclient.send_json(msg)
+        # push vnf status info
+        if dict.has_key(ID):
+            if dict[ID] != status:
+                # vnf is in the record but status changed
+                msg = {'host' : hostname, 'ID' : ID, 'image' : image,
+                        'name' : name, 'status' : status, 'flag' : 'update',
+                        'net_ifs' : net_ifs}
+                if status == 'running':
+                    msg['IP'] = mon.get_ip(ID)
+                syncclient.send_json(msg)
                 print "VNF status changed:"
                 print msg
-				syncclient.recv()
-				dict[ID] = status
-		else:
-			#vnf is not in the record,create a new entry
-			dict[ID] = status
-			msg = {'host' : hostname, 'ID' : ID, 'image' : image,
-						'name' : name, 'status' : status, 'flag' : 'new',
-						'net_ifs' : net_ifs}
-			if status == 'running':
-				msg['IP'] = mon.get_ip(ID)
+                syncclient.recv()
+                dict[ID] = status
+        else:
+            # vnf is not in the record,create a new entry
+            dict[ID] = status
+            msg = {'host' : hostname, 'ID' : ID, 'image' : image,
+                        'name' : name, 'status' : status, 'flag' : 'new',
+                        'net_ifs' : net_ifs}
+            if status == 'running':
+                msg['IP'] = mon.get_ip(ID)
             print "New VNF entry"
             print msg
-			syncclient.send_json(msg)
-			syncclient.recv()
-	#push system resource info
-	mem = psutil.virtual_memory()
-	images = mon.images()
-	msg = {'host' : hostname, 'flag' : 'sysinfo', 
-			'cpu' : psutil.cpu_percent(interval=sleeping),
-			'mem_total' : mem[0], 'mem_available' : mem[1], 
-			'used' : mem[3],'host_ip' : get_ip_address(interface),
-			'cpus' : psutil.cpu_percent(interval=None, percpu=True),
-			'network' : psutil.net_io_counters(pernic=True),
-			'images' : images}
-	syncclient.send_json(msg)
-	syncclient.recv()
-		
-		
+            syncclient.send_json(msg)
+            syncclient.recv()
+    # push system resource info
+    mem = psutil.virtual_memory()
+    images = mon.images()
+    msg = {'host' : hostname, 'flag' : 'sysinfo', 
+            'cpu' : psutil.cpu_percent(interval=sleeping),
+            'mem_total' : mem[0], 'mem_available' : mem[1], 
+            'used' : mem[3],'host_ip' : get_ip_address(interface),
+            'cpus' : psutil.cpu_percent(interval=None, percpu=True),
+            'network' : psutil.net_io_counters(pernic=True),
+            'images' : images}
+    syncclient.send_json(msg)
+    syncclient.recv()
+        
+        
 def repeat():
     """
             A scheduler repeat exec collect() every interval
@@ -205,7 +205,7 @@ def repeat():
     while (True):
         collect()
         # time.sleep(interval)
-    #threading.Timer(interval, repeat).start()
+    # threading.Timer(interval, repeat).start()
 
 
 def main():
