@@ -31,26 +31,27 @@ $(function() {
 	});
 	
   function drawChain(chain) {
-    nodes = [];
-    links = [];
+    var nodes = [];
+    var links = [];
     var LENGTH_MAIN = 350,
         LENGTH_SERVER = 150,
         LENGTH_SUB = 50,
         WIDTH_SCALE = 2,
         GREEN = 'green',
         RED = '#C5000B',
-        ORANGE = 'orange',
+        ORANGE = 'orange';
+    console.log(chain)
     for (var i = 0; i < chain['nodes'].length; ++i) {
-      nodes.push(){id: i, group: 'container'};  
+      nodes.push({id: i, group: 'container'});  
     }
 
     for (var i = 0; i < chain['links'].length; ++i) {
-      s = chains['links'][i]['source'];
-      t = chains['link'][i]['target'];
+      var s = chain['links'][i]['source'];
+      var t = chain['links'][i]['target'];
       links.push({from: s, to: t, length: LENGTH_MAIN, width: WIDTH_SCALE * 6, label: '0.71 mbps'})
     }
-    chain_canvas = document.getElemenById('Chain');
-    render_data = {
+    var chain_canvas = document.getElementById('Chain');
+    var render_data = {
       nodes: nodes,
       edges: links
     };
@@ -69,7 +70,7 @@ $(function() {
         }
       }
     };
-    chain_drawing = new vis.Network(chain_canvas, render_data, options);
+    var chain_drawing = new vis.Network(chain_canvas, render_data, options);
   }
 
 	function repeat() {
@@ -100,7 +101,7 @@ $(function() {
 		}
     // Chains Tab
     for (var i = 0; i < chains.length; ++i) {
-      drawChain(chains[i])
+      drawChain(chains[i]);
     }
 		//VNF Tab
 		for(var i = 0; i < hosts.length; i++) {
