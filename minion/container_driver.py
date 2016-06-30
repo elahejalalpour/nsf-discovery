@@ -81,10 +81,10 @@ class ContainerDriver():
         """
         Returns all container's INFO.
 
-          @return information of all containers in a list.
+        @return information of all containers in a list.
         """
         dcx = self._get_client()
-        return dcx.containers(all=True)
+        return dcx.containers()
 
     def get_id(self, vnf_name):
         """
