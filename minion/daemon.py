@@ -152,7 +152,9 @@ def collect():
                     if container['container_id'] == name:
                         current_container = container
                         break
-                net_ifs = current_container['net_ifs']
+                print current_container
+                if current_container is not None:
+                    net_ifs = current_container['net_ifs']
 		#push vnf status info
 		if dict.has_key(ID):
 			if dict[ID] != status:
