@@ -300,6 +300,8 @@ def msg_handler(msg, etcdcli):
                    'VNF_status': msg['status'], 'VNF_type': msg['image'],
                    'Chain_name': None, 'net_ifs': msg['net_ifs']}
             vnf = json.dumps(vnf)
+            print "VNF info received:"
+            print vnf
             try:
                 r = etcdcli.read('/VNF', recursive=True, sorted=True)
                 exist = False
@@ -321,8 +323,6 @@ def msg_handler(msg, etcdcli):
             etcdcli.write('/Chain/test', None)
             etcdcli.delete('/Chain/test')
             r = etcdcli.read('/VNF', recursive=True, sorted=True)
-            print "VNFS: " 
-            print r
             G = nx.Graph()
             edges = {}
             for child in r.children:
