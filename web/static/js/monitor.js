@@ -33,10 +33,10 @@ $(function() {
 	
 	function repeat() {
 		//repeat every 2 seconds
-		setTimeout(repeat, 1000);
+		setTimeout(repeat, 5000);
 		$("#Hosts").empty();
 		$("#VNFS").empty();
-		//$("#Chain").empty();
+		$("#Chain").empty();
 		
 		var changed = false;
 		
