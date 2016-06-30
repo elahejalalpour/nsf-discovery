@@ -100,6 +100,7 @@ monitor.model = function () {
 		getData : getData,
 		getHost : getHost,
 		getVnf : getVnf,
+    getChains: getChains,
 		makeReq : makeReq
 	};
 };
