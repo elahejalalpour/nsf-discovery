@@ -31,6 +31,7 @@ $(function() {
   });
   
   function drawChain(chain) {
+    var images = { "firewall" : "firewall.jpg" }
     var nodes = [];
     var links = [];
     var LENGTH_MAIN = 350,
@@ -43,7 +44,7 @@ $(function() {
         ORANGE = 'orange';
     console.log(chain)
     for (var i = 0; i < chain['nodes'].length; ++i) {
-      nodes.push({id: i, group: 'container', value: 20});  
+      nodes.push({id: i, group: chain['nodes'][i]['type'], value: 25, label: chain['nodes'][i]['name']});  
     }
 
     for (var i = 0; i < chain['links'].length; ++i) {
@@ -72,9 +73,9 @@ $(function() {
         smooth: true
       },
       groups: {
-        'container': {
+        'firewall': {
           shape: 'circularImage',
-          image: 'images/docker.png'
+          image: 'images/firewall.jpg' 
         }
       }
     };

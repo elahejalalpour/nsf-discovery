@@ -3,8 +3,10 @@
 	<head>
 		    <title>VNF Management System</title>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <link href="http://visjs.org/dist/vis.css" rel="stylesheet" type="text/css" />
     <script src="http://underscorejs.org/underscore-min.js"></script>
     <script type="text/javascript" src="http://visjs.org/dist/vis.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:700|Ubuntu:400,700' rel='stylesheet' type='text/css'>
     <!-- Add all your javascript files here.  If we were doing this for real, we'd
     	use tools to automatically combine many of these files to reduce the network
     	overhead.  But we can't do everything... -->
@@ -14,28 +16,26 @@
     <link rel="stylesheet" href="css/monitor.css"/>
 	</head>
 	<body>
-		
+	<div id="body" style="height: 100%">
 		<ul class ='navi-ul'>
 		  <li class ='navi-li'><a id= 'navi-hosts' class="active" href="#">Hosts</a></li>
 		  <li class ='navi-li'><a id= 'navi-vnfs' href="#">VNFs</a></li>
 		  <li class ='navi-li'><a id= 'navi-chain' href="#">Chain</a></li>
 		</ul>
 		<br></br>
-		<h1 style='width:90%;float:right'>VNF Management System</h1>
-		<div id='content'>
+		<h1 style='width:85%;float:right'>nf.io Dashboard</h1>
+		<div class='body-content' id='body-content'>
 			<ul id='Hosts'>
 			</ul>
 		
 			<ul hidden=true id='VNFS'>
 			</ul>
 		
-			<div hidden=true id='Chain'>
-				<p style='text-align:center;'>This is Chain</p>
-			</div>
+                	<div id='Chain' style="width:100%;height:100%" hidden=true></div>
 		
 			<div id='popup'>
 			</div>
-		</div>
+                </div>
 		<p id='fresh' hidden=true>
 		</p>
 	</body>
