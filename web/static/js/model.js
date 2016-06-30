@@ -31,7 +31,7 @@ monitor.model = function () {
 	
   function getChains() {
     //return chain data from ajax call
-    if (typeof chains == 'undefined') {
+    if (typeof chains === 'undefined') {
       return [];
     } else {
       return chains;
