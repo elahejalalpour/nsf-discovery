@@ -63,7 +63,7 @@ def send_Host():
 @app.route('/getChain', methods=['GET'])
 def send_Chain():
 	results = []
-	r = etcdcli.read('/Host', recursive=True, sorted=True)
+	r = etcdcli.read('/Chain', recursive=True, sorted=True)
 	for child in r.children:
 		results.append(json.loads(child.value))
 	return jsonify(results)
