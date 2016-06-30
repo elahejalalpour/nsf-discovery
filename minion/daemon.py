@@ -181,7 +181,7 @@ def collect():
 	msg = {'host' : hostname, 'flag' : 'sysinfo', 
 			'cpu' : psutil.cpu_percent(interval=sleeping),
 			'mem_total' : mem[0], 'mem_available' : mem[1], 
-			'used' : mem[3],'host_ip' : get_ip_address('eth0'),
+			'used' : mem[3],'host_ip' : get_ip_address(interface),
 			'cpus' : psutil.cpu_percent(interval=None, percpu=True),
 			'network' : psutil.net_io_counters(pernic=True),
 			'images' : images}
