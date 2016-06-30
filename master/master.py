@@ -321,14 +321,24 @@ def msg_handler(msg, etcdcli):
             etcdcli.write('/Chain/test', None)
             etcdcli.delete('/Chain/test')
             r = etcdcli.read('/VNF', recursive=True, sorted=True)
+            print "VNFS: " 
+            print r
             G = nx.Graph()
             edges = {}
             for child in r.children:
+                print "Child: "
+                print child
                 temp = json.loads(child.value)
+                print "Child JSON: "
+                print temp
                 node = temp['Host_name'] + '_' + temp['Con_id']
                 G.add_node(node)
                 lst = temp['net_ifs']
+                print "lst:"
+                print lst
                 for val in lst:
+                    print "val:"
+                    print val
                     key = val['link_type'] + '_' + val['link_id']
                     if (edges.has_key(key)):
                         edges[key][node] = val['if_name']
@@ -346,8 +356,9 @@ def msg_handler(msg, etcdcli):
                     G.add_edge(t1[0], t1[1], {'nodes': edges[key], 'link_type': t2[0],
                                               'link_id': t2[1]})
             data = json_graph.node_link_data(G)
-            # print(data)
+            print(data)
             subgraphs = list(nx.connected_component_subgraphs(G))
+            print subgraphs
             try:
                 for g in subgraphs:
                     etcdcli.write(
