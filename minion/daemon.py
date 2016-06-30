@@ -146,15 +146,15 @@ def collect():
 		#read json chain info from home
 		#chain_data = open("/home/nfuser/chain.json").read()
     
-                #read net_ifs info from partial_view read from discovery module
-                current_container = None
-                for container in partial_view['containers']:
-                    if container['container_id'] == name:
-                        current_container = container
-                        break
-                print current_container
-                if current_container is not None:
-                    net_ifs = current_container['net_ifs']
+        #read net_ifs info from partial_view read from discovery module
+        current_container = None
+        for container in partial_view['containers']:
+            if container['container_id'] == name:
+                current_container = container
+                    break
+            print current_container
+            if current_container is not None:
+                net_ifs = current_container['net_ifs']
 		#push vnf status info
 		if dict.has_key(ID):
 			if dict[ID] != status:
@@ -165,6 +165,8 @@ def collect():
 				if status == 'running':
 					msg['IP'] = mon.get_ip(ID)
 				syncclient.send_json(msg)
+                print "VNF status changed:"
+                print msg
 				syncclient.recv()
 				dict[ID] = status
 		else:
@@ -175,6 +177,8 @@ def collect():
 						'net_ifs' : net_ifs}
 			if status == 'running':
 				msg['IP'] = mon.get_ip(ID)
+            print "New VNF entry"
+            print msg
 			syncclient.send_json(msg)
 			syncclient.recv()
 	#push system resource info
