@@ -133,10 +133,10 @@ def collect():
    """
 	pull()
 
-        discovery_agent = DiscoveryAgent()
-        partial_view = discovery_agent.discover()
+    discovery_agent = DiscoveryAgent()
+    partial_view = discovery_agent.discover()
 	
-        containers = mon.get_containers()
+    containers = mon.get_containers()
 	it = iter(containers)
 	for a in it:
 		ID = a['Id'].encode()

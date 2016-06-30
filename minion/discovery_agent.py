@@ -23,6 +23,7 @@ class DiscoveryAgent():
         #print ovs_bridges_and_ports
 
         containers = self.__container_driver.get_containers()
+        print containers
         for container in containers:
             container_dict = {}
 
