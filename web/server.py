@@ -36,13 +36,15 @@ def send_css():
 
 @app.route('/getVNF', methods=['GET'])
 def send_VNF():
-    # cur.execute('select * from VNF')
-    # results = cur.fetchall()
-    results = []
-    r = etcdcli.read('/VNF', recursive=True, sorted=True)
-    for child in r.children:
-        results.append(json.loads(child.value))
-    return jsonify(results)
+    try:
+        results = []
+        r = etcdcli.read('/VNF', recursive=True, sorted=True)
+        for child in r.children:
+            results.append(json.loads(child.value))
+        return jsonify(results)
+    except:
+        print "Error retrieving VNFs"
+        return jsonify([])
 
 
 @app.route('/getHost', methods=['GET'])
