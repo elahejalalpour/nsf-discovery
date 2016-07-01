@@ -58,12 +58,16 @@ def send_Host():
 
 @app.route('/getChain', methods=['GET'])
 def send_Chain():
-    results = []
-    r = etcdcli.read('/Chain', recursive=True, sorted=True)
-    for child in r.children:
-        child_json = json.loads(child.value)
-        results.append(child_json)
-    return jsonify(results)
+    try:
+        results = []
+        r = etcdcli.read('/Chain', recursive=True, sorted=True)
+        for child in r.children:
+            child_json = json.loads(child.value)
+            results.append(child_json)
+        return jsonify(results)
+    except:
+        print "Error occured while getting chain data"
+        return jsonify([])
 
 
 @app.route('/request', methods=['POST'])
