@@ -6,10 +6,6 @@ import sqlite3
 import command
 import etcd
 
-# set up database connection
-conn = sqlite3.connect('../master/vnfs.db')
-cur = conn.cursor()
-
 cmd = command.CMD()
 
 etcdcli = etcd.Client()
