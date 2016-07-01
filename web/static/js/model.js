@@ -43,7 +43,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-      url: "http://localhost:5000/get"+type,
+      url: "http://159.203.58.105:5000/get"+type,
       method: 'GET',
       success: function (json) {
         if (type == "Chain") {
@@ -77,7 +77,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-      url: "http://localhost:5000/request",
+      url: "http://159.203.58.105:5000/request",
       data: data,
       method: 'POST',
       success: function (json) {

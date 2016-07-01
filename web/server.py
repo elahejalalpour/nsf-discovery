@@ -61,6 +61,7 @@ def send_Chain():
     results = []
     r = etcdcli.read('/Chain', recursive=True, sorted=True)
     for child in r.children:
+        print child.value
         child_json = json.loads(child.value)
         results.append(child_json)
     return jsonify(results)
