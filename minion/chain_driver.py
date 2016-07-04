@@ -14,7 +14,7 @@ class ChainDriver():
     
     def connect_containers_inside_host(self, container_a_name,
             veth_vs_container_a, container_b_name, veth_vs_container_b,
-            link_id, chain_rollback):
+            link_id, bandwidth, chain_rollback):
         """
         Connects two containers within the same physical hosts by a
         bi-directional link.
@@ -25,6 +25,7 @@ class ChainDriver():
         @param veth_vs_container_b Loos end of container_b's veth pair link
         @param link_id Id of the link connecting container_a and container_b
         container_a and container_b
+        @param bandwidth Bandwidth limit for the link
         @param chain_rollback Global rollback object
         """
         ovs_bridge_name = "ovs-br-" + str(link_id)
@@ -37,12 +38,14 @@ class ChainDriver():
         chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
                 veth_vs_container_a)
         VethDriver.enable_veth_interface(veth_vs_container_a)
+        OVSDriver.set_ingress_policing_rate(veth_vs_container_a, bandwidth)
 
         OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
                 veth_vs_container_b)
         chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
                 veth_vs_container_b)
         VethDriver.enable_veth_interface(veth_vs_container_b)
+        OVSDriver.set_ingress_policing_rate(veth_vs_container_b, bandwidth)
 
 
     def connect_containers_across_hosts(
@@ -54,6 +57,7 @@ class ChainDriver():
             remote_container_ip,
             tunnel_id,
             tunnel_interface_name,
+            bandwidth,
             chain_rollback):
         """
         Connects two containers on different hosts thru GRE tunnel.
@@ -69,6 +73,7 @@ class ChainDriver():
         @param tunnel_id ID of the tunnel connecting this container to the other
         @param tunnel_interface_name Name of the tunneling interface on
         this host.
+        @param bandwidth Bandwidth of the link
         @param chain_rollback The global rollback context.
 
         Assumption;
@@ -84,6 +89,7 @@ class ChainDriver():
             veth_vs_container)
 
         VethDriver.enable_veth_interface(veth_vs_container)
+        OVSDriver.set_ingress_policing_rate(veth_vs_container_a, bandwidth)
 
         # find the openflow port where the container is attached to the ovs
         # bridge.

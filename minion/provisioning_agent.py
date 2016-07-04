@@ -28,10 +28,14 @@ class ProvisioningAgent():
         information about the added veth pairs and deployed container name.
         """
         # Deploy the container.
+        scaled_cpu_share = int(1024 * (vnf_config['cpu_share'] / 100.0))
         self.__container_handle.deploy(
             user="sr2chowd",
             image_name=vnf_config['vnf_type'],
-            vnf_name=vnf_config['container_name'])
+            vnf_name=vnf_config['container_name'],
+            cpuset=str(vnf_config['cpuset_cpus']), 
+            cpu_shares=scaled_cpu_share, 
+            mem_limit=str(vnf_config['memory']) + "m")
         container_name = "sr2chowd-" + vnf_config['container_name']
         chain_rollback.push(self.__container_handle.destroy,
                 self.__container_handle, container_name)
@@ -50,6 +54,8 @@ class ProvisioningAgent():
         chain_rollback.push(self.__container_handle.symlink_container_netns,
                 self.__container_handle, container_name)
 
+        
+        # Create necessary veth pairs and attach them to the containers.
         for net_config in vnf_config['net_ifs']:
             print net_config
             veth_vs, veth_cn = self.generate_unique_veth_endpoints(container_name,
@@ -105,6 +111,7 @@ class ProvisioningAgent():
                         links[link_id]["veth_vs_a"] =  net_conf["veth_vs"]
                         links[link_id]["veth_cn_a"] =  net_conf["veth_cn"]
                         links[link_id]["a_ip_address"] = net_conf["ip_address"]
+                        links[link_id]["bandwidth"] = net_conf["bandwidth"]
                         if net_conf["link_type"] <> "local":
                             links[link_id]["remote_container_ip"] =\
                                 net_conf["remote_container_ip"]
@@ -121,21 +128,23 @@ class ProvisioningAgent():
                     a, b = link["endpoint_a"], link["endpoint_b"]
                     veth_vs_a = link["veth_vs_a"]
                     veth_vs_b = link["veth_vs_b"]
+                    bandwidth = link["bandwidth"]
                     self.__chain_driver.connect_containers_inside_host(a,
-                            veth_vs_a, b, veth_vs_b, link_id, chain_rollback)
+                            veth_vs_a, b, veth_vs_b, link_id, bandwidth, chain_rollback)
                 else:
                     a = link["endpoint_a"]
                     veth_vs = link["veth_vs_a"]
                     ovs_bridge_name = self.__default_ovs_bridge
                     container_ip_net = link["a_ip_address"]
                     remote_container_ip = link["remote_container_ip"].split("/")[0]
+                    bandwidth = link["bandwidth"]
                     print remote_container_ip
                     tunnel_id = str(link_id)
                     tunnel_interface_name = self.__default_tunnel_interface
                     self.__chain_driver.connect_containers_across_hosts(a,
                             veth_vs, ovs_bridge_name, container_ip_net,
                             remote_container_ip, tunnel_id,
-                            tunnel_interface_name, chain_rollback)
+                            tunnel_interface_name, bandwidth, chain_rollback)
 
             chain_rollback.commitAll()
 

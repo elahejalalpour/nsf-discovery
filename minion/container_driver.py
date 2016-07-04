@@ -222,7 +222,7 @@ class ContainerDriver():
         with self._error_handling(errors.VNFUnpauseError):
             dcx.unpause(container=vnf_fullname)
 
-    def deploy(self, user, image_name, vnf_name, is_privileged=True):
+    def deploy(self, user, image_name, vnf_name, is_privileged=True, **kwargs):
         """
         Deploys a docker container.
 
@@ -246,7 +246,8 @@ class ContainerDriver():
             container = dcx.create_container(
                 image=image_name,
                 name=vnf_fullname,
-                host_config=host_config)
+                host_config=host_config,
+                kwargs)
             return container['Id']
 
     def destroy(self, vnf_name, force=True):
