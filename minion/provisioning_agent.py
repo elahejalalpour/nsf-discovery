@@ -35,7 +35,7 @@ class ProvisioningAgent():
             vnf_name=vnf_config['container_name'],
             cpuset=str(vnf_config['cpuset_cpus']), 
             cpu_shares=scaled_cpu_share, 
-            mem_limit=str(vnf_config['memory']) + "m")
+            mem_limit=str(vnf_config['memory']) + "M")
         container_name = "sr2chowd-" + vnf_config['container_name']
         chain_rollback.push(self.__container_handle.destroy,
                 self.__container_handle, container_name)

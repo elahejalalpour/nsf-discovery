@@ -242,12 +242,16 @@ class ContainerDriver():
         host_config = dict()
         if is_privileged:
             host_config['Privileged'] = True
+        if "mem_limit" in kwargs.keys():
+            host_config['mem_limit'] = kwargs['mem_limit'] 
+            del kwargs['mem_limit']
+
         with self._error_handling(errors.VNFDeployError):
             container = dcx.create_container(
                 image=image_name,
                 name=vnf_fullname,
                 host_config=host_config,
-                kwargs)
+                **kwargs)
             return container['Id']
 
     def destroy(self, vnf_name, force=True):

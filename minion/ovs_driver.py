@@ -170,8 +170,8 @@ class OVSDriver():
 
         # Allow a 5% packet burst over the set ingress rate.
         allowed_burst = int(0.05 * float(rate_kbps))
-        bash_command = "ovs-vsctl set interface " + veth_interface_name " " +\
-                "ingress_policing_burst=" + str(allowed_burst)
+        bash_command = "ovs-vsctl set interface " + veth_interface_name +\
+                " ingress_policing_burst=" + str(allowed_burst)
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
