@@ -89,7 +89,7 @@ class ChainDriver():
             veth_vs_container)
 
         VethDriver.enable_veth_interface(veth_vs_container)
-        OVSDriver.set_ingress_policing_rate(veth_vs_container_a, bandwidth)
+        OVSDriver.set_ingress_policing_rate(veth_vs_container, bandwidth)
 
         # find the openflow port where the container is attached to the ovs
         # bridge.

@@ -14,7 +14,7 @@ import thread
 import json
 import argparse
 
-sleeping = 5
+sleeping = 1
 mon = ContainerDriver()
 dict = {}
 # set up zeromq
@@ -120,7 +120,8 @@ def pull():
         # exhaust the msg queue
         while(True):
             msg = subscriber.recv_json(flags=zmq.NOBLOCK)
-            thread.start_new_thread(cmd_handler, (msg,))
+            cmd_handler(msg)
+            # thread.start_new_thread(cmd_handler, (msg,))
     except Exception, ex:
         # print("No New Msg!")
         return
@@ -155,6 +156,8 @@ def collect():
         print current_container
         if current_container is not None:
             net_ifs = current_container['net_ifs']
+        else:
+            continue
         # push vnf status info
         if dict.has_key(ID):
             if dict[ID] != status:
