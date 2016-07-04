@@ -247,7 +247,7 @@ class ContainerDriver():
                 image=image_name,
                 name=vnf_fullname,
                 host_config=host_config,
-                kwargs)
+                **kwargs)
             return container['Id']
 
     def destroy(self, vnf_name, force=True):
