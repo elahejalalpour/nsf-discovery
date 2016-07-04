@@ -90,9 +90,15 @@ def reply():
         cmd.unpause(msg['Host'], msg['ID'])
     elif(msg['action'] == 'deploy'):
         cmd.deploy(msg['Host'], msg['username'], msg['image'], msg['vnfname'])
-    elif(msg['action'] == 'deploy_chain'):
-        cmd.create_chain()
+    # elif(msg['action'] == 'deploy_chain'):
+    #    cmd.create_chain()
 
+    return jsonify({'result' : 'command received'})
+
+@app.route('/create_chain', methods = ['POST'])
+def create_chain():
+    config_json = request.files['file'].stream.read()
+    cmd.create_chain(config_json)
     return jsonify({'result' : 'command received'})
 
 if __name__ == "__main__":
