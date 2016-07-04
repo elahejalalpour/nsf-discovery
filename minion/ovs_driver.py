@@ -149,6 +149,33 @@ class OVSDriver():
         if len(output) <= 0:
             return "-1"
         return output.strip()
+    
+    @staticmethod
+    def set_ingress_policing_rate(veth_interface_name, rate):
+        """
+        Sets the ingress policing rate of an interface attached to the ovs
+        bridge.
+
+        @param veth_interface_name Name of the interface on which the policy is
+        being applied.
+        @param rate The rate limit for the interface in Mbps.
+        """
+        # First set the ingress policing rate policy for the interface.
+        rate_kbps = str(int(rate) * 1000)
+        bash_command = "ovs-vsctl set interface " + veth_interface_name + "\
+                ingress_policing_rate=" + rate_kbps
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+
+        # Allow a 5% packet burst over the set ingress rate.
+        allowed_burst = int(0.05 * float(rate_kbps))
+        bash_command = "ovs-vsctl set interface " + veth_interface_name " " +\
+                "ingress_policing_burst=" + str(allowed_burst)
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code <> 0:
+            raise Exception(return_code, errput)
+
 
     @staticmethod
     def get_tunnel_port_number(ovs_bridge_name, veth_interface_name):
