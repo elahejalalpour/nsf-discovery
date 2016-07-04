@@ -97,10 +97,10 @@ class CMD():
         self.__client.send_json(msg)
         self.__client.recv()
 
-    def create_chain(self):
+    def create_chain(self, chain_config):
         # read json chain info from home
-        chain_data = open("/home/nfuser/chain.json").read()
-        chain_data = json.loads(chain_data)
+        # chain_data = open("/home/nfuser/chain.json").read()
+        chain_data = json.loads(chain_config)
         print(chain_data)
         self.__client.send_json({'action': 'create_chain', 'data': chain_data})
         self.__client.recv()

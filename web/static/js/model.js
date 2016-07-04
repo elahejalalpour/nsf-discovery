@@ -43,7 +43,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-      url: "http://localhost:5000/get"+type,
+      url: "http://159.203.58.105:5000/get"+type,
       method: 'GET',
       success: function (json) {
         if (type == "Chain") {
@@ -69,6 +69,8 @@ monitor.model = function () {
                       'image' : image,
                       'username' : username,
                       'action' : 'deploy'});
+    } if (action == 'create_chain') {
+
     } else {
       data = JSON.stringify({'Host' : host,
                       'ID' : ID,
@@ -77,7 +79,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-      url: "http://localhost:5000/request",
+      url: "http://159.203.58.105:5000/request",
       data: data,
       method: 'POST',
       success: function (json) {
@@ -90,6 +92,20 @@ monitor.model = function () {
     });
   }
   
+  function createChainRequest(formData) {
+    console.log(formData);
+    $.ajax({
+      contentType: false,
+      processData: false,
+      url: "http://159.203.58.105:5000/create_chain",
+      method: 'POST',
+      success: function(json) {
+        console.log(json);
+      },
+      data: formData
+    });
+  }
+
   function test() {
     alert("Test!");
   }
@@ -101,6 +117,7 @@ monitor.model = function () {
     getHost : getHost,
     getVnf : getVnf,
     getChains: getChains,
-    makeReq : makeReq
+    makeReq : makeReq,
+    createChainRequest: createChainRequest
   };
 };

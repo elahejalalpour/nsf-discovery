@@ -10,7 +10,10 @@ $(function() {
       $("a").removeClass('active');
       $("#navi-hosts").addClass('active');
       $('#VNFS').prop('hidden', 'hidden');
-      $('#Chain').prop('hidden', 'hidden');
+      $('#navi-new-chain').prop('hidden', 'hidden');
+      $('#navi-show-chains').prop('hidden', 'hidden');
+      $('#new-chain').prop('hidden', 'hidden');
+      $('#show-chain').prop('hidden', 'hidden');
       $('#Hosts').removeProp('hidden');
   });
   
@@ -18,7 +21,10 @@ $(function() {
       $("a").removeClass('active');
       $("#navi-vnfs").addClass('active');
       $('#Hosts').prop('hidden', 'hidden');
-      $('#Chain').prop('hidden', 'hidden');
+      $('#navi-new-chain').prop('hidden', 'hidden');
+      $('#navi-show-chains').prop('hidden', 'hidden');
+      $('#new-chain').prop('hidden', 'hidden');
+      $('#show-chain').prop('hidden', 'hidden');
       $('#VNFS').removeProp('hidden');
   });
   
@@ -26,12 +32,70 @@ $(function() {
       $("a").removeClass('active');
       $("#navi-chain").addClass('active');
       $('#Hosts').prop('hidden', 'hidden');
+      $('#new-chain').prop('hidden', 'hidden');
+      $('#show-chain').prop('hidden', 'hidden');
       $('#VNFS').prop('hidden', 'hidden');
-      $('#Chain').removeProp('hidden');
+      $('#navi-new-chain').removeProp('hidden');
+      $('#navi-show-chains').removeProp('hidden');
+  });
+
+
+  $("#navi-show-chains")[0].addEventListener('click', function () {
+      $("a").removeClass('active');
+      $("#navi-chain").addClass('active');
+      $('#Hosts').prop('hidden', 'hidden');
+      $('#VNFS').prop('hidden', 'hidden');
+      $('#navi-new-chain').removeProp('hidden');
+      $('#navi-show-chains').removeProp('hidden');
+      $('#new-chain').remove();
+      $('#show-chain').remove();
+      $('#chains').append("<div id = 'show-chain' style='width:100%;height:100%'></div>")
+      $('#show-chain').removeProp('hidden');
+      // Chains Tab
+      model.getData("Chain");
+      var chains = model.getChains();
+      console.log(JSON.stringify(chains));
+      for (var i = 0; i < chains.length; ++i) {
+        $("#show-chain").append("<div id=chain"+i+" style='width: 100%;height: 200px;'></div>")
+        drawChain(chains[i], "chain" + i);
+      }
   });
   
-  function drawChain(chain) {
-    var images = { "firewall" : "firewall.jpg" }
+  $("#navi-new-chain")[0].addEventListener('click', function () {
+      $("a").removeClass('active');
+      $("#navi-chain").addClass('active');
+      $('#Hosts').prop('hidden', 'hidden');
+      $('#VNFS').prop('hidden', 'hidden');
+      $('#navi-new-chain').removeProp('hidden');
+      $('#navi-show-chains').removeProp('hidden');
+      $('#show-chain').remove()     
+      $('#new-chain').remove();
+      $('#chains').append("<div id = 'new-chain' style='width:100%;height:100%'></div>")
+      $('#new-chain').removeProp('hidden');
+      drawChainUI();
+  });
+
+  function drawChainUI() {
+    var new_chain_div = document.getElementById("new-chain");
+    if (new_chain_div == null) {
+      return;
+    }
+    $("#new-chain").append("<h3>Create New Service Chain</h3>");
+    $("#new-chain").append("<form id='config-uploader' method = 'post'>");
+    $("#new-chain").append("<label>Select Chain Configuration File (*.json)</label></br>"); 
+    $("#new-chain").append("<input type = 'hidden' id = 'action' value = 'create_chain'/>");
+    $("#new-chain").append("<input type = 'file' id = 'chain-config'/>");
+    $("#new-chain").append("<a id = 'upload-button' class = 'mybutton'>Create Chain</a>");
+    $("#new-chain").append("</form>");
+    $("#upload-button").click(function() {
+      var formData = new FormData($("#config-uploader")[0]);
+      console.log($('#chain-config')[0].files[0]);
+      formData.append('file', $('#chain-config')[0].files[0]);
+      model.createChainRequest(formData);
+    });
+  }
+
+  function drawChain(chain, canvas_id) {
     var nodes = [];
     var links = [];
     var LENGTH_MAIN = 350,
@@ -43,6 +107,8 @@ $(function() {
         BLACK = '#090909',
         ORANGE = 'orange';
     console.log(chain)
+    var chain_canvas = document.getElementById(canvas_id);
+    if (chain_canvas == null) return;
     for (var i = 0; i < chain['nodes'].length; ++i) {
       nodes.push({id: i, group: chain['nodes'][i]['type'], value: 25, label: chain['nodes'][i]['name']});  
     }
@@ -50,23 +116,16 @@ $(function() {
     for (var i = 0; i < chain['links'].length; ++i) {
       var s = chain['links'][i]['source'];
       var t = chain['links'][i]['target'];
-      links.push({from: s, to: t, length: LENGTH_SUB / 20, color: BLACK, width: WIDTH_SCALE * 2})
+      links.push({from: s, to: t, length: LENGTH_SERVER, color: BLACK, width: WIDTH_SCALE * 2})
     }
-    var chain_canvas = document.getElementById('Chain');
     var render_data = {
       nodes: nodes,
       edges: links
     };
     var options = {
-      autoResize: true,
-      height: '50%',
-      width: '50%',
-      physics:{
-        barnesHut:{gravitationalConstant:-30000},
-        stabilization: {iterations:2500}
-      },
+      layout:{ randomSeed:95, improvedLayout: true },
       nodes: {
-        scaling: {min: 20, max: 40}
+        size: 40
       },
       edges: {
         color: RED,
@@ -75,7 +134,11 @@ $(function() {
       groups: {
         'firewall': {
           shape: 'circularImage',
-          image: 'images/firewall.jpg' 
+          image: 'static/images/firewall.jpg' 
+        },
+        'proxy': {
+          shape: 'circularImage',
+          image: 'static/images/proxy.png'
         }
       }
     };
@@ -84,10 +147,9 @@ $(function() {
 
   function repeat() {
     //repeat every 2 seconds
-    setTimeout(repeat, 5000);
+    setTimeout(repeat, 15000);
     $("#Hosts").empty();
     $("#VNFS").empty();
-    $("#Chain").empty();
     
     var changed = false;
     
@@ -95,9 +157,6 @@ $(function() {
     var vnfs = model.getVnf();
     model.getData("Host");
     var hosts = model.getHost();
-    model.getData("Chain");
-    var chains = model.getChains();
-    console.log(JSON.stringify(chains));
     var data = JSON.stringify(vnfs);
     //console.log("d:"+$('#fresh').text());
     var old = $('#fresh').text();
@@ -108,10 +167,7 @@ $(function() {
       $('#popup').empty()
       console.log("VNF data changed");
     }
-    // Chains Tab
-    for (var i = 0; i < chains.length; ++i) {
-      drawChain(chains[i]);
-    }
+
     //VNF Tab
     for(var i = 0; i < hosts.length; i++) {
       //console.log(hosts[i]);
@@ -313,32 +369,34 @@ $(function() {
         $("."+hostname+id).remove();
         $("."+hostname+"_vnfs").append("<div class="+"'"+hostname+id+"'>\n</div>");
         var result = "";
-        result+=`<p> <span style='font-weight: bold; font-size: 10pt'> 
-              Container ID: </span>`+id.substring(0,11);
-        result+=`<span style='font-weight: bold; 
-              font-size: 10pt'> Name: </span>`+vnfname+"</p>";
-        result+="<p> <span style='font-weight: bold; font-size: 10pt'> IP: </span>"+IP;
-        result+=`<span style='font-weight: bold; 
-              font-size: 10pt'> Status: </span>`+status;
-        result+=`<span style='font-weight: bold; 
-              font-size: 10pt'> Type: </span>`+type+"</p>";
+        result+=`<p> <span style='font-weight: bold; font-size: 12pt'> 
+              Container ID: </span>`+`<span style='font-family: Consolas, monaco, monospace'>` + id.substring(0,11) + `</span>`;
+        result+=`, <span style='font-weight: bold; 
+              font-size: 12pt'> Type: </span>`+type+"</p>";
+        result+=`<p><span style='font-weight: bold; 
+              font-size: 12pt'> Name: </span>`+vnfname;
+        result+=", <span style='font-weight: bold; font-size: 12pt'> IP: </span>"+IP;
+        var status_color = "green";
+        if (status != "running") status_color = "red";
+        result+=`<br/><span style='font-weight: bold; 
+              font-size: 12ppt;'> Status: </span>`+`<span style='color:`+status_color+`'>`+status+`</span></p>`;
         $("."+hostname+id).append(result);
         //add start button and listener
-        $("."+hostname+id).append("<button id="+hostname+"_"+id+"_start>Start</button>")
+        $("."+hostname+id).append("<a id="+hostname+"_"+id+"_start class='mybutton'>Start</a>")
         $("#"+hostname+"_"+id+"_start")[0].addEventListener('click', function () {
           console.log(this.id);
           var args = this.id.split("_");
           model.makeReq(args[0],args[1],args[2],'','','');
         });
         //add stop button and listener
-        $("."+hostname+id).append("<button id="+hostname+"_"+id+"_stop>Stop</button>")
+        $("."+hostname+id).append("<a id="+hostname+"_"+id+"_stop class='mybutton'>Stop</a>")
         $("#"+hostname+"_"+id+"_stop")[0].addEventListener('click', function () {
           console.log(this.id);
           var args = this.id.split("_");
           model.makeReq(args[0],args[1],args[2],'','','');
         });
         //add destroy button and listener
-        $("."+hostname+id).append("<button id="+hostname+"_"+id+"_destroy>Destroy</button>")
+        $("."+hostname+id).append("<a id="+hostname+"_"+id+"_destroy class='mybutton'>Destroy</a>")
         $("#"+hostname+"_"+id+"_destroy")[0].addEventListener('click', function () {
           console.log(this.id);
           var args = this.id.split("_");
