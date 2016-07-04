@@ -242,6 +242,10 @@ class ContainerDriver():
         host_config = dict()
         if is_privileged:
             host_config['Privileged'] = True
+        if "mem_limit" in kwargs.keys():
+            host_config['mem_limit'] = kwargs['mem_limit'] 
+            del kwargs['mem_limit']
+
         with self._error_handling(errors.VNFDeployError):
             container = dcx.create_container(
                 image=image_name,
