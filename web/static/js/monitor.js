@@ -49,14 +49,14 @@ $(function() {
       $('#navi-show-chains').removeProp('hidden');
       $('#new-chain').remove();
       $('#show-chain').remove();
-      $('#chains').append("<div id = 'show-chain' style='width:100%;height:100%'></div>")
+      $('#chains').append("<div id = 'show-chain' style='width:100%;height:750px'></div>")
       $('#show-chain').removeProp('hidden');
       // Chains Tab
       model.getData("Chain");
       var chains = model.getChains();
       console.log(JSON.stringify(chains));
       for (var i = 0; i < chains.length; ++i) {
-        $("#show-chain").append("<div id=chain"+i+" style='width: 100%;height: 200px;'></div>")
+        $("#show-chain").append("<div id=chain"+i+" style='width: 80%;height: 200px;'></div>")
         drawChain(chains[i], "chain" + i);
       }
   });
@@ -110,7 +110,8 @@ $(function() {
     var chain_canvas = document.getElementById(canvas_id);
     if (chain_canvas == null) return;
     for (var i = 0; i < chain['nodes'].length; ++i) {
-      nodes.push({id: i, group: chain['nodes'][i]['type'], value: 25, label: chain['nodes'][i]['name']});  
+      var title_text = "VNF Type: " + chain['nodes'][i]['type'];
+      nodes.push({id: i, group: chain['nodes'][i]['type'], value: 25, label: chain['nodes'][i]['name'], title: title_text});  
     }
 
     for (var i = 0; i < chain['links'].length; ++i) {
@@ -118,18 +119,27 @@ $(function() {
       var t = chain['links'][i]['target'];
       links.push({from: s, to: t, length: LENGTH_SERVER, color: BLACK, width: WIDTH_SCALE * 2})
     }
+
     var render_data = {
       nodes: nodes,
       edges: links
     };
     var options = {
-      layout:{ randomSeed:95, improvedLayout: true },
+      layout:{ randomSeed:105, improvedLayout: true },
+      interaction: {hover: true},
       nodes: {
-        size: 40
+        size: 60,
+        scaling: {min: 20, max: 40},
+        font: {
+          size: 14,
+          face: 'Ubuntu',
+          align: 'center'
+        },
+        shadow: true
       },
       edges: {
         color: RED,
-        smooth: true
+        smooth: {enabled: true, type: "dynamic", roundness: 0.5}
       },
       groups: {
         'firewall': {
@@ -147,7 +157,7 @@ $(function() {
 
   function repeat() {
     //repeat every 2 seconds
-    setTimeout(repeat, 15000);
+    setTimeout(repeat, 2000);
     $("#Hosts").empty();
     $("#VNFS").empty();
     
