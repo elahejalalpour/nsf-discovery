@@ -1,5 +1,8 @@
-import minion
-import time, threading
+from container_driver import ContainerDriver
+from provisioning_agent import ProvisioningAgent
+from ovs_driver import OVSDriver
+import time
+import threading
 import zmq
 import platform
 import psutil
@@ -11,104 +14,116 @@ import json
 import argparse
 
 sleeping = 1.5
-mon = minion.Minion()
+mon = ContainerDriver()
 dict = {}
-#set up zeromq
+# set up zeromq
 master = '10.0.1.100'
 interface = 'eth0'
+default_ovs_bridge = 'ovs-br0'
+default_tunnel_interface = 'gre0'
 context = zmq.Context()
 subscriber = context.socket(zmq.SUB)
 syncclient = context.socket(zmq.REQ)
 hostname = platform.node()
 
+
 def get_ip_address(ifname):
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915,  # SIOCGIFADDR
-									struct.pack('256s', ifname[:15]))[20:24])
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915,  # SIOCGIFADDR
+                                        struct.pack('256s', ifname[:15]))[20:24])
+
 
 def register():
-	"""
-		Register minion with master
-	"""
-	msg = {'flag' : 'REG','host' : hostname,
-			'host_ip' : get_ip_address(interface),
-			'cpus' : len(psutil.cpu_percent(interval=None, percpu=True))}
-	# send a synchronization request
-	syncclient.send_json(msg)
-	# wait for synchronization reply
-	syncclient.recv()
-	#print('register finished')
-	
+    """
+            Register minion with master
+    """
+    msg = {'flag': 'REG', 'host': hostname,
+           'host_ip': get_ip_address(interface),
+           'cpus': len(psutil.cpu_percent(interval=None, percpu=True))}
+    # send a synchronization request
+    syncclient.send_json(msg)
+    # wait for synchronization reply
+    syncclient.recv()
+    #print('register finished')
+
+
 def cmd_helper(msg):
-	"""
-		call cooresponding API to execute commands
-	"""
-	if (msg['action'] == 'start'):
-		mon.start(msg['ID'])
-	elif (msg['action'] == 'stop'):
-		mon.stop(msg['ID'])
-	elif (msg['action'] == 'restart'):
-		mon.restart(msg['ID'])
-	elif (msg['action'] == 'pause'):
-		mon.pause(msg['ID'])
-	elif (msg['action'] == 'unpause'):
-		mon.unpause(msg['ID'])
-	elif (msg['action'] == 'destroy'):
-		mon.stop(msg['ID'])
-		mon.destroy(msg['ID'])
-		del dict[msg['ID']]
-		reply = {'host' : hostname, 'ID' : msg['ID'], 
-				 'flag' : 'removed'}
-		syncclient.send_json(reply)
-		syncclient.recv()
-	elif (msg['action'] == 'deploy'):
-		ret = mon.deploy(msg['user'],msg['image_name'],msg['vnf_name'])
-	elif (msg['action'] == 'execute'):
-		response = mon.execute_in_guest(msg['ID'],msg['cmd'])
-		reply = {'host' : hostname, 'ID' : msg['ID'], 
-				 'flag' : 'reply', 'response' : response, 'cmd' : msg['cmd']}
-		syncclient.send_json(reply)
-		syncclient.recv()
-	elif (msg['action'] == 'create_chain'):
-		#To be finished
-		print(msg)
-		print('########################################')
-	
+    """
+            call cooresponding API to execute commands
+    """
+    if (msg['action'] == 'start'):
+        mon.start(msg['ID'])
+    elif (msg['action'] == 'stop'):
+        mon.stop(msg['ID'])
+    elif (msg['action'] == 'restart'):
+        mon.restart(msg['ID'])
+    elif (msg['action'] == 'pause'):
+        mon.pause(msg['ID'])
+    elif (msg['action'] == 'unpause'):
+        mon.unpause(msg['ID'])
+    elif (msg['action'] == 'destroy'):
+        mon.stop(msg['ID'])
+        mon.destroy(msg['ID'])
+        del dict[msg['ID']]
+        reply = {'host': hostname, 'ID': msg['ID'],
+                 'flag': 'removed'}
+        syncclient.send_json(reply)
+        syncclient.recv()
+    elif (msg['action'] == 'deploy'):
+        ret = mon.deploy(msg['user'], msg['image_name'], msg['vnf_name'])
+    elif (msg['action'] == 'execute'):
+        response = mon.execute_in_guest(msg['ID'], msg['cmd'])
+        reply = {'host': hostname, 'ID': msg['ID'],
+                 'flag': 'reply', 'response': response, 'cmd': msg['cmd']}
+        syncclient.send_json(reply)
+        syncclient.recv()
+    elif (msg['action'] == 'create_chain'):
+        # To be finished
+        print "Request received to deploy chain: \n"
+        pa = ProvisioningAgent(ovs_bridge_name = default_ovs_bridge,
+                tunnel_interface_name = default_tunnel_interface)
+        pa.provision_local_chain(msg['data'])
+        # print msg['data']
+        # print(json.dumps(msg))
+        print("\n")
+
+
 def cmd_handler(msg):
-	"""
-		handle commands received from master
-	"""
-	try:
-		if (hostname == msg['host'] or msg['host'] == '*'):
-			#print(msg)
-			if (msg['action'] == 'create_chain'):
-				cmd_helper(msg)
-				return
-			if (msg['ID'] == '*'):
-				containers = mon.get_containers()
-				it = iter(containers)
-				for a in it:
-					msg['ID'] = a['Id'].encode()
-					cmd_helper(msg)
-			else:
-				cmd_helper(msg)
-	except Exception,ex:
-		print(ex)
-		pass
-		
-	
+    """
+            handle commands received from master
+    """
+    try:
+        if (hostname == msg['host'] or msg['host'] == '*'):
+            print(msg)
+            if (msg['action'] == 'create_chain'):
+                cmd_helper(msg)
+                return
+            if (msg['ID'] == '*'):
+                containers = mon.get_containers()
+                it = iter(containers)
+                for a in it:
+                    msg['ID'] = a['Id'].encode()
+                    cmd_helper(msg)
+            else:
+                cmd_helper(msg)
+    except Exception, ex:
+        print(ex)
+        pass
+
+
 def pull():
-	"""
-		check any new message from master
-	"""
-	try:
-	#exhaust the msg queue
-		while(True):
-			msg = subscriber.recv_json(flags=zmq.NOBLOCK)
-			thread.start_new_thread(cmd_handler, (msg,))
-	except Exception,ex:
-		#print("No New Msg!")
-		return
+    """
+            check any new message from master
+    """
+    try:
+        # exhaust the msg queue
+        while(True):
+            msg = subscriber.recv_json(flags=zmq.NOBLOCK)
+            thread.start_new_thread(cmd_handler, (msg,))
+    except Exception, ex:
+        #print("No New Msg!")
+        return
+
 
 def collect():
 	"""
@@ -124,8 +139,16 @@ def collect():
 		image = a['Image']
 		name = a['Names'][0];
 		#read json chain info from home
-		chain_data = open("/home/nfuser/chain.json").read()
-		chain_data = json.loads(chain_data)
+
+                ## adding chain discovery code here 
+                container_name = name[1:]
+                print 'container name:', container_name
+                
+
+		#chain_data = open("/home/nfuser/chain.json").read()
+		#chain_data = json.loads(chain_data)
+                chain_data = {}
+                chain_data['net_ifs'] = ""
 		#push vnf status info
 		if dict.has_key(ID):
 			if dict[ID] != status:
@@ -162,32 +185,40 @@ def collect():
 	syncclient.recv()
 		
 		
-		
 def repeat():
-	"""
-		A scheduler repeat exec collect() every interval 
-		amount of time
-	"""
-	print(master)
-	register()
-	while (True):
-		collect()
-		#time.sleep(interval)
-	#threading.Timer(interval, repeat).start()
-    
+    """
+            A scheduler repeat exec collect() every interval
+            amount of time
+    """
+    print(master)
+    register()
+    while (True):
+        collect()
+        # time.sleep(interval)
+    #threading.Timer(interval, repeat).start()
+
+
 def main():
-	repeat()
+    repeat()
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--master", help="IP of the master")
-	parser.add_argument("--interface", help="interface of minion")
-	args = parser.parse_args()
-	if (args.master != None):
-		master = args.master
-	if (args.interface != None):
-		interface = args.interface
-	subscriber.connect('tcp://'+master+':5561')
-	subscriber.setsockopt(zmq.SUBSCRIBE,'')
-	syncclient.connect('tcp://'+master+':5562')
-	main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--master", help = "IP address of the master", 
+                        default = "127.0.0.1")
+    parser.add_argument("--interface", help = "Communication interface of\
+                        minion, e.g., eth0", default = "eth0")
+    parser.add_argument("--default_ovs_bridge", help = "Name of the default ovs\
+                        bridge", default = "ovs-br0")
+    parser.add_argument("--default_tunnel_interface", help = "Name of the \
+                        tunnel interface", default = "gre0")
+    args = parser.parse_args()
+    master = args.master
+    interface = args.interface
+    default_ovs_bridge = args.default_ovs_bridge
+    default_tunnel_interface = args.default_tunnel_interface
+    OVSDriver.set_bridge_of_version(default_ovs_bridge, "OpenFlow13")
+    OVSDriver.set_bridge_fail_mode(default_ovs_bridge, "secure")
+    subscriber.connect('tcp://' + master + ':5561')
+    subscriber.setsockopt(zmq.SUBSCRIBE, '')
+    syncclient.connect('tcp://' + master + ':5562')
+    main()

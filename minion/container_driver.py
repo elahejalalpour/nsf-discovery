@@ -9,7 +9,7 @@ from bash_wrapper import execute_bash_command
 logger = logging.getLogger(__name__)
 
 
-class Minion():
+class ContainerDriver():
 
     """
     @class Monitor
@@ -263,6 +263,19 @@ class Minion():
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         with self._error_handling(errors.VNFDestroyError):
             dcx.remove_container(container=vnf_fullname, force=force)
+
+    def unlink_container_netns(self, vnf_name):
+        """
+        Deletes the symbolic link to the container's network namespace.
+
+        @param vnf_name Name of the VNF
+        """
+        vnf_container_pid = str(self.get_container_pid(vnf_name))
+        if os.path.exists('/var/run/netns/' + vnf_container_pid):
+            bash_command = "sudo rm /var/run/netns/" + vnf_container_pid
+            (return_code, output, errput) = execute_bash_command(bash_command)
+            if return_code <> 0:
+                raise Exception(return_code, errput)
 
     def symlink_container_netns(self, vnf_name):
         """
