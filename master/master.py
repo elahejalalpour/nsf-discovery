@@ -293,6 +293,7 @@ def msg_handler(msg, etcdcli):
             etcdcli.write('/Host/' + msg['host'], host)
         elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
             # A new VNF is detected or a status change in existing VNF
+            print(msg)
             if (msg['status'] == 'running'):
                 IP = msg['IP']
             else:
@@ -302,8 +303,6 @@ def msg_handler(msg, etcdcli):
                    'VNF_status': msg['status'], 'VNF_type': msg['image'],
                    'Chain_name': None, 'net_ifs': msg['net_ifs']}
             vnf = json.dumps(vnf)
-            print "VNF info received:"
-            print vnf
             try:
                 r = etcdcli.read('/VNF', recursive=True, sorted=True)
                 exist = False
@@ -317,6 +316,7 @@ def msg_handler(msg, etcdcli):
                 if (not exist):
                     etcdcli.write("/VNF", vnf, append=True)
             except Exception, ex:
+                traceback.print_exc()
                 etcdcli.write("/VNF", vnf, append=True)
 
             # build graph object from chain info when the VNF status changed
@@ -328,19 +328,11 @@ def msg_handler(msg, etcdcli):
             G = nx.Graph()
             edges = {}
             for child in r.children:
-                print "Child: "
-                print child
                 temp = json.loads(child.value)
-                print "Child JSON: "
-                print temp
                 node = temp['Host_name'] + '_' + temp['Con_id']
                 G.add_node(node, name = temp['Con_name'], type = temp['VNF_type'])
                 lst = temp['net_ifs']
-                print "lst:"
-                print lst
                 for val in lst:
-                    print "val:"
-                    print val
                     key = val['link_type'] + '_' + val['link_id']
                     if (edges.has_key(key)):
                         edges[key][node] = val['if_name']
@@ -358,9 +350,7 @@ def msg_handler(msg, etcdcli):
                     G.add_edge(t1[0], t1[1], {'nodes': edges[key], 'link_type': t2[0],
                                               'link_id': t2[1]})
             data = json_graph.node_link_data(G)
-            print(data)
             subgraphs = list(nx.connected_component_subgraphs(G))
-            print subgraphs
             try:
                 for g in subgraphs:
                     etcdcli.write(
@@ -409,7 +399,7 @@ def main():
     publisher.bind('tcp://*:5561')
 
     # Socket to receive signals
-    syncservice = context.socket(zmq.REP)
+    syncservice = context.socket(zmq.PAIR)
     syncservice.bind('tcp://*:5562')
 
     # Socket to receive IPC
@@ -421,7 +411,6 @@ def main():
             # exhaust the msg queue from Minions
             while(True):
                 msg = syncservice.recv_json(flags=zmq.NOBLOCK)
-                syncservice.send('')
                 msg_handler(msg, etcdcli)
         except Exception, ex:
             #print("No New Msg from Slave!")

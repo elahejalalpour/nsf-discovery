@@ -43,7 +43,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-      url: "http://159.203.58.105:5000/get"+type,
+      url: "http://localhost:5000/get"+type,
       method: 'GET',
       success: function (json) {
         if (type == "Chain") {
@@ -79,7 +79,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-      url: "http://159.203.58.105:5000/request",
+      url: "http://localhost:5000/request",
       data: data,
       method: 'POST',
       success: function (json) {
@@ -97,7 +97,7 @@ monitor.model = function () {
     $.ajax({
       contentType: false,
       processData: false,
-      url: "http://159.203.58.105:5000/create_chain",
+      url: "http://localhost:5000/create_chain",
       method: 'POST',
       success: function(json) {
         console.log(json);
