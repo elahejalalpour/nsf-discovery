@@ -43,11 +43,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-<<<<<<< HEAD
       url: "http://142.150.208.169:5000/get"+type,
-=======
-      url: "http://localhost:5000/get"+type,
->>>>>>> 5a9357e96e1df9f702170f5d631b035bc1f80dbb
       method: 'GET',
       success: function (json) {
         if (type == "Chain") {
@@ -83,11 +79,7 @@ monitor.model = function () {
     $.ajax({
       contentType: "application/json",
       dataType: "json",
-<<<<<<< HEAD
       url: "http://142.150.208.169:5000/request",
-=======
-      url: "http://localhost:5000/request",
->>>>>>> 5a9357e96e1df9f702170f5d631b035bc1f80dbb
       data: data,
       method: 'POST',
       success: function (json) {
@@ -105,11 +97,7 @@ monitor.model = function () {
     $.ajax({
       contentType: false,
       processData: false,
-<<<<<<< HEAD
       url: "http://142.150.208.169:5000/create_chain",
-=======
-      url: "http://localhost:5000/create_chain",
->>>>>>> 5a9357e96e1df9f702170f5d631b035bc1f80dbb
       method: 'POST',
       success: function(json) {
         console.log(json);

@@ -157,11 +157,7 @@ $(function() {
 
   function repeat() {
     //repeat every 2 seconds
-<<<<<<< HEAD
-    setTimeout(repeat, 2000);
-=======
     setTimeout(repeat, 1500);
->>>>>>> 5a9357e96e1df9f702170f5d631b035bc1f80dbb
     $("#Hosts").empty();
     $("#VNFS").empty();
     
