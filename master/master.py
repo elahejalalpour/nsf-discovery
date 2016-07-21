@@ -409,7 +409,7 @@ def main():
     publisher.bind('tcp://*:5561')
 
     # Socket to receive signals
-    syncservice = context.socket(zmq.REP)
+    syncservice = context.socket(zmq.PULL)
     syncservice.bind('tcp://*:5562')
 
     # Socket to receive IPC
@@ -421,7 +421,6 @@ def main():
             # exhaust the msg queue from Minions
             while(True):
                 msg = syncservice.recv_json(flags=zmq.NOBLOCK)
-                syncservice.send('')
                 msg_handler(msg, etcdcli)
         except Exception, ex:
             #print("No New Msg from Slave!")
