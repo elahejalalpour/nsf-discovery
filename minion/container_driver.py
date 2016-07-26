@@ -77,14 +77,17 @@ class ContainerDriver():
             inspect_data = dcx.inspect_container(container=vnf_name)
             return dcx, vnf_name, inspect_data
 
-    def get_containers(self):
+    def get_containers(self,full=False):
         """
         Returns all container's INFO.
 
         @return information of all containers in a list.
         """
         dcx = self._get_client()
-        return dcx.containers()
+        if (full):
+            return dcx.containers(all=True)
+        else:
+            return dcx.containers()
 
     def get_id(self, vnf_name):
         """
