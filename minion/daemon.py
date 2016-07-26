@@ -96,7 +96,7 @@ def cmd_handler(msg):
                 cmd_helper(msg)
                 return
             if (msg['ID'] == '*'):
-                containers = mon.get_containers(full=True)
+                containers = mon.get_containers()
                 it = iter(containers)
                 for a in it:
                     msg['ID'] = a['Id'].encode()
@@ -133,7 +133,7 @@ def collect():
     discovery_agent = DiscoveryAgent()
     partial_view = discovery_agent.discover()
     
-    containers = mon.get_containers(full=True)
+    containers = mon.get_containers()
     it = iter(containers)
     for a in it:
         ID = a['Id'].encode()
