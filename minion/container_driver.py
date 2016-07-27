@@ -5,6 +5,8 @@ from contextlib import contextmanager
 import docker
 import errors
 from bash_wrapper import execute_bash_command
+from mock_docker import mockDocker
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ class ContainerDriver():
 
         """
         self.__dns_list = ['8.8.8.8']
+        mocking = False
 
     @contextmanager
     def _error_handling(self, nfioError):
@@ -67,8 +70,11 @@ class ContainerDriver():
         @return A docker client object that can be used to communicate
             with the docker daemon on the host
         """
-        with self._error_handling(errors.HypervisorConnectionError):
-            return docker.Client(base_url='unix://var/run/docker.sock')
+        if (not mocking):
+            with self._error_handling(errors.HypervisorConnectionError):
+                return docker.Client(base_url='unix://var/run/docker.sock')
+        else:
+            return mockDocker()
 
     def _lookup_vnf(self, vnf_name):
         self._validate_cont_name(vnf_name)
@@ -76,6 +82,9 @@ class ContainerDriver():
         with self._error_handling(errors.VNFNotFoundError):
             inspect_data = dcx.inspect_container(container=vnf_name)
             return dcx, vnf_name, inspect_data
+
+    def mock_mode():
+        mocking = True
 
     def get_containers(self,full=False):
         """
