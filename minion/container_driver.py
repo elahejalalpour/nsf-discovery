@@ -70,7 +70,7 @@ class ContainerDriver():
         @return A docker client object that can be used to communicate
             with the docker daemon on the host
         """
-        if (not mocking):
+        if (not self.mocking):
             with self._error_handling(errors.HypervisorConnectionError):
                 return docker.Client(base_url='unix://var/run/docker.sock')
         else:
@@ -84,7 +84,7 @@ class ContainerDriver():
             return dcx, vnf_name, inspect_data
 
     def mock_mode(self):
-        mocking = True
+        self.mocking = True
 
     def get_containers(self,full=False):
         """
