@@ -421,20 +421,20 @@ class mockDocker():
     def execute(self,vnf_name,args,stdout=True, stderr=False):
         return None
     
-    def start(self,container='',dns='8.8.8.8',privileged=False)
+    def start(self,container='',dns='8.8.8.8',privileged=False):
         print('container '+container+' started!')
         
     def restart(self,container='')
-        print('container '+container+' restarted!')
+        print('container '+container+' restarted!'):
     
     def stop(self,container='')
-        print('container '+container+' stopped!')
+        print('container '+container+' stopped!'):
 
     def pause(self,container='')
-        print('container '+container+' paused!')
+        print('container '+container+' paused!'):
         
     def unpause(self,container='')
-        print('container '+container+' unpaused!')
+        print('container '+container+' unpaused!'):
         
     def dcx.create_container(self,image='',name='',host_config='',**kwargs):
         print('container '+name+' created!')
