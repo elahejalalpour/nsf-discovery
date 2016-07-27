@@ -424,19 +424,19 @@ class mockDocker():
     def start(self,container='',dns='8.8.8.8',privileged=False):
         print('container '+container+' started!')
         
-    def restart(self,container='')
-        print('container '+container+' restarted!'):
+    def restart(self,container=''):
+        print('container '+container+' restarted!')
     
-    def stop(self,container='')
-        print('container '+container+' stopped!'):
+    def stop(self,container=''):
+        print('container '+container+' stopped!')
 
-    def pause(self,container='')
-        print('container '+container+' paused!'):
+    def pause(self,container=''):
+        print('container '+container+' paused!')
         
-    def unpause(self,container='')
-        print('container '+container+' unpaused!'):
+    def unpause(self,container=''):
+        print('container '+container+' unpaused!')
         
-    def dcx.create_container(self,image='',name='',host_config='',**kwargs):
+    def create_container(self,image='',name='',host_config='',**kwargs):
         print('container '+name+' created!')
         return {'id' : '0000000000'}
     
