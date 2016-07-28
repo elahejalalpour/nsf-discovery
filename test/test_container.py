@@ -1,4 +1,4 @@
-from container_driver import ContainerDriver
+from minion.container_driver import ContainerDriver
 
 mon = ContainerDriver(True)
 
