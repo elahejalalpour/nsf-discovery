@@ -25,7 +25,7 @@ class ContainerDriver():
         """
         self.__dns_list = ['8.8.8.8']
         if (mocking):
-            mod = importlib.import_module('mock_docker')
+            mod = importlib.import_module('minion.mock_docker')
             self.docker_wrap = mod.mockDocker()
         else:
             self.docker_wrap = importlib.import_module('docker')
