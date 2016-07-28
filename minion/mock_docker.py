@@ -1,6 +1,9 @@
 
 
 class mockDocker():
+    def Client(self,base_url=''):
+        return self
+
     def containers(self,all=False):
         if(not all):
             data = [{

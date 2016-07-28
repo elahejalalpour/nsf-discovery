@@ -2,10 +2,9 @@ import requests
 import logging
 import os
 from contextlib import contextmanager
-import docker
 import errors
 from bash_wrapper import execute_bash_command
-from mock_docker import mockDocker
+import importlib
 
 
 logger = logging.getLogger(__name__)
@@ -19,13 +18,17 @@ class ContainerDriver():
     This class provides methods for monitoring docker containers.
     """
 
-    def __init__(self):
+    def __init__(self,mocking):
         """
         @brief Instantiates a Monitor object.
 
         """
         self.__dns_list = ['8.8.8.8']
-        mocking = False
+        if (mocking):
+            mod = importlib.import_module('mock_docker')
+            self.docker_wrap = mod.mockDocker()
+        else:
+            self.docker_wrap = importlib.import_module('docker')
 
     @contextmanager
     def _error_handling(self, nfioError):
@@ -70,11 +73,8 @@ class ContainerDriver():
         @return A docker client object that can be used to communicate
             with the docker daemon on the host
         """
-        if (not self.mocking):
-            with self._error_handling(errors.HypervisorConnectionError):
-                return docker.Client(base_url='unix://var/run/docker.sock')
-        else:
-            return mockDocker()
+        with self._error_handling(errors.HypervisorConnectionError):
+            return self.docker_wrap.Client(base_url='unix://var/run/docker.sock')
 
     def _lookup_vnf(self, vnf_name):
         self._validate_cont_name(vnf_name)
