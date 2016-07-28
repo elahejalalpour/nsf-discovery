@@ -3,10 +3,9 @@ from container_driver import ContainerDriver
 mon = ContainerDriver(True)
 
 def test_get_containers():
-	assert(mon.containers()) != None
+	assert(mon.get_containers() != None)
 
 def test_start():
-	assert(mon.start('whatever')) == 'container whatever started!'
+	assert(mon.start('whatever') == 'container whatever started!')
 	
-
-print mon.get_id('nfuser-new-firewall')
+test_get_containers()
