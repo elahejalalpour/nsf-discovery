@@ -1,7 +1,6 @@
 from container_driver import ContainerDriver
 
-mon = ContainerDriver()
-mon.mock_mode()
+mon = ContainerDriver(True)
 
 def test_get_containers():
 	assert(mon.containers()) != None
