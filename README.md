@@ -1,6 +1,6 @@
 # nsf-discovery
 Network Service Function Discovery <br />
-![alt tag](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/badge/icon)
+[![Build Status](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/badge/icon)] 
 on master:<br />
 zeromq <br />
 flask <br />
