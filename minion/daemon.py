@@ -15,7 +15,7 @@ import json
 import argparse
 
 sleeping = 1
-mon = ContainerDriver(False)
+mon = ContainerDriver(True)
 dict = {}
 # set up zeromq
 master = '10.0.1.100'
