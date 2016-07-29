@@ -83,9 +83,6 @@ class ContainerDriver():
             inspect_data = dcx.inspect_container(container=vnf_name)
             return dcx, vnf_name, inspect_data
 
-    def mock_mode(self):
-        self.mocking = True
-
     def get_containers(self,full=False):
         """
         Returns all container's INFO.
