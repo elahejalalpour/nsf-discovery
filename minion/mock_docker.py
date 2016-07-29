@@ -441,7 +441,7 @@ class mockDocker():
         
     def create_container(self,image='',name='',host_config='',**kwargs):
         print('container '+name+' created!')
-        return {'id' : '0000000000'}
+        return {'Id' : '0000000000'}
     
     def remove_container(self,container='', force=False):
         print('container '+container+' removed!')
