@@ -14,6 +14,7 @@ import ipaddress
 import networkx as nx
 from networkx.readwrite import json_graph
 from copy import deepcopy
+import argparse
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -380,11 +381,9 @@ def msg_handler(msg, etcdcli):
         traceback.print_exc()
 
 
-def main():
+def main(etcdcli):
     # interval: how many seconds before been marked inactive
     interval = 5
-    # initialize etcd
-    etcdcli = etcd.Client()
     try:
         etcdcli.read('link_id')
     except Exception, ex:
@@ -454,4 +453,15 @@ def main():
         time.sleep(sleeping)
 
 if __name__ == '__main__':
-    main()
+    # initialize etcd
+    etcdcli = etcd.Client()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--clear", help = "clear etcd database", 
+                        action = "store_true")
+    args = parser.parse_args()
+    if (args.clear):
+        etcdcli.delete("/VNF", recursive=True)
+        etcdcli.delete("/Host", recursive=True)
+        etcdcli.delete("/Chain", recursive=True)
+    
+    main(etcdcli)
