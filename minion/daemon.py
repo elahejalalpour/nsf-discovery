@@ -15,7 +15,7 @@ import json
 import argparse
 
 sleeping = 1
-mon = ContainerDriver()
+mon = ContainerDriver(True)
 dict = {}
 # set up zeromq
 master = '10.0.1.100'
@@ -24,7 +24,7 @@ default_ovs_bridge = 'ovs-br0'
 default_tunnel_interface = 'gre0'
 context = zmq.Context()
 subscriber = context.socket(zmq.SUB)
-syncclient = context.socket(zmq.REQ)
+syncclient = context.socket(zmq.PUSH)
 hostname = platform.node()
 
 
@@ -43,8 +43,6 @@ def register():
            'cpus': len(psutil.cpu_percent(interval=None, percpu=True))}
     # send a synchronization request
     syncclient.send_json(msg)
-    # wait for synchronization reply
-    syncclient.recv()
     # print('register finished')
 
 
@@ -69,7 +67,6 @@ def cmd_helper(msg):
         reply = {'host': hostname, 'ID': msg['ID'],
                  'flag': 'removed'}
         syncclient.send_json(reply)
-        syncclient.recv()
     elif (msg['action'] == 'deploy'):
         ret = mon.deploy(msg['user'], msg['image_name'], msg['vnf_name'])
     elif (msg['action'] == 'execute'):
@@ -77,7 +74,6 @@ def cmd_helper(msg):
         reply = {'host': hostname, 'ID': msg['ID'],
                  'flag': 'reply', 'response': response, 'cmd': msg['cmd']}
         syncclient.send_json(reply)
-        syncclient.recv()
     elif (msg['action'] == 'create_chain'):
         # To be finished
         print "Request received to deploy chain: \n"
@@ -170,7 +166,6 @@ def collect():
                 syncclient.send_json(msg)
                 print "VNF status changed:"
                 print msg
-                syncclient.recv()
                 dict[ID] = status
         else:
             # vnf is not in the record,create a new entry
@@ -183,7 +178,6 @@ def collect():
             print "New VNF entry"
             print msg
             syncclient.send_json(msg)
-            syncclient.recv()
     # push system resource info
     mem = psutil.virtual_memory()
     images = mon.images()
@@ -195,7 +189,6 @@ def collect():
             'network' : psutil.net_io_counters(pernic=True),
             'images' : images}
     syncclient.send_json(msg)
-    syncclient.recv()
         
         
 def repeat():

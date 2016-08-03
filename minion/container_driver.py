@@ -2,9 +2,10 @@ import requests
 import logging
 import os
 from contextlib import contextmanager
-import docker
 import errors
 from bash_wrapper import execute_bash_command
+import importlib
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,17 @@ class ContainerDriver():
     This class provides methods for monitoring docker containers.
     """
 
-    def __init__(self):
+    def __init__(self,mocking):
         """
         @brief Instantiates a Monitor object.
 
         """
         self.__dns_list = ['8.8.8.8']
+        if (mocking):
+            mod = importlib.import_module('minion.mock_docker')
+            self.docker_wrap = mod.mockDocker()
+        else:
+            self.docker_wrap = importlib.import_module('docker')
 
     @contextmanager
     def _error_handling(self, nfioError):
@@ -68,7 +74,7 @@ class ContainerDriver():
             with the docker daemon on the host
         """
         with self._error_handling(errors.HypervisorConnectionError):
-            return docker.Client(base_url='unix://var/run/docker.sock')
+            return self.docker_wrap.Client(base_url='unix://var/run/docker.sock')
 
     def _lookup_vnf(self, vnf_name):
         self._validate_cont_name(vnf_name)
@@ -77,14 +83,17 @@ class ContainerDriver():
             inspect_data = dcx.inspect_container(container=vnf_name)
             return dcx, vnf_name, inspect_data
 
-    def get_containers(self):
+    def get_containers(self,full=False):
         """
         Returns all container's INFO.
 
         @return information of all containers in a list.
         """
         dcx = self._get_client()
-        return dcx.containers()
+        if (full):
+            return dcx.containers(all=True)
+        else:
+            return dcx.containers()
 
     def get_id(self, vnf_name):
         """
