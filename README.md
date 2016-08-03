@@ -6,6 +6,7 @@ zeromq <br />
 flask <br />
 python-dateutil <br />
 networkx <br />
+etcd <br />
 
 On minion: <br />
 psutil <br />
