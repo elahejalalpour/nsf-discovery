@@ -29,13 +29,19 @@ class ProvisioningAgent():
         """
         # Deploy the container.
         scaled_cpu_share = int(1024 * (vnf_config['cpu_share'] / 100.0))
+        host_config = {'Privileged': True}
+        vnf_config_keys = vnf_config.keys()
+        if "memory" in vnf_config_keys:
+            host_config['mem_limit'] = str(vnf_config['memory']) + "M"
+        if "cpu_share" in vnf_config_keys:
+            host_config['CpuShares'] = int(1024 * (float(vnf_config['cpu_share']) / 100.0))
+        if "cpuset_cpus" in vnf_config_keys:
+            host_config['CpusetCpus'] = str(vnf_config['cpuset_cpus'])
+
         self.__container_handle.deploy(
-            user="sr2chowd",
             image_name=vnf_config['vnf_type'],
             vnf_name=vnf_config['container_name'],
-            cpuset=str(vnf_config['cpuset_cpus']), 
-            cpu_shares=scaled_cpu_share, 
-            mem_limit=str(vnf_config['memory']) + "M")
+            host_config = host_config)
         container_name = "sr2chowd-" + vnf_config['container_name']
         chain_rollback.push(self.__container_handle.destroy,
                 self.__container_handle, container_name)
