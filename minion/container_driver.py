@@ -222,36 +222,29 @@ class ContainerDriver():
         with self._error_handling(errors.VNFUnpauseError):
             dcx.unpause(container=vnf_fullname)
 
-    def deploy(self, user, image_name, vnf_name, is_privileged=True, **kwargs):
+    def deploy(self, image_name, vnf_name, h_config):
         """
         Deploys a docker container.
 
 
-        @param user name of the user who owns the VNF
         @param image_name docker image name for the VNF
         @param vnf_name name of the VNF instance
         @param is_privileged if True then the container is deployed in
             privileged mode
-
+        @param h_config Various host configuration parameters as supported by
+        Docker remote API.
         @returns docker container ID
         """
         self._validate_image_name(image_name)
-        vnf_fullname = user + '-' + vnf_name
+        vnf_fullname = vnf_name
         self._validate_cont_name(vnf_fullname)
         dcx = self._get_client()
-        host_config = dict()
-        if is_privileged:
-            host_config['Privileged'] = True
-        if "mem_limit" in kwargs.keys():
-            host_config['mem_limit'] = kwargs['mem_limit'] 
-            del kwargs['mem_limit']
-
+        print h_config        
         with self._error_handling(errors.VNFDeployError):
             container = dcx.create_container(
                 image=image_name,
                 name=vnf_fullname,
-                host_config=host_config,
-                **kwargs)
+                host_config=h_config)
             return container['Id']
 
     def destroy(self, vnf_name, force=True):
