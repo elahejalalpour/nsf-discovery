@@ -11,7 +11,7 @@ from rollbackcontext import RollbackContext
 class ProvisioningAgent():
 
     def __init__(self, ovs_bridge_name = "ovs-br0", tunnel_interface_name = "gre0"):
-        self.__container_handle = ContainerDriver()
+        self.__container_handle = ContainerDriver(backing_driver = "docker")
         self.__default_ovs_bridge = ovs_bridge_name
         self.__default_tunnel_interface = tunnel_interface_name
         self.__chain_driver = ChainDriver()

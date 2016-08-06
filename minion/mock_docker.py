@@ -1,9 +1,8 @@
 
-
-class mockDocker():
-    def Client(self,base_url=''):
-        return self
-
+class Client:
+    def __init__(self, base_url=""):
+        self.base_url = base_url
+    
     def containers(self,all=False):
         if(not all):
             data = [{
@@ -481,21 +480,3 @@ class mockDocker():
                 'Size': 187899635
         }]
         return data
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        

@@ -1,7 +1,8 @@
-from minion.container_driver import ContainerDriver
-import sys
+import sys, os
+sys.path.append(os.getcwd() + "/..")
+from minion import container_driver
 
-mon = ContainerDriver(True)
+mon = container_driver.ContainerDriver("minion.mock_docker")
 
 def test_get_containers():
 	assert(mon.get_containers() != None)

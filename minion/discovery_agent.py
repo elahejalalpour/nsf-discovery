@@ -6,7 +6,7 @@ import json
 class DiscoveryAgent():
 
     def __init__(self, tunnel_bridge_name = "ovs-br0"):
-        self.__container_driver = ContainerDriver()
+        self.__container_driver = ContainerDriver(backing_driver = "docker")
         self.__ovs_driver = OVSDriver()
         self.__tunnel_bridge_name = tunnel_bridge_name
 

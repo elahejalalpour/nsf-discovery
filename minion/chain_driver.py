@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class ChainDriver():
 
     def __init__(self):
-        self.__container_handler = ContainerDriver()
+        self.__container_handler = ContainerDriver(backing_driver = "docker")
     
     def connect_containers_inside_host(self, container_a_name,
             veth_vs_container_a, container_b_name, veth_vs_container_b,
