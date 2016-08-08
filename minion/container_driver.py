@@ -6,6 +6,7 @@ import errors
 from bash_wrapper import execute_bash_command
 import importlib
 
+
 class ContainerDriver:
 
     """
@@ -70,7 +71,8 @@ class ContainerDriver:
             with the docker daemon on the host
         """
         with self._error_handling(errors.HypervisorConnectionError):
-            return self.backing_driver.Client(base_url='unix://var/run/docker.sock')
+            return self.backing_driver.Client(
+                base_url='unix://var/run/docker.sock')
 
     def _lookup_vnf(self, vnf_name):
         self._validate_cont_name(vnf_name)
@@ -139,8 +141,9 @@ class ContainerDriver:
         if self.guest_status(vnf_name) != 'running':
             raise errors.VNFNotRunningError
         with self._error_handling(errors.VNFCommandExecutionError):
-            response = dcx.execute(vnf_fullname,
-                                   ["/bin/bash", "-c", cmd], stdout=True, stderr=False)
+            response = dcx.execute(
+                vnf_fullname, [
+                    "/bin/bash", "-c", cmd], stdout=True, stderr=False)
             return response
 
     def is_interface_attached(self, vnf_name, veth_interface_name):
@@ -276,7 +279,7 @@ class ContainerDriver:
         if os.path.exists('/var/run/netns/' + vnf_container_pid):
             bash_command = "sudo rm /var/run/netns/" + vnf_container_pid
             (return_code, output, errput) = execute_bash_command(bash_command)
-            if return_code <> 0:
+            if return_code != 0:
                 raise Exception(return_code, errput)
 
     def symlink_container_netns(self, vnf_name):
@@ -328,9 +331,10 @@ class ContainerDriver:
 
     def get_container_net_ifaces(self, container_name):
         with self._error_handling(errors.BashExecutionError):
-            bash_command = "docker exec " + container_name + " ip link | grep -o veth[0-9]*-cn"
+            bash_command = "docker exec " + container_name + \
+                " ip link | grep -o veth[0-9]*-cn"
             (return_code, output, errput) = execute_bash_command(
                 bash_command)
-            if return_code <> 0:
+            if return_code != 0:
                 raise Exception(return_code, errput)
         return output.split()

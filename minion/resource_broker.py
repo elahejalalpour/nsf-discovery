@@ -1,4 +1,5 @@
 class ResourceBroker(object):
+
     def __init__(self):
         self._resources = {}
         pass
