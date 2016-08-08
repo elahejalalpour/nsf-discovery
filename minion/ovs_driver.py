@@ -166,7 +166,7 @@ class OVSDriver():
             raise Exception(return_code, errput)
 
     def get_tunnel_port_number(self, ovs_bridge_name, veth_interface_name):
-        veth_openflow_port = OVSDriver.get_openflow_port_number(
+        veth_openflow_port = self.get_openflow_port_number(
             ovs_bridge_name,
             veth_interface_name)
         if veth_openflow_port == '-1':
