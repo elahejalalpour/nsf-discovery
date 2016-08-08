@@ -175,7 +175,7 @@ class MinionDaemon(object):
                    'name': name, 'status': status, 'flag': 'new',
                    'net_ifs': net_ifs}
             if status == 'running':
-                msg['IP'] = self._container_driver.get_up(ID)
+                msg['IP'] = self._container_driver.get_ip(ID)
 
             self._syncclient.send_json(msg)
         # push system resource info
