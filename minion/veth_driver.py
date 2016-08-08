@@ -1,13 +1,9 @@
-import logging
 import os
 from bash_wrapper import execute_bash_command
 import errors
 
-logger = logging.getLogger(__name__)
-
 class VethDriver():      
-    @staticmethod
-    def create_veth_pair(veth_interface_a, veth_interface_b):
+    def create_veth_pair(self, veth_interface_a, veth_interface_b):
         """
         Creates a link using veth pair.
     
@@ -20,8 +16,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def delete_veth_interface(veth_interface):
+    def delete_veth_interface(self, veth_interface):
         """
         Deletes an endpoint of a veth pair.
 
@@ -33,8 +28,7 @@ class VethDriver():
             raise Exception(return_code, errput)
 
 
-    @staticmethod
-    def move_veth_interface_to_netns(veth_interface, netns):
+    def move_veth_interface_to_netns(self, veth_interface, netns):
         """
         Moves a veth interface inside a network namespace.
 
@@ -47,8 +41,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def enable_veth_interface(veth_interface, netns = "root"):
+    def enable_veth_interface(self, veth_interface, netns = "root"):
         """
         Brings up a veth interface inside a network namespace.
 
@@ -66,8 +59,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def assign_ip_to_veth_interface(veth_interface, ip, netns = "root"):
+    def assign_ip_to_veth_interface(self, veth_interface, ip, netns = "root"):
         """
         Assigns IP address to veth interface inside a network namespace.
 
@@ -86,8 +78,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def delete_ip_from_veth_interface(veth_interface, ip, netns = "root"):
+    def delete_ip_from_veth_interface(self, veth_interface, ip, netns = "root"):
         """
         Delete an IP address from a veth interface inside a network namespace. 
 
@@ -107,8 +98,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def add_route_to_veth_interface(veth_interface, network, netns = "root"):
+    def add_route_to_veth_interface(self, veth_interface, network, netns = "root"):
         """
         Add a network route going through a veth interface inside a network
         namespace. 
@@ -128,8 +118,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def delete_route_from_veth_interface(veth_interface, network, netns = "root"):
+    def delete_route_from_veth_interface(self, veth_interface, network, netns = "root"):
         """
         Delete a network route going through a veth interface inside a network
         namespace. 
@@ -149,8 +138,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def update_mtu_at_veth_interface(veth_interface, mtu, netns = "root"):
+    def update_mtu_at_veth_interface(self, veth_interface, mtu, netns = "root"):
         """
         Update Maximum Transport Unit (MTU) of a veth interface inside a network
         namespace.
@@ -170,8 +158,7 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def is_interface_present(veth_interface, netns = "root"):
+    def is_interface_present(self, veth_interface, netns = "root"):
         bash_command = "sudo "
         if netns <> "root":
             bash_command += "ip netns exec " + netns + " "
@@ -180,4 +167,3 @@ class VethDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
         return int(output) > 0
-

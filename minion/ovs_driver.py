@@ -1,13 +1,8 @@
-import logging
 from bash_wrapper import execute_bash_command
-
-logger = logging.getLogger(__name__)
-
 
 class OVSDriver():
 
-    @staticmethod
-    def create_bridge(ovs_bridge_name):
+    def create_bridge(self, ovs_bridge_name):
         """
         Creates an OVS bridge
 
@@ -17,9 +12,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-    @staticmethod
-    def delete_bridge(ovs_bridge_name):
+    
+    def delete_bridge(self, ovs_bridge_name):
         """
         Delete an existing ovs bridge.
         
@@ -29,9 +23,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-    @staticmethod
-    def set_bridge_of_version(ovs_bridge_name, of_version = "OpenFlow13"):
+    
+    def set_bridge_of_version(self, ovs_bridge_name, of_version = "OpenFlow13"):
         """
         Set the OpenFlow protocol version for an OVS bridge.
 
@@ -44,8 +37,7 @@ class OVSDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    @staticmethod
-    def set_bridge_fail_mode(ovs_bridge_name, fail_mode = "secure"):
+    def set_bridge_fail_mode(self, ovs_bridge_name, fail_mode = "secure"):
         """
         Sets the configured failure mode for the ovs bridge.
 
@@ -56,9 +48,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-    @staticmethod
-    def install_flow_rule(ovs_bridge_name, rule):
+    
+    def install_flow_rule(self, ovs_bridge_name, rule):
         """
         Install an Openflow rule in the OVS bridge
         @param ovs_bridge_name Name of the OVS bridge.
@@ -69,9 +60,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-    @staticmethod
-    def remove_flow_rule(ovs_bridge_name, rule):
+    
+    def remove_flow_rule(self, ovs_bridge_name, rule):
         """
         Remove a flow rule from an OVS bridge.
         @param ovs_bridge_name Name of the OVS bridge.
@@ -82,9 +72,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-    @staticmethod
-    def attach_interface_to_ovs(ovs_bridge_name, veth_interface_name):
+    
+    def attach_interface_to_ovs(self, ovs_bridge_name, veth_interface_name):
         """
         Attaches a veth interface to an OVS bridge.
 
@@ -97,7 +86,7 @@ class OVSDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
 
-    def detach_interface_from_ovs(ovs_bridge_name, veth_interface_name):
+    def detach_interface_from_ovs(self, ovs_bridge_name, veth_interface_name):
         """
         Remove a veth interface from an OVS bridge.
 
@@ -109,9 +98,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-    @staticmethod
-    def is_interface_attached(ovs_bridge_name, veth_interface_name):
+    
+    def is_interface_attached(self, ovs_bridge_name, veth_interface_name):
         """
         Checks if a virtual ethernet interface is attached to an OVS bridge.
         @param ovs_bridge_name Name of the OVS bridge.
@@ -126,9 +114,8 @@ class OVSDriver():
         if return_code <> 0:
             raise Exception(return_code, errput)
         return True if int(output) > 0 else False
-
-    @staticmethod
-    def get_openflow_port_number(ovs_bridge_name, veth_interface_name):
+    
+    def get_openflow_port_number(self, ovs_bridge_name, veth_interface_name):
         """
         Returns the OpenFlow port identifier of the veth interface.
 
@@ -150,8 +137,7 @@ class OVSDriver():
             return "-1"
         return output.strip()
     
-    @staticmethod
-    def set_ingress_policing_rate(veth_interface_name, rate):
+    def set_ingress_policing_rate(self, veth_interface_name, rate):
         """
         Sets the ingress policing rate of an interface attached to the ovs
         bridge.
@@ -175,10 +161,8 @@ class OVSDriver():
         (return_code, output, errput) = execute_bash_command(bash_command)
         if return_code <> 0:
             raise Exception(return_code, errput)
-
-
-    @staticmethod
-    def get_tunnel_port_number(ovs_bridge_name, veth_interface_name):
+    
+    def get_tunnel_port_number(self, ovs_bridge_name, veth_interface_name):
         veth_openflow_port = OVSDriver.get_openflow_port_number(ovs_bridge_name,
             veth_interface_name)
         if veth_openflow_port == '-1':
@@ -196,11 +180,9 @@ class OVSDriver():
         except:
             return '-1'
 
-    @staticmethod
-    def get_ovs_bridges_and_ports():
-
+    
+    def get_ovs_bridges_and_ports(self):
         bridges_and_ports = {}
-
         bash_command = 'sudo ovs-vsctl show | grep -o Bridge.*".*" ' + \
             ' | grep -o \\".*\\"'
         (return_code, output, errput) = execute_bash_command(bash_command)
@@ -208,7 +190,6 @@ class OVSDriver():
             raise Exception(return_code, errput)
         output = output.replace('"', '')
         ovs_bridges = output.split()
-
         for ovs_bridge in ovs_bridges:
             bash_command = "sudo ovs-vsctl list-ports " + ovs_bridge
             (return_code, output, errput) = execute_bash_command(bash_command)
@@ -218,10 +199,3 @@ class OVSDriver():
             bridges_and_ports[ovs_bridge] = ovs_ports
 
         return bridges_and_ports
-
-        
-      
-
-
-
-
