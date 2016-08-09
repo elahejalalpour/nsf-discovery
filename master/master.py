@@ -382,7 +382,7 @@ def msg_handler(msg, etcdcli):
         traceback.print_exc()
 
 
-def main(etcdcli):
+def main(etcdcli,influx):
     # interval: how many seconds before been marked inactive
     interval = 5
     try:
@@ -416,9 +416,6 @@ def main(etcdcli):
     ipc = context.socket(zmq.REP)
     ipc.bind('ipc:///tmp/test.pipe')
     
-    #set up influxDB
-    influx = logger.influxwrapper()
-
     while(True):
         try:
             # exhaust the msg queue from Minions
@@ -434,7 +431,7 @@ def main(etcdcli):
                 msg = ipc.recv_json(flags=zmq.NOBLOCK)
                 ipc.send('')
                 print(msg)
-                ipc_handler(msg, etcdcli, publisher, influxcli)
+                ipc_handler(msg, etcdcli, publisher, influx)
         except Exception, ex:
             #print("No New Msg from IPC!")
             pass
@@ -459,15 +456,19 @@ def main(etcdcli):
 if __name__ == '__main__':
     # initialize etcd
     etcdcli = etcd.Client()
+    #initialize influxDB
+    influx = logger.influxwrapper()
+    
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clear-etcd", help = "clear etcd database", 
+    parser.add_argument("--clearetcd", help = "clear etcd database", 
                         action = "store_true")
-    parser.add_argument("--clear-log", help = "clear influx database", 
+    parser.add_argument("--clearlog", help = "clear influx database", 
                         action = "store_true")
     args = parser.parse_args()
-    if (args.clear):
+    if (args.clearetcd):
         etcdcli.delete("/VNF", recursive=True)
         etcdcli.delete("/Host", recursive=True)
         etcdcli.delete("/Chain", recursive=True)
-    
-    main(etcdcli)
+    if (args.clearlog):
+        influx.clear()
+    main(etcdcli,influx)

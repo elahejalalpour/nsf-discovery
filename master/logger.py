@@ -8,9 +8,9 @@ class influxwrapper:
             self.influxcli = InfluxDBClient('localhost', 8086, 'root', 'root', 'NSF')
             self.influxcli.create_database('NSF')
             
-    def clear():
-        influxcli.drop_database('NSF')
-        client.create_database('NSF')
+    def clear(self):
+        self.influxcli.drop_database('NSF')
+        self.influxcli.create_database('NSF')
     
     def log_host(self,host,ip,event):
         json_body = [
