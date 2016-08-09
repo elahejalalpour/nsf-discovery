@@ -32,7 +32,7 @@ class influxwrapper:
 
         @param host hostname of the node
         @param ip ip address of the node
-        @param Type of event
+        @param event Type of event
         """
     
         json_body = [
@@ -49,5 +49,36 @@ class influxwrapper:
         ]
         self.influxcli.write_points(json_body)
         
-    #def log_vnf(self,vnf_id,vnf_type,vnf_event):
+    def log_vnf(self,vnf_id,vnf_type,event):
+        """
+        @beief This method logs VNF related events
+
+        @param vnf_id id of container
+        @param vnf_type type of the container
+        @param event Type of event
+        """
+        
+        {
+            "measurement": "VNF",
+            "tags": {
+                "VNF_id": vnf_id,
+                "VNF_type": vnf_type
+            },
+            "fields": {
+                "Event": event
+            }
+        }
+        ]
+        
+
+
+
+
+
+
+
+
+
+
+
     
