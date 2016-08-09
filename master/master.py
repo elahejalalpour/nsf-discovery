@@ -15,7 +15,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from copy import deepcopy
 import argparse
-from influxdb import InfluxDBClient
+import logger
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -23,7 +23,7 @@ from influxdb import InfluxDBClient
 sleeping = 1
 
 
-def ipc_handler(msg, etcdcli, publisher, influxcli):
+def ipc_handler(msg, etcdcli, publisher, influx):
     """
             handles messages from IPC(typically commands)
     """
@@ -417,8 +417,7 @@ def main(etcdcli):
     ipc.bind('ipc:///tmp/test.pipe')
     
     #set up influxDB
-    influxcli = InfluxDBClient('localhost', 8086, 'root', 'root', 'NSF')
-    client.create_database('NSF')
+    influx = logger.influxwrapper()
 
     while(True):
         try:
@@ -461,7 +460,9 @@ if __name__ == '__main__':
     # initialize etcd
     etcdcli = etcd.Client()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clear", help = "clear etcd database", 
+    parser.add_argument("--clear-etcd", help = "clear etcd database", 
+                        action = "store_true")
+    parser.add_argument("--clear-log", help = "clear influx database", 
                         action = "store_true")
     args = parser.parse_args()
     if (args.clear):
