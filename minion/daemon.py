@@ -15,7 +15,7 @@ import json
 import argparse
 
 sleeping = 1
-mon = ContainerDriver(backing_driver = "docker")
+mon = None
 dict = {}
 # set up zeromq
 master = '10.0.1.100'
@@ -208,6 +208,8 @@ def main():
     repeat()
 
 if __name__ == '__main__':
+    global mon
+    mon = ContainerDriver(backing_driver = "docker")
     parser = argparse.ArgumentParser()
     parser.add_argument("--master", help = "IP address of the master", 
                         default = "127.0.0.1")
