@@ -15,7 +15,6 @@ import json
 import argparse
 
 sleeping = 1
-mon = None
 dict = {}
 # set up zeromq
 master = '10.0.1.100'
