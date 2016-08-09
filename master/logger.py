@@ -57,7 +57,7 @@ class influxwrapper:
         @param vnf_type type of the container
         @param event Type of event
         """
-        
+        json_body = [
         {
             "measurement": "VNF",
             "tags": {
@@ -69,6 +69,7 @@ class influxwrapper:
             }
         }
         ]
+        self.influxcli.write_points(json_body)
         
 
 
