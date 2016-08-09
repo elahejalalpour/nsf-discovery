@@ -15,6 +15,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from copy import deepcopy
 import argparse
+from influxdb import InfluxDBClient
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -22,7 +23,7 @@ import argparse
 sleeping = 1
 
 
-def ipc_handler(msg, etcdcli, publisher):
+def ipc_handler(msg, etcdcli, publisher, influxcli):
     """
             handles messages from IPC(typically commands)
     """
@@ -414,6 +415,10 @@ def main(etcdcli):
     # Socket to receive IPC
     ipc = context.socket(zmq.REP)
     ipc.bind('ipc:///tmp/test.pipe')
+    
+    #set up influxDB
+    influxcli = InfluxDBClient('localhost', 8086, 'root', 'root', 'NSF')
+    client.create_database('NSF')
 
     while(True):
         try:
@@ -430,7 +435,7 @@ def main(etcdcli):
                 msg = ipc.recv_json(flags=zmq.NOBLOCK)
                 ipc.send('')
                 print(msg)
-                ipc_handler(msg, etcdcli, publisher)
+                ipc_handler(msg, etcdcli, publisher, influxcli)
         except Exception, ex:
             #print("No New Msg from IPC!")
             pass
