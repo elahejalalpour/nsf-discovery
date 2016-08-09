@@ -23,7 +23,7 @@ import logger
 sleeping = 1
 
 
-def ipc_handler(msg, etcdcli, publisher, influx):
+def ipc_handler(msg, etcdcli, publisher):
     """
             handles messages from IPC(typically commands)
     """
@@ -217,7 +217,7 @@ def ipc_handler(msg, etcdcli, publisher, influx):
             traceback.print_exc()
 
 
-def msg_handler(msg, etcdcli):
+def msg_handler(msg, etcdcli,influx):
     """
             handles messages recv from minions
     """
@@ -254,15 +254,23 @@ def msg_handler(msg, etcdcli):
                 host = {'Host_name': msg['host'], 'Host_ip': msg['host_ip'],
                         'Host_cpu': None, 'Host_total_mem': None,
                         'Host_avail_mem': None, 'Host_used_mem': None,
-                        'Last_seen': datetime.now().isoformat(), 'Active': None,
+                        'Last_seen': datetime.now().isoformat(), 'Active': True,
                         'cpus': None, 'network': None, 'images': None, 'resource': resource}
+            influx.log_host(host['Host_name'],
+                            host['Host_ip'],
+                            'registered')
             host = json.dumps(host)
             etcdcli.write('/Host/' + msg['host'], host)
+            
         elif(msg['flag'] == 'sysinfo'):
             # A Host pushed system resource info
             try:
                 host = etcdcli.read('/Host/' + msg['host']).value
                 host = json.loads(host)
+                if (not host['Active']):
+                    influx.log_host(host['Host_name'],
+                                    host['Host_ip'],
+                                    'active')
                 host['Host_name'] = msg['host']
                 host['Host_ip'] = msg['host_ip']
                 host['Host_cpu'] = msg['cpu']
@@ -421,7 +429,7 @@ def main(etcdcli,influx):
             # exhaust the msg queue from Minions
             while(True):
                 msg = syncservice.recv_json(flags=zmq.NOBLOCK)
-                msg_handler(msg, etcdcli)
+                msg_handler(msg, etcdcli,influx)
         except Exception, ex:
             #print("No New Msg from Slave!")
             pass
@@ -431,7 +439,7 @@ def main(etcdcli,influx):
                 msg = ipc.recv_json(flags=zmq.NOBLOCK)
                 ipc.send('')
                 print(msg)
-                ipc_handler(msg, etcdcli, publisher, influx)
+                ipc_handler(msg, etcdcli, publisher)
         except Exception, ex:
             #print("No New Msg from IPC!")
             pass
@@ -445,6 +453,9 @@ def main(etcdcli,influx):
                 if (temp['Active'] == 1 and diff.seconds > interval):
                     temp['Active'] = 0
                     hostname = temp['Host_name']
+                    influx.log_host(temp['Host_name'],
+                                    temp['Host_ip'],
+                                    'inactive')
                     temp = json.dumps(temp)
                     etcdcli.write("/Host/" + hostname, temp)
         except Exception, ex:
