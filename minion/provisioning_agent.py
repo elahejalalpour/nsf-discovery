@@ -1,20 +1,20 @@
-from container_driver import ContainerDriver
-from bash_wrapper import execute_bash_command
+from resource_broker import ResourceBroker
 import copy
 from random import randint
-from veth_driver import VethDriver
-from ovs_driver import OVSDriver
-from chain_driver import ChainDriver
 from rollbackcontext import RollbackContext
 
 
 class ProvisioningAgent():
 
-    def __init__(self, ovs_bridge_name = "ovs-br0", tunnel_interface_name = "gre0"):
-        self.__container_handle = ContainerDriver(backing_driver = "docker")
+    def __init__(self, resource_broker, ovs_bridge_name="ovs-br0",
+                 tunnel_interface_name="gre0"):
+        self.__container_driver =\
+            resource_broker.get_resource("ContainerDriver")
+        self.__ovs_driver = resource_broker.get_resource("OVSDriver")
+        self.__veth_driver = resource_broker.get_resource("VethDriver")
+        self.__chain_driver = resource_broker.get_resource("ChainDriver")
         self.__default_ovs_bridge = ovs_bridge_name
         self.__default_tunnel_interface = tunnel_interface_name
-        self.__chain_driver = ChainDriver()
 
     def provision_single_vnf(self, vnf_config, chain_rollback):
         """
@@ -34,53 +34,68 @@ class ProvisioningAgent():
         if "memory" in vnf_config_keys:
             host_config['mem_limit'] = str(vnf_config['memory']) + "M"
         if "cpu_share" in vnf_config_keys:
-            host_config['CpuShares'] = int(1024 * (float(vnf_config['cpu_share']) / 100.0))
+            host_config['CpuShares'] = int(
+                1024 * (float(vnf_config['cpu_share']) / 100.0))
         if "cpuset_cpus" in vnf_config_keys:
             host_config['CpusetCpus'] = str(vnf_config['cpuset_cpus'])
 
-        self.__container_handle.deploy(
+        self.__container_driver.deploy(
             image_name=vnf_config['vnf_type'],
             vnf_name=vnf_config['container_name'],
-            host_config = host_config)
+            host_config=host_config)
         container_name = "sr2chowd-" + vnf_config['container_name']
-        chain_rollback.push(self.__container_handle.destroy,
-                self.__container_handle, container_name)
+        chain_rollback.push(self.__container_driver.destroy,
+                            self.__container_driver, container_name)
 
-        # Start the container 
-        self.__container_handle.start(vnf_name=container_name)
-        chain_rollback.push(self.__container_handle.stop, self.__container_handle,
-                container_name)
+        # Start the container
+        self.__container_driver.start(vnf_name=container_name)
+        chain_rollback.push(
+            self.__container_driver.stop,
+            self.__container_driver,
+            container_name)
 
         # Retrieve container pid and create symlink to netns under
         # /var/run/netns
-        cont_pid = str(self.__container_handle.get_container_pid(container_name))
-        print "Container " + container_name + " started with pid " + cont_pid
+        cont_pid = str(
+            self.__container_driver.get_container_pid(container_name))
+        # print "Container " + container_name + " started with pid " + cont_pid
         vnf_config["container_name"] = container_name
-        self.__container_handle.symlink_container_netns(container_name)
-        chain_rollback.push(self.__container_handle.symlink_container_netns,
-                self.__container_handle, container_name)
+        self.__container_driver.symlink_container_netns(container_name)
+        chain_rollback.push(self.__container_driver.symlink_container_netns,
+                            self.__container_driver, container_name)
 
-        
         # Create necessary veth pairs and attach them to the containers.
         for net_config in vnf_config['net_ifs']:
-            print net_config
-            veth_vs, veth_cn = self.generate_unique_veth_endpoints(container_name,
-                    self.__default_ovs_bridge)
-            print "Creating veth pair (" + veth_cn + ", " + veth_vs + ")\n" 
-            VethDriver.create_veth_pair(veth_cn, veth_vs)
-            chain_rollback.push(VethDriver.delete_veth_interface, veth_cn)
-            chain_rollback.push(VethDriver.delete_veth_interface, veth_vs)
+            veth_vs, veth_cn = self.generate_unique_veth_endpoints(
+                container_name, self.__default_ovs_bridge)
+            # print "Creating veth pair (" + veth_cn + ", " + veth_vs + ")\n"
+            self.__veth_driver.create_veth_pair(veth_cn, veth_vs)
+            chain_rollback.push(
+                self.__veth_driver.delete_veth_interface,
+                veth_cn)
+            chain_rollback.push(
+                self.__veth_driver.delete_veth_interface,
+                veth_vs)
 
-            VethDriver.move_veth_interface_to_netns(veth_cn, netns = cont_pid)
-            VethDriver.update_mtu_at_veth_interface(veth_cn, 1436, netns = cont_pid)
-            VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+            self.__veth_driver.move_veth_interface_to_netns(
+                veth_cn,
+                netns=cont_pid)
+            self.__veth_driver.update_mtu_at_veth_interface(
+                veth_cn,
+                1436,
+                netns=cont_pid)
+            self.__veth_driver.enable_veth_interface(veth_cn, netns=cont_pid)
 
-            VethDriver.assign_ip_to_veth_interface(veth_cn, net_config['ip_address'], netns =
-                    cont_pid)
-            chain_rollback.push(VethDriver.delete_ip_from_veth_interface,
-                    net_config['ip_address'], netns = cont_pid)
+            self.__veth_driver.assign_ip_to_veth_interface(
+                veth_cn,
+                net_config['ip_address'],
+                netns=cont_pid)
+            chain_rollback.push(
+                self.__veth_driver.delete_ip_from_veth_interface,
+                net_config['ip_address'],
+                netns=cont_pid)
 
-            VethDriver.enable_veth_interface(veth_cn, netns = cont_pid)
+            self.__veth_driver.enable_veth_interface(veth_cn, netns=cont_pid)
             net_config["veth_cn"] = veth_cn
             net_config["veth_vs"] = veth_vs
 
@@ -88,8 +103,8 @@ class ProvisioningAgent():
 
     def provision_local_chain(self, chain_config):
         """
-        Create this host's local view of the chain. 
-        
+        Create this host's local view of the chain.
+
         @param chain_config Configuration dictionary for the chain.
         """
         with RollbackContext() as chain_rollback:
@@ -98,31 +113,30 @@ class ProvisioningAgent():
             # First provision individual VNFs.
             for vnf_config in chain_config:
                 updated_chain_config.append(copy.deepcopy(
-                        self.provision_single_vnf(vnf_config, chain_rollback)))
-            
+                    self.provision_single_vnf(vnf_config, chain_rollback)))
+
             # Identify the links.
             links = {}
-            print updated_chain_config
+            # print updated_chain_config
             for i in range(0, len(updated_chain_config)):
                 vnf_conf = updated_chain_config[i]
-                print vnf_conf
                 for j in range(0, len(vnf_conf['net_ifs'])):
                     net_conf = vnf_conf['net_ifs'][j]
-                    print net_conf
                     link_id = net_conf['link_id']
-                    print link_id
                     if link_id not in links.keys():
-                        links[link_id] = {"link_type" : net_conf["link_type"]}
-                        links[link_id]["endpoint_a"] = vnf_conf["container_name"]
-                        links[link_id]["veth_vs_a"] =  net_conf["veth_vs"]
-                        links[link_id]["veth_cn_a"] =  net_conf["veth_cn"]
+                        links[link_id] = {"link_type": net_conf["link_type"]}
+                        links[link_id]["endpoint_a"] = vnf_conf[
+                            "container_name"]
+                        links[link_id]["veth_vs_a"] = net_conf["veth_vs"]
+                        links[link_id]["veth_cn_a"] = net_conf["veth_cn"]
                         links[link_id]["a_ip_address"] = net_conf["ip_address"]
                         links[link_id]["bandwidth"] = net_conf["bandwidth"]
-                        if net_conf["link_type"] <> "local":
+                        if net_conf["link_type"] != "local":
                             links[link_id]["remote_container_ip"] =\
                                 net_conf["remote_container_ip"]
                     else:
-                        links[link_id]["endpoint_b"] = vnf_conf["container_name"]
+                        links[link_id]["endpoint_b"] = vnf_conf[
+                            "container_name"]
                         links[link_id]["veth_vs_b"] = net_conf["veth_vs"]
                         links[link_id]["veth_cn_b"] = net_conf["veth_cn"]
                         links[link_id]["b_ip_address"] = net_conf["ip_address"]
@@ -135,22 +149,34 @@ class ProvisioningAgent():
                     veth_vs_a = link["veth_vs_a"]
                     veth_vs_b = link["veth_vs_b"]
                     bandwidth = link["bandwidth"]
-                    self.__chain_driver.connect_containers_inside_host(a,
-                            veth_vs_a, b, veth_vs_b, link_id, bandwidth, chain_rollback)
+                    self.__chain_driver.connect_containers_inside_host(
+                        a,
+                        veth_vs_a,
+                        b,
+                        veth_vs_b,
+                        link_id,
+                        bandwidth,
+                        chain_rollback)
                 else:
                     a = link["endpoint_a"]
                     veth_vs = link["veth_vs_a"]
                     ovs_bridge_name = self.__default_ovs_bridge
                     container_ip_net = link["a_ip_address"]
-                    remote_container_ip = link["remote_container_ip"].split("/")[0]
+                    remote_container_ip = link[
+                        "remote_container_ip"].split("/")[0]
                     bandwidth = link["bandwidth"]
-                    print remote_container_ip
                     tunnel_id = str(link_id)
                     tunnel_interface_name = self.__default_tunnel_interface
-                    self.__chain_driver.connect_containers_across_hosts(a,
-                            veth_vs, ovs_bridge_name, container_ip_net,
-                            remote_container_ip, tunnel_id,
-                            tunnel_interface_name, bandwidth, chain_rollback)
+                    self.__chain_driver.connect_containers_across_hosts(
+                        a,
+                        veth_vs,
+                        ovs_bridge_name,
+                        container_ip_net,
+                        remote_container_ip,
+                        tunnel_id,
+                        tunnel_interface_name,
+                        bandwidth,
+                        chain_rollback)
 
             chain_rollback.commitAll()
 
@@ -166,7 +192,7 @@ class ProvisioningAgent():
         """
         veth_endpoint_a = ""
         veth_endpoint_b = ""
-        container_pid = str(self.__container_handle.get_container_pid(
+        container_pid = str(self.__container_driver.get_container_pid(
             container_name))
         while(True):
             # generate a 4-digit random number
@@ -176,11 +202,14 @@ class ProvisioningAgent():
             veth_endpoint_a = "veth" + str(veth_id) + "-vs"
             veth_endpoint_b = "veth" + str(veth_id) + "-cn"
 
-            present_in_host = VethDriver.is_interface_present(veth_endpoint_a)
-            present_in_ovs = OVSDriver.is_interface_attached(ovs_bridge_name,
-                                                             veth_endpoint_a)
-            present_in_container = VethDriver.is_interface_present(veth_endpoint_b,
-                                                                    netns=container_pid)
+            present_in_host = self.__veth_driver.is_interface_present(
+                veth_endpoint_a)
+            present_in_ovs = self.__ovs_driver.is_interface_attached(
+                ovs_bridge_name,
+                veth_endpoint_a)
+            present_in_container = self.__veth_driver.is_interface_present(
+                veth_endpoint_b,
+                netns=container_pid)
 
             if present_in_host or present_in_ovs or present_in_container:
                 continue

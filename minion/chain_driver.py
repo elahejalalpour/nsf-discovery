@@ -1,20 +1,18 @@
-import logging
-from bash_wrapper import execute_bash_command
-from ovs_driver import OVSDriver
-from veth_driver import VethDriver
-from container_driver import ContainerDriver
+class ChainDriver:
 
-logger = logging.getLogger(__name__)
+    def __init__(self, resource_broker):
+        self.__veth_driver = resource_broker.get_resource("VethDriver")
+        self.__ovs_driver = resource_broker.get_resource("OVSDriver")
 
-
-class ChainDriver():
-
-    def __init__(self):
-        self.__container_handler = ContainerDriver(backing_driver = "docker")
-    
-    def connect_containers_inside_host(self, container_a_name,
-            veth_vs_container_a, container_b_name, veth_vs_container_b,
-            link_id, bandwidth, chain_rollback):
+    def connect_containers_inside_host(
+            self,
+            container_a_name,
+            veth_vs_container_a,
+            container_b_name,
+            veth_vs_container_b,
+            link_id,
+            bandwidth,
+            chain_rollback):
         """
         Connects two containers within the same physical hosts by a
         bi-directional link.
@@ -29,24 +27,31 @@ class ChainDriver():
         @param chain_rollback Global rollback object
         """
         ovs_bridge_name = "ovs-br-" + str(link_id)
-        OVSDriver.create_bridge(ovs_bridge_name)
-        OVSDriver.set_bridge_of_version(ovs_bridge_name, "OpenFlow13")
-        chain_rollback.push(OVSDriver.delete_bridge, ovs_bridge_name)
-        
-        OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
-                veth_vs_container_a)
-        chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
-                veth_vs_container_a)
-        VethDriver.enable_veth_interface(veth_vs_container_a)
-        OVSDriver.set_ingress_policing_rate(veth_vs_container_a, bandwidth)
+        self.__ovs_driver.create_bridge(ovs_bridge_name)
+        self.__ovs_driver.set_bridge_of_version(ovs_bridge_name, "OpenFlow13")
+        chain_rollback.push(self.__ovs_driver.delete_bridge, ovs_bridge_name)
 
-        OVSDriver.attach_interface_to_ovs(ovs_bridge_name,
-                veth_vs_container_b)
-        chain_rollback.push(OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
-                veth_vs_container_b)
-        VethDriver.enable_veth_interface(veth_vs_container_b)
-        OVSDriver.set_ingress_policing_rate(veth_vs_container_b, bandwidth)
+        self.__ovs_driver.attach_interface_to_ovs(ovs_bridge_name,
+                                                  veth_vs_container_a)
+        chain_rollback.push(
+            self.__ovs_driver.detach_interface_from_ovs,
+            ovs_bridge_name,
+            veth_vs_container_a)
+        self.__veth_driver.enable_veth_interface(veth_vs_container_a)
+        self.__ovs_driver.set_ingress_policing_rate(
+            veth_vs_container_a,
+            bandwidth)
 
+        self.__ovs_driver.attach_interface_to_ovs(ovs_bridge_name,
+                                                  veth_vs_container_b)
+        chain_rollback.push(
+            self.__ovs_driver.detach_interface_from_ovs,
+            ovs_bridge_name,
+            veth_vs_container_b)
+        self.__veth_driver.enable_veth_interface(veth_vs_container_b)
+        self.__ovs_driver.set_ingress_policing_rate(
+            veth_vs_container_b,
+            bandwidth)
 
     def connect_containers_across_hosts(
             self,
@@ -83,55 +88,69 @@ class ChainDriver():
         """
 
         # attach veth_endpoint_a to ovs
-        OVSDriver.attach_interface_to_ovs(ovs_bridge_name, veth_vs_container)
+        self.__ovs_driver.attach_interface_to_ovs(
+            ovs_bridge_name,
+            veth_vs_container)
         chain_rollback.push(
-            OVSDriver.detach_interface_from_ovs, ovs_bridge_name,
+            self.__ovs_driver.detach_interface_from_ovs, ovs_bridge_name,
             veth_vs_container)
 
-        VethDriver.enable_veth_interface(veth_vs_container)
-        OVSDriver.set_ingress_policing_rate(veth_vs_container, bandwidth)
+        self.__veth_driver.enable_veth_interface(veth_vs_container)
+        self.__ovs_driver.set_ingress_policing_rate(
+            veth_vs_container,
+            bandwidth)
 
         # find the openflow port where the container is attached to the ovs
         # bridge.
-        container_of_port = str(OVSDriver.get_openflow_port_number(
-                                    ovs_bridge_name, veth_vs_container))
+        container_of_port = str(self.__ovs_driver.get_openflow_port_number(
+            ovs_bridge_name, veth_vs_container))
 
         tunnel_id = str(tunnel_id)
-        tunnel_of_port = str(OVSDriver.get_openflow_port_number(ovs_bridge_name,
-            tunnel_interface_name))
+        tunnel_of_port = str(
+            self.__ovs_driver.get_openflow_port_number(
+                ovs_bridge_name,
+                tunnel_interface_name))
         container_ip = container_ip_net.split("/")[0]
 
         # install rule to forward regular traffic
         egress_forwarding_rule = "in_port=" + container_of_port + \
             ",actions=set_tunnel:" + tunnel_id + \
-                ",output:" + tunnel_of_port
-        OVSDriver.install_flow_rule(
-                                ovs_bridge_name,
-                                egress_forwarding_rule)
-        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                        egress_forwarding_rule)
+            ",output:" + tunnel_of_port
+        self.__ovs_driver.install_flow_rule(
+            ovs_bridge_name,
+            egress_forwarding_rule)
+        chain_rollback.push(
+            self.__ovs_driver.remove_flow_rule,
+            ovs_bridge_name,
+            egress_forwarding_rule)
 
         ingress_forwarding_rule = "in_port=" + tunnel_of_port + ",tun_id=" + \
-                tunnel_id + ",actions=output:" + container_of_port
-        OVSDriver.install_flow_rule(ovs_bridge_name, ingress_forwarding_rule)
+            tunnel_id + ",actions=output:" + container_of_port
+        self.__ovs_driver.install_flow_rule(
+            ovs_bridge_name,
+            ingress_forwarding_rule)
 
-        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                ingress_forwarding_rule)
+        chain_rollback.push(
+            self.__ovs_driver.remove_flow_rule,
+            ovs_bridge_name,
+            ingress_forwarding_rule)
 
         # install rule to handle arp traffic
         egress_arp_rule = "in_port=" + container_of_port + ",arp,nw_dst='"\
             + remote_container_ip + "'" + \
-                ",actions=set_tunnel:" + tunnel_id\
+            ",actions=set_tunnel:" + tunnel_id\
             + ",output:" + tunnel_of_port
-        OVSDriver.install_flow_rule(ovs_bridge_name, egress_arp_rule)
-        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                egress_arp_rule)
+        self.__ovs_driver.install_flow_rule(ovs_bridge_name, egress_arp_rule)
+        chain_rollback.push(
+            self.__ovs_driver.remove_flow_rule,
+            ovs_bridge_name,
+            egress_arp_rule)
 
         ingress_arp_rule = "in_port=" + tunnel_of_port + ",arp,nw_dst='" +\
-                container_ip + "'" + ",tun_id=" + tunnel_id +\
-                ",actions=output:" + container_of_port
-        OVSDriver.install_flow_rule(ovs_bridge_name, ingress_arp_rule)
-        chain_rollback.push(OVSDriver.remove_flow_rule, ovs_bridge_name,
-                ingress_arp_rule)
-
-
+            container_ip + "'" + ",tun_id=" + tunnel_id +\
+            ",actions=output:" + container_of_port
+        self.__ovs_driver.install_flow_rule(ovs_bridge_name, ingress_arp_rule)
+        chain_rollback.push(
+            self.__ovs_driver.remove_flow_rule,
+            ovs_bridge_name,
+            ingress_arp_rule)
