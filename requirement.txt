@@ -1,7 +1,8 @@
+docker-py
 pyzmq
 psutil
 rollbackcontext
 flask
 python-dateutil
 networkx
-git+git://github.com/myuser/foo.git@master
+git+https://github.com/jplana/python-etcd.git@master
