@@ -1,6 +1,6 @@
 # nsf-discovery
 Network Service Function Discovery <br />
-[![Build Status](http://cn101.cs.uwaterloo.ca:8080/buildStatus/icon?job=nsf-discovery)](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/) <br />
+[![Build Status](http://cn101.cs.uwaterloo.ca:8080/buildStatus/icon?job=nsf-discovery)](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/) 
 [![Coverage Status](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/statusbadges-coverage/icon)](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/) <br />
 
 on master:<br />
