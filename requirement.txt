@@ -1,0 +1,7 @@
+pyzmq
+psutil
+rollbackcontext
+flask
+python-dateutil
+networkx
+git+git://github.com/myuser/foo.git@master

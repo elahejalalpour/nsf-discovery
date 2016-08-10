@@ -205,7 +205,6 @@ def ipc_handler(msg, etcdcli, publisher):
         publisher.send_json(msg)
         try:
             if (msg['action'] == 'destroy'):
-                #cur.execute("DELETE FROM VNF WHERE Con_id=? AND Host_name=?",(msg['ID'],msg['host']))
                 r = etcdcli.read('/VNF', recursive=True, sorted=True)
                 for child in r.children:
                     temp = json.loads(child.value)
@@ -328,6 +327,11 @@ def msg_handler(msg, etcdcli,influx):
                     etcdcli.write("/VNF", vnf, append=True)
             except Exception, ex:
                 etcdcli.write("/VNF", vnf, append=True)
+                
+            influx.log_vnf(msg['ID'],
+                           msg['image'],
+                           msg['host'],
+                           msg['status'])
 
             # build graph object from chain info when the VNF status changed
             etcdcli.write('/Chain/test', None)
@@ -458,6 +462,18 @@ def main(etcdcli,influx):
                                     'inactive')
                     temp = json.dumps(temp)
                     etcdcli.write("/Host/" + hostname, temp)
+                    try:
+                        r = etcdcli.read('/VNF', recursive=True, sorted=True)
+                        for child in r.children:
+                            temp = json.loads(child.value)
+                            if (temp['Host_name'] == hostname):
+                                influx.log_vnf(temp['Con_id'],
+                                               temp['VNF_type'],
+                                               hostname,
+                                               'Host Inactive')
+                    except Exception, ex:
+                        print(ex)
+                        traceback.print_exc()
         except Exception, ex:
             print(ex)
             traceback.print_exc()

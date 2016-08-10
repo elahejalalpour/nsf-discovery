@@ -49,20 +49,22 @@ class influxwrapper:
         ]
         self.influxcli.write_points(json_body)
         
-    def log_vnf(self,vnf_id,vnf_type,event):
+    def log_vnf(self,vnf_id,vnf_type,host,event):
         """
         @beief This method logs VNF related events
 
         @param vnf_id id of container
         @param vnf_type type of the container
+        @param host hostname of the node which container lives
         @param event Type of event
         """
         json_body = [
         {
             "measurement": "VNF",
             "tags": {
-                "VNF_id": vnf_id,
-                "VNF_type": vnf_type
+                "Con_id": vnf_id,
+                "VNF_type": vnf_type,
+                "Host": host
             },
             "fields": {
                 "Event": event
