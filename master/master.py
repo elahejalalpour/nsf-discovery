@@ -1,6 +1,6 @@
+#Master
 #
-#  Synchronized publisher
-#
+from __future__ import division
 import copy
 import zmq
 import time
@@ -16,6 +16,7 @@ from networkx.readwrite import json_graph
 from copy import deepcopy
 import argparse
 import logger
+
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -297,7 +298,10 @@ def msg_handler(msg, etcdcli,influx):
                         'Host_avail_mem': msg['mem_available'], 'Host_used_mem': msg['used'],
                         'Last_seen': datetime.now().isoformat(), 'Active': 1, 'cpus': msg['cpus'],
                         'network': msg['network'], 'images': msg['images'], 'resource': resource}
-
+            influx.log_cpu(host['Host_name'],host['Host_cpu'])
+            
+            influx.log_mem(host['Host_name'],
+                           host['Host_used_mem']/host['Host_total_mem'])
             host = json.dumps(host)
             etcdcli.write('/Host/' + msg['host'], host)
         elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
@@ -334,8 +338,6 @@ def msg_handler(msg, etcdcli,influx):
                            msg['status'])
 
             # build graph object from chain info when the VNF status changed
-            etcdcli.write('/Chain/test', None)
-            etcdcli.delete("/Chain/", recursive=True)
             etcdcli.write('/Chain/test', None)
             etcdcli.delete('/Chain/test')
             r = etcdcli.read('/VNF', recursive=True, sorted=True)
@@ -377,6 +379,8 @@ def msg_handler(msg, etcdcli,influx):
             print subgraphs
             try:
                 for g in subgraphs:
+                    print g.nodes()
+                    g.graph['available'] = True
                     etcdcli.write(
                         "/Chain",
                         json.dumps(json_graph.node_link_data(g)),
@@ -496,6 +500,7 @@ if __name__ == '__main__':
         etcdcli.delete("/VNF", recursive=True)
         etcdcli.delete("/Host", recursive=True)
         etcdcli.delete("/Chain", recursive=True)
+        etcdcli.delete("/link_id")
     if (args.clearlog):
         influx.clear()
     main(etcdcli,influx)

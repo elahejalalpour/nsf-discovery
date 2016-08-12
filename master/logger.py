@@ -49,6 +49,48 @@ class influxwrapper:
         ]
         self.influxcli.write_points(json_body)
         
+    def log_cpu(self,host,val):
+        """
+        @beief This method logs host CPU loads
+
+        @param host hostname of the node
+        @param val load of cpu
+        """
+    
+        json_body = [
+        {
+            "measurement": "cpu_load",
+            "tags": {
+                "Hostname": host,
+            },
+            "fields": {
+                "value": val
+            }
+        }
+        ]
+        self.influxcli.write_points(json_body)
+        
+    def log_mem(self,host,val):
+        """
+        @beief This method logs host memory loads
+
+        @param host hostname of the node
+        @param val load of memory
+        """
+    
+        json_body = [
+        {
+            "measurement": "mem_load",
+            "tags": {
+                "Hostname": host,
+            },
+            "fields": {
+                "value": val
+            }
+        }
+        ]
+        self.influxcli.write_points(json_body)
+        
     def log_vnf(self,vnf_id,vnf_type,host,event):
         """
         @beief This method logs VNF related events
