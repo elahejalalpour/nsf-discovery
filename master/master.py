@@ -325,7 +325,7 @@ def msg_handler(msg, etcdcli,influx):
                     if (temp['Host_name'] == msg['host'] and
                             temp['Con_id'] == msg['ID']):
                         exist = True
-                        etcdcli.write(child.key, vnf)
+                        etcdcli.write('/VNF/'+child.key, vnf)
                         break
                 if (not exist):
                     etcdcli.write("/VNF", vnf, append=True)
@@ -379,12 +379,29 @@ def msg_handler(msg, etcdcli,influx):
             print subgraphs
             try:
                 for g in subgraphs:
-                    print g.nodes()
                     g.graph['available'] = True
-                    etcdcli.write(
-                        "/Chain",
-                        json.dumps(json_graph.node_link_data(g)),
-                        append=True)
+                    g.graph['Last_seen'] = datetime.now().isoformat()
+                    nodesA = set(g.nodes())
+                    try:
+                        r = etcdcli.read("/Chain", recursive=True, sorted=True)
+                        exist = False
+                        for child in r.children:
+                            temp = json_graph.node_link_graph(child.value)
+                            nodesB = set(tmep.nodes())
+                            if (nodesA == nodesB):
+                                exist = True
+                                etcdcli.write("/Chain/"+child.key, 
+                                          json.dumps(json_graph.node_link_data(g)))
+                                
+                        if (not exist):
+                            etcdcli.write("/Chain", 
+                                          json.dumps(json_graph.node_link_data(g)),
+                                          append=True)
+                    except Exception, ex:
+                        etcdcli.write(
+                            "/Chain",
+                            json.dumps(json_graph.node_link_data(g)),
+                            append=True)
             except Exception, ex:
                 print(ex)
                 traceback.print_exc()
@@ -500,6 +517,7 @@ if __name__ == '__main__':
         etcdcli.delete("/VNF", recursive=True)
         etcdcli.delete("/Host", recursive=True)
         etcdcli.delete("/Chain", recursive=True)
+        etcdcli.delete("/source", recursive=True)
         etcdcli.delete("/link_id")
     if (args.clearlog):
         influx.clear()
