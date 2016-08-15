@@ -152,7 +152,7 @@ class MinionDaemon(object):
         and report it back to the master.
         """
         partial_view = self._discovery_agent.discover()
-        containers = self._container_driver.get_containers(fll=True)
+        containers = self._container_driver.get_containers(full=True)
         it = iter(containers)
         for a in it:
             ID = a['Id'].encode()
