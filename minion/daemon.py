@@ -56,7 +56,7 @@ class MinionDaemon(object):
         self._syncclient = None
         self._context = None
         self._init_zeromq()
-        self._dict = []
+        self._dict = {}
 
     def _init_zeromq(self):
         self._context = zmq.Context()
@@ -173,26 +173,26 @@ class MinionDaemon(object):
             if self._dict.has_key(ID):
                 if self._dict[ID] != status:
                 # vnf is in the record but status changed
-                    msg = {'host' : hostname, 'ID' : ID, 'image' : image,
+                    msg = {'host' : self._hostname, 'ID' : ID, 'image' : image,
                     'name' : name, 'status' : status, 'flag' : 'update',
                     'net_ifs' : net_ifs}
                     if status == 'running':
-                    msg['IP'] = self._container_driver.get_ip(ID)
+                        msg['IP'] = self._container_driver.get_ip(ID)
                     self._syncclient.send_json(msg)
                     print "VNF status changed:"
                     print msg
                     self._dict[ID] = status
-                else:
-                    # vnf is not in the record,create a new entry
-                    self._dict[ID] = status
-                    msg = {'host' : hostname, 'ID' : ID, 'image' : image,
-                    'name' : name, 'status' : status, 'flag' : 'new',
-                    'net_ifs' : net_ifs}
-                    if status == 'running':
+            else:
+                # vnf is not in the record,create a new entry
+                self._dict[ID] = status
+                msg = {'host' : self._hostname, 'ID' : ID, 'image' : image,
+                'name' : name, 'status' : status, 'flag' : 'new',
+                'net_ifs' : net_ifs}
+                if status == 'running':
                     msg['IP'] = self._container_driver.get_ip(ID)
-                    print "New VNF entry"
-                    print msg
-                    self._syncclient.send_json(msg)
+                print "New VNF entry"
+                print msg
+                self._syncclient.send_json(msg)
 
         # push system resource info
         mem = psutil.virtual_memory()
