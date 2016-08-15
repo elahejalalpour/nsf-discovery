@@ -16,7 +16,7 @@ from networkx.readwrite import json_graph
 from copy import deepcopy
 import argparse
 import logger
-
+import uuid
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -44,9 +44,10 @@ def ipc_handler(msg, etcdcli, publisher):
             print hosts
             nodes = mssg['data']['nodes']
             links = mssg['data']['links']
-
+            
+            unique = str(uuid.uuid4())
             for node in nodes:
-                temp = {'container_name': node['vnf_name'],
+                temp = {'container_name': node['vnf_name']+'_'+unique,
                         'cpu_share': node['cpu_share'],
                         'cpuset_cpus': None,
                         'memory': node['memory'],
@@ -380,14 +381,15 @@ def msg_handler(msg, etcdcli,influx):
             try:
                 for g in subgraphs:
                     g.graph['available'] = True
-                    g.graph['Last_seen'] = datetime.now().isoformat()
+                    g.graph['created'] = datetime.now().isoformat()
                     nodesA = set(g.nodes())
+                    print nodesA
                     try:
                         r = etcdcli.read("/Chain", recursive=True, sorted=True)
                         exist = False
                         for child in r.children:
-                            temp = json_graph.node_link_graph(child.value)
-                            nodesB = set(tmep.nodes())
+                            temp = json_graph.node_link_graph(json.loads(child.value))
+                            nodesB = set(temp.nodes())
                             if (nodesA == nodesB):
                                 exist = True
                                 etcdcli.write("/Chain/"+child.key, 
@@ -398,6 +400,8 @@ def msg_handler(msg, etcdcli,influx):
                                           json.dumps(json_graph.node_link_data(g)),
                                           append=True)
                     except Exception, ex:
+                        print ex
+                        traceback.print_exc()
                         etcdcli.write(
                             "/Chain",
                             json.dumps(json_graph.node_link_data(g)),
@@ -514,6 +518,11 @@ if __name__ == '__main__':
                         action = "store_true")
     args = parser.parse_args()
     if (args.clearetcd):
+        etcdcli.write('/VNF/test', None)
+        etcdcli.write('/Host/test', None)
+        etcdcli.write('/Chain/test', None)
+        etcdcli.write('/source/test', None)
+        etcdcli.write('/link_id', None)
         etcdcli.delete("/VNF", recursive=True)
         etcdcli.delete("/Host", recursive=True)
         etcdcli.delete("/Chain", recursive=True)

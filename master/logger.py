@@ -116,7 +116,25 @@ class influxwrapper:
         self.influxcli.write_points(json_body)
         
 
+    def log_chain(self,chain_id,event):
+        """
+        @beief This method logs chain related events
 
+        @param chain unique id of the chain
+        @param event Type of event
+        """
+        json_body = [
+        {
+            "measurement": "Chain",
+            "tags": {
+                "chain_id": chain_id,
+            },
+            "fields": {
+                "Event": event
+            }
+        }
+        ]
+        self.influxcli.write_points(json_body)
 
 
 
