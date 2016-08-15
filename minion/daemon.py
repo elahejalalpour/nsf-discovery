@@ -91,7 +91,7 @@ class MinionDaemon(object):
                 container_list = []
                 if msg['ID'] == '*':
                     container_list = [
-                        c['Id'].encode() for c in self._container_driver.get_containers()]
+                        c['Id'].encode() for c in self._container_driver.get_containers(full=True)]
                 else:
                     container_list.append(msg['ID'])
 
@@ -152,7 +152,7 @@ class MinionDaemon(object):
         and report it back to the master.
         """
         partial_view = self._discovery_agent.discover()
-        containers = self._container_driver.get_containers()
+        containers = self._container_driver.get_containers(fll=True)
         it = iter(containers)
         for a in it:
             ID = a['Id'].encode()
