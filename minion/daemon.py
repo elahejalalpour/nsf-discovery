@@ -159,7 +159,6 @@ class MinionDaemon(object):
             status = self._container_driver.guest_status(ID)
             image = a['Image']
             name = a['Names'][0][1:].encode('ascii')
-            print "ID_first = "+ID
             # read net_ifs info from partial_view read from discovery module
             current_container = None
             for container in partial_view['containers']:
@@ -171,7 +170,6 @@ class MinionDaemon(object):
             else:
                 net_ifs = []
 
-            print "ID_second = "+ID
             # push vnf status info
             if self._dict.has_key(ID):
                 if self._dict[ID] != status:
