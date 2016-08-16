@@ -1,4 +1,7 @@
+import os
+import sys
 import importlib
+sys.path.append(os.getcwd)
 
 class OVSDriver():
     def __init__(self, resource_broker):
