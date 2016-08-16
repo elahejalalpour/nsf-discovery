@@ -34,12 +34,12 @@ def get_ip_address(ifname):
 class MinionDaemon(object):
 
     """
-    Creates the minion daemon. Then upon calling the repeat method, the minion 
-    daemon will periodically pull the message queue for any incoming message 
-    from the master and take appropriate action based on the received message. 
-    The daemon also discovers the local VNFs and chain lins and exports this 
-    data to the master. 
-    
+    Creates the minion daemon. Then upon calling the repeat method, the minion
+    daemon will periodically pull the message queue for any incoming message
+    from the master and take appropriate action based on the received message.
+    The daemon also discovers the local VNFs and chain lins and exports this
+    data to the master.
+
     @param resource_broker A ResourceBroker object that is used to provide the
         daemon with the necessary drivers.
     @param sleep_interval The sleep timer interval for the minion daemon.
@@ -53,10 +53,10 @@ class MinionDaemon(object):
     @param discovery_agent A DiscoveryAgent object that is used to discover the
         VNFs and the links in between them.
     """
-    def __init__(self, 
-                 resource_broker, 
+    def __init__(self,
+                 resource_broker,
                  sleep_interval,
-                 master_ip, 
+                 master_ip,
                  master_subs_port,
                  master_sync_port,
                  minion_ip,
@@ -132,7 +132,7 @@ class MinionDaemon(object):
                     elif action == 'unpause':
                         self._container_driver.unpause(container)
                     elif action == 'destroy':
-                        reply = {'host' : self._minion_hostname, 
+                        reply = {'host' : self._minion_hostname,
                                  'ID': container}
                         if self._vnfs.has_key(container):
                             self._container_driver.destroy(container, force = True)
@@ -192,22 +192,21 @@ class MinionDaemon(object):
                     container['container_id'] == name]
             net_ifs = [] if not current_container else\
                     current_container[0]['net_ifs']
-                    
             msg = {'host': self._minion_hostname, 'ID': ID, 'image': image,
                    'name': name, 'status': status, 'net_ifs': net_ifs}
-            if status == 'running': 
+            if status == 'running':
                 msg['IP'] = self._container_driver.get_ip(ID)
 
             # Only push update for a VNF if it's status has changed, i.e., the
             # container went from running to paused or paused to running etc.
             if self._vnfs.has_key(ID):
-                if self._vnfs[ID] != status:                   
+                if self._vnfs[ID] != status:
                     self._vnfs[ID] = status
                     msg['flag'] = 'update'
             else:
                 self._vnfs[ID] = status
                 msg['flag'] = 'new'
-            if msg.has_key('flag'): 
+            if msg.has_key('flag'):
                 self._syncclient.send_json(msg)
                 print(msg)
         # push system resource info
