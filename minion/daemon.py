@@ -26,50 +26,74 @@ def initialize_resources(resource_broker):
     resource_broker.register_resource("ChainDriver",
                                       ChainDriver, resource_broker)
 
-
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915,  # SIOCGIFADDR
                                         struct.pack('256s', ifname[:15]))[20:24])
 
-
 class MinionDaemon(object):
 
-    def __init__(self, resource_broker, master_ip, interface="eth0",
-                 default_ovs_bridge="ovs0", default_tunnel_interface="gre0"):
+    """
+    Creates the minion daemon. Then upon calling the repeat method, the minion 
+    daemon will periodically pull the message queue for any incoming message 
+    from the master and take appropriate action based on the received message. 
+    The daemon also discovers the local VNFs and chain lins and exports this 
+    data to the master. 
+    
+    @param resource_broker A ResourceBroker object that is used to provide the
+        daemon with the necessary drivers.
+    @param sleep_interval The sleep timer interval for the minion daemon.
+    @param master_ip IP address of the master node.
+    @param master_subs_port Subscriber listening port number for the master.
+    @param master_sync_port PULL socket port number for the master.
+    @param minion_ip IP address of the minion.
+    @param minion_hostname Hostname of the minion.
+    @param provisioning_agent A ProvisioningAgent object that is used to
+        provision VNFs and the links in between them.
+    @param discovery_agent A DiscoveryAgent object that is used to discover the
+        VNFs and the links in between them.
+    """
+    def __init__(self, 
+                 resource_broker, 
+                 sleep_interval,
+                 master_ip, 
+                 master_subs_port,
+                 master_sync_port,
+                 minion_ip,
+                 minion_hostname,
+                 provisioning_agent,
+                 discovery_agent):
         self._resource_broker = resource_broker
-        self._sleeping = 1
+        self._sleeping = sleep_interval
         self._container_driver =\
             self._resource_broker.get_resource("ContainerDriver")
         self._ovs_driver = self._resource_broker.get_resource("OVSDriver")
         self._master_ip = master_ip
+        self._master_subs_port = master_subs_port
+        self._master_sync_port = master_sync_port
         self._default_ovs_bridge = default_ovs_bridge
         self._default_tunnel_interface = default_tunnel_interface
-        self._ip_address = get_ip_address(interface)
-        self._hostname = platform.node()
-        self._provisioning_agent = ProvisioningAgent(
-            resource_broker,
-            self._default_ovs_bridge,
-            self._default_tunnel_interface)
-        self._discovery_agent = DiscoveryAgent(
-            self._resource_broker,
-            self._default_ovs_bridge)
-        self._subscriber = None
-        self._syncclient = None
-        self._context = None
-        self._init_zeromq()
+        self._ip_address = minion_ip
+        self._hostname = minion_hostname
+        self._provisioning_agent = provisioning_agent
+        self._discovery_agent = discovery_agent
+        self._context, self._subscriber, self._syncclient =\
+                self.__init_zeromq()
 
-    def _init_zeromq(self):
-        self._context = zmq.Context()
-        self._subscriber = self._context.socket(zmq.SUB)
-        self._syncclient = self._context.socket(zmq.PUSH)
+    def __init_zeromq(self):
+        context = zmq.Context()
+        subscriber = self._context.socket(zmq.SUB)
+        syncclient = self._context.socket(zmq.PUSH)
+        return context, subscriber, syncclient
 
-    def connect_to_master(self):
-        self._subscriber.connect('tcp://' + master + ':5561')
+    def __connect_to_master(self):
+        subscriber_con_str = "tcp://" + self._master_ip + ":" + self._master_subs_port
+        syncclient_con_str = "tcp://" + sel.f_master_ip + ":" + self._master_sync_port
+        self._subscriber.connect(subscriber_con_str)
         self._subscriber.setsockopt(zmq.SUBSCRIBE, '')
-        self._syncclient.connect('tcp://' + master + ':5562')
+        self._syncclient.connect(syncclient_con_str)
 
-    def register_with_master(self):
+    def __register_with_master(self):
         """
         Register minion with master
         """
@@ -108,8 +132,7 @@ class MinionDaemon(object):
                     elif action == 'unpause':
                         self._container_driver.unpause(container)
                     elif action == 'destroy':
-                        self._container_driver.stop(container)
-                        self._container_driver.destroy(container)
+                        self._container_driver.destroy(container, force = True)
                         # del dict[msg['ID']]
                         reply = {'host': self._hostname, 'ID': msg['ID'],
                                  'flag': 'removed'}
@@ -140,7 +163,8 @@ class MinionDaemon(object):
                 A scheduler repeat exec collect() every interval
                 amount of time
         """
-        self.register_with_master()
+        self.__connect_to_master()
+        self.__register_with_master()
         while (True):
             self.pull()
             self.collect()
@@ -194,6 +218,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--master", help="IP address of the master",
                         default="127.0.0.1")
+    parser.add_argument("--master_subs_port", help="ZeroMQ subscriber\
+                        number at the master", default="5561")
+    parser.add_argument("--master_sync_port", help="ZeroMQ push socket\ 
+                        port number at master", default="5562")
     parser.add_argument("--interface", help="Communication interface of\
                         minion, e.g., eth0", default="eth0")
     parser.add_argument("--default_ovs_bridge", help="Name of the default ovs\
@@ -201,16 +229,28 @@ if __name__ == '__main__':
     parser.add_argument("--default_tunnel_interface", help="Name of the \
                         tunnel interface", default="gre0")
     args = parser.parse_args()
-    master = args.master
-    interface = args.interface
+    minion_ip = get_ip_address(args.interface)
+    minion_hostname = platform.node()
     default_ovs_bridge = args.default_ovs_bridge
     default_tunnel_interface = args.default_tunnel_interface
     resource_broker = ResourceBroker()
     initialize_resources(resource_broker)
+    provisioning_agent = ProvisioningAgent(
+            resource_broker,
+            default_ovs_bridge,
+            default_tunnel_interface)
+    discovery_agent = DiscoveryAgent(
+            resource_broker,
+            default_ovs_bridge)
     ovs_driver = resource_broker.get_resource("OVSDriver")
+    if not ovs_driver.is_bridge_created(default_ovs_bridge):
+        ovs_driver.create_bridge(default_ovs_bridge)
     ovs_driver.set_bridge_of_version(default_ovs_bridge, "OpenFlow13")
     ovs_driver.set_bridge_fail_mode(default_ovs_bridge, "secure")
-    minion_daemon = MinionDaemon(resource_broker, master, interface,
-                                 default_ovs_bridge, default_tunnel_interface)
-    minion_daemon.connect_to_master()
+    minion_daemon = MinionDaemon(resource_broker, 
+                                 args.master, 1,
+                                 args.master_subs_port,
+                                 args.master_sync_port,
+                                 minion_ip, minion_hostname,
+                                 provisioning_agent, discovery_agent)
     minion_daemon.repeat()
