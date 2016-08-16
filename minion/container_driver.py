@@ -267,6 +267,8 @@ class ContainerDriver:
         """
         dcx, vnf_fullname, inspect_data = self._lookup_vnf(vnf_name)
         with self._error_handling(errors.VNFDestroyError):
+            if force and self.guest_status(vnf_name) == 'running':
+                self.stop(vnf_name)
             dcx.remove_container(container=vnf_fullname, force=force)
 
     def unlink_container_netns(self, vnf_name):
