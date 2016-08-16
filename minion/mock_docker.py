@@ -1,4 +1,4 @@
-
+import errors
 class Client:
 
     def __init__(self, base_url=""):
@@ -303,7 +303,8 @@ class Client:
                         'Type': 'json-file'}},
                 'Id': 'd998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331',
                 'MountLabel': ''}
-        else:
+        elif(container in 'f5b716c6d757e97cdd2e2df2a7b37f357b946916787d681e8b29c62e0daa811e' or
+                container == 'nfuser-edge-ufw-1'):
             data = {
                 'ExecIDs': None,
                 'State': {
@@ -461,12 +462,15 @@ class Client:
                         'Type': 'json-file'}},
                 'Id': 'f5b716c6d757e97cdd2e2df2a7b37f357b946916787d681e8b29c62e0daa811e',
                 'MountLabel': ''}
+        else:
+            raise errors.VNFNotFoundError
         return data
 
     def execute(self, vnf_name, args, stdout=True, stderr=False):
         return None
 
     def start(self, container='', dns='8.8.8.8', privileged=False):
+        #data = inspect_container(container)
         print('container ' + container + ' started!')
 
     def restart(self, container=''):
