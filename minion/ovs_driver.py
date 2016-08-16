@@ -25,6 +25,18 @@ class OVSDriver():
         if return_code != 0:
             raise Exception(return_code, errput)
 
+    def is_bridge_created(self, ovs_bridge_name):
+        """
+        Checks if a bridge name ovs_bridge_name already exists or not.
+
+        @param ovs_bridge_name Name of the bridge to check.
+        """
+        bash_command = "sudo ovs-vsctl show | grep -c " + ovs_bridge_name
+        (return_code, output, errput) = execute_bash_command(bash_command)
+        if return_code != 0:
+            raise Exception(return_code, errput)
+        return True if int(output) > 0 else False
+
     def set_bridge_of_version(self, ovs_bridge_name, of_version="OpenFlow13"):
         """
         Set the OpenFlow protocol version for an OVS bridge.
