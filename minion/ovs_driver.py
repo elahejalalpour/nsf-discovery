@@ -1,7 +1,9 @@
-from bash_wrapper import execute_bash_command
-
+import importlib
 
 class OVSDriver():
+    def __init__(self, resource_broker):
+        bash_wrapper_module = resource_broker.get_resource("BashWrapper")
+        self._bash_wrapper = importlib.import_module(bash_wrapper_module)
 
     def create_bridge(self, ovs_bridge_name):
         """
@@ -10,7 +12,7 @@ class OVSDriver():
         @param ovs_bridge_name Name of the bridge to create.
         """
         bash_command = "sudo ovs-vsctl add-br " + ovs_bridge_name
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -21,7 +23,7 @@ class OVSDriver():
         @param ovs_bridge_name Name of the ovs bridge to delete.
         """
         bash_command = "sudo ovs-vsctl del-br " + ovs_bridge_name
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -32,7 +34,7 @@ class OVSDriver():
         @param ovs_bridge_name Name of the bridge to check.
         """
         bash_command = "sudo ovs-vsctl show | grep -c " + ovs_bridge_name
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
         return True if int(output) > 0 else False
@@ -47,7 +49,7 @@ class OVSDriver():
         """
         bash_command = "ovs-vsctl set bridge " + \
             ovs_bridge_name + " protocols=" + of_version
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -60,7 +62,7 @@ class OVSDriver():
         """
         bash_command = "ovs-vsctl set-fail-mode " + \
             ovs_bridge_name + " " + fail_mode
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -72,7 +74,7 @@ class OVSDriver():
         """
         bash_command = "sudo ovs-ofctl -O OpenFlow13 add-flow " + \
             ovs_bridge_name + " " + rule
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -84,7 +86,7 @@ class OVSDriver():
         """
         bash_command = "sudo ovs-ofctl -O OpenFlow13 del-flow " + \
             ovs_bridge_name + " " + rule
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -97,7 +99,7 @@ class OVSDriver():
         """
         bash_command = "sudo ovs-vsctl add-port " + \
             ovs_bridge_name + " " + veth_interface_name
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -110,7 +112,7 @@ class OVSDriver():
         """
         bash_command = "sudo ovs-vsctl del-port " + \
             ovs_bridge_name + " " + veth_interface_name
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -125,7 +127,7 @@ class OVSDriver():
         """
         bash_command = "sudo ovs-vsctl list-ports " + \
             ovs_bridge_name + " | grep -c " + veth_interface_name
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
         return True if int(output) > 0 else False
@@ -145,7 +147,7 @@ class OVSDriver():
         bash_command = "sudo ovs-ofctl -O OpenFlow13 dump-ports-desc " + \
             ovs_bridge_name + " | grep -o '.*(" + veth_interface_name + "):'" +\
             " | sed 's/\s\([0-9]*\).*/\\1/'"
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
         if len(output) <= 0:
@@ -165,7 +167,7 @@ class OVSDriver():
         rate_kbps = str(int(rate) * 1000)
         bash_command = "ovs-vsctl set interface " + veth_interface_name + "\
                 ingress_policing_rate=" + rate_kbps
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -173,7 +175,7 @@ class OVSDriver():
         allowed_burst = int(0.05 * float(rate_kbps))
         bash_command = "ovs-vsctl set interface " + veth_interface_name +\
             " ingress_policing_burst=" + str(allowed_burst)
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
 
@@ -187,7 +189,7 @@ class OVSDriver():
             ovs_bridge_name + " | grep -o in_port=" + veth_openflow_port + \
             ".*set_tunnel:[x0-9]* | grep -v arp | grep -o tunnel:[x0-9]* | " + \
             "sed 's/.*:\(.*\)/\\1/'"
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
         try:
@@ -200,14 +202,14 @@ class OVSDriver():
         bridges_and_ports = {}
         bash_command = 'sudo ovs-vsctl show | grep -o Bridge.*".*" ' + \
             ' | grep -o \\".*\\"'
-        (return_code, output, errput) = execute_bash_command(bash_command)
+        (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:
             raise Exception(return_code, errput)
         output = output.replace('"', '')
         ovs_bridges = output.split()
         for ovs_bridge in ovs_bridges:
             bash_command = "sudo ovs-vsctl list-ports " + ovs_bridge
-            (return_code, output, errput) = execute_bash_command(bash_command)
+            (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
             if return_code != 0:
                 raise Exception(return_code, errput)
             ovs_ports = output.split()
