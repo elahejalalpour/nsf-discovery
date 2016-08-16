@@ -18,13 +18,34 @@ def test_is_empty():
 def test_get_id():
     assert(cdriver.get_id('nfuser-new-firewall') ==
            'd998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.get_id('whatever')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 def test_get_container_pid():
     assert(cdriver.get_container_pid('nfuser-new-firewall') == 3790)
-
+    assert(cdriver.get_container_pid('nfuser-edge-ufw-1') == 0)
+    print cdriver.get_container_pid('nfuser-edge-ufw-1')
+    try:
+        cdriver.get_container_pid('whatever')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 def test_get_ip():
     assert(cdriver.get_ip('nfuser-new-firewall') == '172.17.0.2')
+    try:
+        cdriver.get_ip('nfuser-edge-ufw-1')
+        assert(False)
+    except Exception as ex:
+        assert(True)
+    try:
+        cdriver.get_ip('whatever')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_execute_in_guest():
@@ -33,35 +54,98 @@ def test_execute_in_guest():
 
 def test_guest_status():
     assert(cdriver.guest_status('nfuser-new-firewall') == 'running')
+    assert(cdriver.guest_status('nfuser-edge-ufw-1') == 'exited')
+    try:
+        cdriver.guest_status('whatever')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_start():
-    cdriver.start('whatever')
+    cdriver.start('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.start('000')
+        assert(False)
+    except Exception as ex:
+        assert(True)
+    try:
+        cdriver.start('')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_restart():
-    cdriver.restart('whatever')
+    cdriver.restart('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.restart('000')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_stop():
-    cdriver.stop('whatever')
+    cdriver.stop('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.stop('000')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_pause():
-    cdriver.pause('whatever')
+    cdriver.pause('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.pasuse('000')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_unpause():
-    cdriver.unpause('whatever')
+    cdriver.unpause('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.unpause('000')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_deploy():
     assert(cdriver.deploy('a', 'b', 'c') == '0000000000')
-
+    try:
+        cdriver.deploy('', 'b', 'c')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 def test_destroy():
-    cdriver.destroy('whatever')
+    cdriver.destroy('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    try:
+        cdriver.destroy('000')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_images():
     assert(cdriver.images() != None)
+    
+def test_unlink_container_netns():
+    cdriver.unlink_container_netns('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    
+def test_symlink_container_netns():
+    try:
+        cdriver.symlink_container_netns('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+        assert(False)
+    except Exception as ex:
+        assert(True)
+    
+def test_get_container_net_ifaces():
+    try:
+        cdriver.get_container_net_ifaces('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+        assert(False)
+    except Exception as ex:
+        assert(True)
+    
