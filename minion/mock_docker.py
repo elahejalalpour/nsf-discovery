@@ -470,7 +470,6 @@ class Client:
         return None
 
     def start(self, container='', dns='8.8.8.8', privileged=False):
-        #data = inspect_container(container)
         print('container ' + container + ' started!')
 
     def restart(self, container=''):

@@ -69,6 +69,11 @@ def test_start():
         assert(False)
     except Exception as ex:
         assert(True)
+    try:
+        cdriver.start('')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 
 def test_restart():
@@ -109,8 +114,14 @@ def test_unpause():
 
 def test_deploy():
     assert(cdriver.deploy('a', 'b', 'c') == '0000000000')
+    try:
+        cdriver.deploy('', 'b', 'c')
+        assert(False)
+    except Exception as ex:
+        assert(True)
 
 def test_destroy():
+    cdriver.destroy('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
     try:
         cdriver.destroy('000')
         assert(False)
