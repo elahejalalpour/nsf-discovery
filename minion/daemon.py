@@ -73,12 +73,12 @@ class MinionDaemon(object):
         self._default_ovs_bridge = default_ovs_bridge
         self._default_tunnel_interface = default_tunnel_interface
         self._ip_address = minion_ip
-        self._hostname = minion_hostname
+        self._minion_hostname = minion_hostname
         self._provisioning_agent = provisioning_agent
         self._discovery_agent = discovery_agent
         self._context, self._subscriber, self._syncclient =\
                 self.__init_zeromq()
-        self._vnfs = []
+        self._vnfs = {}
 
     def __init_zeromq(self):
         context = zmq.Context()
@@ -97,7 +97,7 @@ class MinionDaemon(object):
         """
         Register minion with master
         """
-        msg = {'flag': 'REG', 'host': self._hostname,
+        msg = {'flag': 'REG', 'host': self._minion_hostname,
                'host_ip': self._ip_address,
                'cpus': len(psutil.cpu_percent(interval=None, percpu=True))}
         # send a synchronization request
@@ -211,7 +211,7 @@ class MinionDaemon(object):
         # push system resource info
         mem = psutil.virtual_memory()
         vnf_images = self._container_driver.images()
-        msg = {'host': self._hostname, 'flag': 'sysinfo',
+        msg = {'host': self._minion_hostname, 'flag': 'sysinfo',
                'cpu': psutil.cpu_percent(interval=float(self._sleeping)),
                'mem_total': mem[0], 'mem_available': mem[1],
                'used': mem[3], 'host_ip': self._ip_address,
