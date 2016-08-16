@@ -18,10 +18,11 @@ import json
 import argparse
 
 def initialize_resources(resource_broker):
+    resource_broker.register_resource("BashWrapper", "bash_wrapper")
     resource_broker.register_resource("ContainerDriver",
                                       ContainerDriver, backing_driver="docker")
-    resource_broker.register_resource("OVSDriver", OVSDriver)
     resource_broker.register_resource("VethDriver", VethDriver)
+    resource_broker.register_resource("OVSDriver", OVSDriver, resource_broker)
     resource_broker.register_resource("ChainDriver",
                                       ChainDriver, resource_broker)
 
