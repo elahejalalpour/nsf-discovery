@@ -131,3 +131,13 @@ def test_destroy():
 
 def test_images():
     assert(cdriver.images() != None)
+    
+def test_unlink_container_netns():
+    cdriver.unlink_container_netns('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    
+def test_symlink_container_netns():
+    cdriver.symlink_container_netns('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    
+def test_get_container_net_ifaces():
+    cdriver.get_container_net_ifaces('d998116c32849114eae8152c060fcd4cc12989e9b3a1c71e6172d42fa43a9331')
+    
