@@ -79,6 +79,7 @@ class MinionDaemon(object):
         self._discovery_agent = discovery_agent
         self._context, self._subscriber, self._syncclient =\
                 self.__init_zeromq()
+        self._vnfs = []
 
     def __init_zeromq(self):
         context = zmq.Context()
@@ -119,7 +120,6 @@ class MinionDaemon(object):
                         c['Id'].encode() for c in self._container_driver.get_containers()]
                 else:
                     container_list.append(msg['ID'])
-
                 for container in container_list:
                     if action == 'start':
                         self._container_driver.start(container)
@@ -132,15 +132,19 @@ class MinionDaemon(object):
                     elif action == 'unpause':
                         self._container_driver.unpause(container)
                     elif action == 'destroy':
-                        self._container_driver.destroy(container, force = True)
-                        # del dict[msg['ID']]
-                        reply = {'host': self._hostname, 'ID': msg['ID'],
-                                 'flag': 'removed'}
+                        reply = {'host' : self._minion_hostname, 
+                                 'ID': container}
+                        if self._vnfs.has_key(container):
+                            self._container_driver.destroy(container, force = True)
+                            del self._vnfs[container]
+                            reply['flag'] = 'removed'
+                        else:
+                            reply['flag'] = 'not_exists'
                         self._syncclient.send_json(reply)
                     elif (msg['action'] == 'execute'):
                         response = self._container_driver.execute_in_guest(
                             msg['ID'], msg['cmd'])
-                        reply = {'host': self._hostname, 'ID': msg['ID'],
+                        reply = {'host': self._minion_hostname, 'ID': msg['ID'],
                                  'flag': 'reply', 'response': response,
                                  'cmd': msg['cmd']}
                         self._syncclient.send_json(reply)
@@ -153,15 +157,14 @@ class MinionDaemon(object):
             while(True):
                 msg = self._subscriber.recv_json(flags=zmq.NOBLOCK)
                 self._command_handler(msg)
-                # thread.start_new_thread(cmd_handler, (msg,))
         except Exception as ex:
             return
 
     def repeat(self):
         """
         The main loop of the daemon.
-                A scheduler repeat exec collect() every interval
-                amount of time
+        A scheduler repeat exec collect() every interval
+        amount of time
         """
         self.__connect_to_master()
         self.__register_with_master()
@@ -178,40 +181,42 @@ class MinionDaemon(object):
         """
         partial_view = self._discovery_agent.discover()
         containers = self._container_driver.get_containers()
-        it = iter(containers)
-        for a in it:
-            ID = a['Id'].encode()
+        for c in containers:
+            ID = c['Id'].encode()
             status = self._container_driver.guest_status(ID)
-            image = a['Image']
-            name = a['Names'][0][1:].encode('ascii')
+            image = c['Image']
+            name = c['Names'][0][1:].encode('ascii')
             # read net_ifs info from partial_view read from discovery module
-            current_container = None
-            for container in partial_view['containers']:
-                if container['container_id'] == name:
-                    current_container = container
-                    break
-            if current_container is not None:
-                net_ifs = current_container['net_ifs']
-            else:
-                continue
-            # push vnf status info
-            msg = {'host': self._hostname, 'ID': ID, 'image': image,
-                   'name': name, 'status': status, 'flag': 'new',
-                   'net_ifs': net_ifs}
-            if status == 'running':
+            current_container = [container for container in \
+                    partial_view['containers'] if \
+                    container['container_id'] == name]
+            net_ifs = [] if not current_container else\
+                    current_container[0]['net_ifs']
+            msg = {'host': self._minion_hostname, 'ID': ID, 'image': image,
+                   'name': name, 'status': status, 'net_ifs': net_ifs}
+            if status == 'running': 
                 msg['IP'] = self._container_driver.get_ip(ID)
-
-            self._syncclient.send_json(msg)
+            # Only push update for a VNF if it's status has changed, i.e., the
+            # container went from running to paused or paused to running etc.
+            if self._vnfs.has_key(ID):
+                if self._vnfs[ID] != status:                   
+                    self._vnfs[ID] = status
+                    msg['flag'] = 'changed'
+            else:
+                self._vnfs[ID] = status
+                msg['flag'] = 'new'
+            if msg.has_key('flag'): 
+                self._syncclient.send_json(msg)
         # push system resource info
         mem = psutil.virtual_memory()
-        images = self._container_driver.images()
+        vnf_images = self._container_driver.images()
         msg = {'host': self._hostname, 'flag': 'sysinfo',
                'cpu': psutil.cpu_percent(interval=self._sleeping),
                'mem_total': mem[0], 'mem_available': mem[1],
                'used': mem[3], 'host_ip': get_ip_address(interface),
                'cpus': psutil.cpu_percent(interval=None, percpu=True),
                'network': psutil.net_io_counters(pernic=True),
-               'images': images}
+               'images': vnf_images}
         self._syncclient.send_json(msg)
 
 if __name__ == '__main__':
