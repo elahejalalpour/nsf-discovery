@@ -8,3 +8,4 @@ networkx==1.11
 git+https://github.com/jplana/python-etcd.git@master
 ipaddress==1.0.16
 influxdb==3.0.0
+commandwrapper
