@@ -8,7 +8,7 @@ from minion import resource_broker
 
 def test_create_bridge():
     rb = resource_broker.ResourceBroker()
-    rb.register_resource("BashWrapper", "mock_bash_wrapper")
+    rb.register_resource("BashWrapper", "minion.mock_bash_wrapper")
     odriver = ovs_driver.OVSDriver(rb)
     odriver.create_bridge("ovs-0")
     odriver.create_bridge("ovs-1")
