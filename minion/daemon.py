@@ -179,7 +179,7 @@ class MinionDaemon(object):
         and report it back to the master.
         """
         partial_view = self._discovery_agent.discover()
-        containers = self._container_driver.get_containers()
+        containers = self._container_driver.get_containers(full=True)
         for c in containers:
             ID = c['Id'].encode()
             status = self._container_driver.guest_status(ID)
@@ -208,6 +208,7 @@ class MinionDaemon(object):
                 msg['flag'] = 'new'
             if msg.has_key('flag'): 
                 self._syncclient.send_json(msg)
+                print(msg)
         # push system resource info
         mem = psutil.virtual_memory()
         vnf_images = self._container_driver.images()
