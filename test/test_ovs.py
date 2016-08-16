@@ -4,12 +4,11 @@ sys.path.append(os.getcwd() + "/../minion")
 from minion import ovs_driver
 from minion import resource_broker
 
-
+rb = resource_broker.ResourceBroker()
+rb.register_resource("BashWrapper", "minion.mock_bash_wrapper")
+odriver = ovs_driver.OVSDriver(rb)
 
 def test_create_bridge():
-    rb = resource_broker.ResourceBroker()
-    rb.register_resource("BashWrapper", "minion.mock_bash_wrapper")
-    odriver = ovs_driver.OVSDriver(rb)
     odriver.create_bridge("ovs-0")
     odriver.create_bridge("ovs-1")
     assert(odriver.is_bridge_created("ovs-0") == True)
@@ -25,9 +24,6 @@ def test_create_bridge():
     odriver.delete_bridge("ovs-1")
 
 def test_delete_bridge():
-    rb = resource_broker.ResourceBroker()
-    rb.register_resource("BashWrapper", "mock_bash_wrapper")
-    odriver = ovs_driver.OVSDriver(rb)
     odriver.create_bridge("ovs-0")
     odriver.delete_bridge("ovs-0")
     assert(odriver.is_bridge_created("ovs-0") == False)
@@ -39,9 +35,6 @@ def test_delete_bridge():
 
 
 def test_attach_interface():
-    rb = resource_broker.ResourceBroker()
-    rb.register_resource("BashWrapper", "mock_bash_wrapper")
-    odriver = ovs_driver.OVSDriver(rb)
     odriver.create_bridge("ovs-0")
     odriver.create_bridge("ovs-1")
     assert(odriver.is_bridge_created("ovs-0") == True)
@@ -77,9 +70,6 @@ def test_attach_interface():
     odriver.delete_bridge("ovs-1")
 
 def test_detach_interface():
-    rb = resource_broker.ResourceBroker()
-    rb.register_resource("BashWrapper", "mock_bash_wrapper")
-    odriver = ovs_driver.OVSDriver(rb)
     odriver.create_bridge("ovs-0")
     assert(odriver.is_bridge_created("ovs-0") == True)
     odriver.attach_interface_to_ovs("ovs-0", "port-0")
@@ -104,9 +94,6 @@ def test_detach_interface():
     odriver.delete_bridge("ovs-0")
 
 def get_openflow_port_number():
-    rb = resource_broker.ResourceBroker()
-    rb.register_resource("BashWrapper", "mock_bash_wrapper")
-    odriver = ovs_driver.OVSDriver(rb)
     odriver.create_bridge("ovs-0")
     assert(odriver.is_bridge_created("ovs-0") == True)
     odriver.attach_interface_to_ovs("ovs-0", "port-0")
