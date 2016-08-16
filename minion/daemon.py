@@ -83,13 +83,13 @@ class MinionDaemon(object):
 
     def __init_zeromq(self):
         context = zmq.Context()
-        subscriber = self._context.socket(zmq.SUB)
-        syncclient = self._context.socket(zmq.PUSH)
+        subscriber = context.socket(zmq.SUB)
+        syncclient = context.socket(zmq.PUSH)
         return context, subscriber, syncclient
 
     def __connect_to_master(self):
-        subscriber_con_str = "tcp://" + self._master_ip + ":" + self._master_subs_port
-        syncclient_con_str = "tcp://" + sel.f_master_ip + ":" + self._master_sync_port
+        subscriber_con_str = "tcp://" + str(self._master_ip) + ":" + str(self._master_subs_port)
+        syncclient_con_str = "tcp://" + str(self._master_ip) + ":" + str(self._master_sync_port)
         self._subscriber.connect(subscriber_con_str)
         self._subscriber.setsockopt(zmq.SUBSCRIBE, '')
         self._syncclient.connect(syncclient_con_str)
@@ -211,9 +211,9 @@ class MinionDaemon(object):
         mem = psutil.virtual_memory()
         vnf_images = self._container_driver.images()
         msg = {'host': self._hostname, 'flag': 'sysinfo',
-               'cpu': psutil.cpu_percent(interval=self._sleeping),
+               'cpu': psutil.cpu_percent(interval=float(self._sleeping)),
                'mem_total': mem[0], 'mem_available': mem[1],
-               'used': mem[3], 'host_ip': get_ip_address(interface),
+               'used': mem[3], 'host_ip': self._ip_address,
                'cpus': psutil.cpu_percent(interval=None, percpu=True),
                'network': psutil.net_io_counters(pernic=True),
                'images': vnf_images}
@@ -225,7 +225,7 @@ if __name__ == '__main__':
                         default="127.0.0.1")
     parser.add_argument("--master_subs_port", help="ZeroMQ subscriber\
                         number at the master", default="5561")
-    parser.add_argument("--master_sync_port", help="ZeroMQ push socket\ 
+    parser.add_argument("--master_sync_port", help="ZeroMQ push socket\
                         port number at master", default="5562")
     parser.add_argument("--interface", help="Communication interface of\
                         minion, e.g., eth0", default="eth0")
@@ -252,8 +252,8 @@ if __name__ == '__main__':
         ovs_driver.create_bridge(default_ovs_bridge)
     ovs_driver.set_bridge_of_version(default_ovs_bridge, "OpenFlow13")
     ovs_driver.set_bridge_fail_mode(default_ovs_bridge, "secure")
-    minion_daemon = MinionDaemon(resource_broker, 
-                                 args.master, 1,
+    minion_daemon = MinionDaemon(resource_broker, 1.0,
+                                 args.master,
                                  args.master_subs_port,
                                  args.master_sync_port,
                                  minion_ip, minion_hostname,
