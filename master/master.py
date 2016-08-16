@@ -1,6 +1,6 @@
+#Master
 #
-#  Synchronized publisher
-#
+from __future__ import division
 import copy
 import zmq
 import time
@@ -15,6 +15,8 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from copy import deepcopy
 import argparse
+import logger
+import uuid
 
 #  We wait for 2 subscribers
 #SUBSCRIBERS_EXPECTED = 2
@@ -42,9 +44,10 @@ def ipc_handler(msg, etcdcli, publisher):
             print hosts
             nodes = mssg['data']['nodes']
             links = mssg['data']['links']
-
+            
+            unique = str(uuid.uuid4())
             for node in nodes:
-                temp = {'container_name': node['vnf_name'],
+                temp = {'container_name': node['vnf_name']+'_'+unique,
                         'cpu_share': node['cpu_share'],
                         'cpuset_cpus': None,
                         'memory': node['memory'],
@@ -204,7 +207,6 @@ def ipc_handler(msg, etcdcli, publisher):
         publisher.send_json(msg)
         try:
             if (msg['action'] == 'destroy'):
-                #cur.execute("DELETE FROM VNF WHERE Con_id=? AND Host_name=?",(msg['ID'],msg['host']))
                 r = etcdcli.read('/VNF', recursive=True, sorted=True)
                 for child in r.children:
                     temp = json.loads(child.value)
@@ -216,7 +218,7 @@ def ipc_handler(msg, etcdcli, publisher):
             traceback.print_exc()
 
 
-def msg_handler(msg, etcdcli):
+def msg_handler(msg, etcdcli,influx):
     """
             handles messages recv from minions
     """
@@ -253,15 +255,23 @@ def msg_handler(msg, etcdcli):
                 host = {'Host_name': msg['host'], 'Host_ip': msg['host_ip'],
                         'Host_cpu': None, 'Host_total_mem': None,
                         'Host_avail_mem': None, 'Host_used_mem': None,
-                        'Last_seen': datetime.now().isoformat(), 'Active': None,
+                        'Last_seen': datetime.now().isoformat(), 'Active': True,
                         'cpus': None, 'network': None, 'images': None, 'resource': resource}
+            influx.log_host(host['Host_name'],
+                            host['Host_ip'],
+                            'registered')
             host = json.dumps(host)
             etcdcli.write('/Host/' + msg['host'], host)
+            
         elif(msg['flag'] == 'sysinfo'):
             # A Host pushed system resource info
             try:
                 host = etcdcli.read('/Host/' + msg['host']).value
                 host = json.loads(host)
+                if (not host['Active']):
+                    influx.log_host(host['Host_name'],
+                                    host['Host_ip'],
+                                    'active')
                 host['Host_name'] = msg['host']
                 host['Host_ip'] = msg['host_ip']
                 host['Host_cpu'] = msg['cpu']
@@ -289,7 +299,10 @@ def msg_handler(msg, etcdcli):
                         'Host_avail_mem': msg['mem_available'], 'Host_used_mem': msg['used'],
                         'Last_seen': datetime.now().isoformat(), 'Active': 1, 'cpus': msg['cpus'],
                         'network': msg['network'], 'images': msg['images'], 'resource': resource}
-
+            influx.log_cpu(host['Host_name'],host['Host_cpu'])
+            
+            influx.log_mem(host['Host_name'],
+                           host['Host_used_mem']/host['Host_total_mem'])
             host = json.dumps(host)
             etcdcli.write('/Host/' + msg['host'], host)
         elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
@@ -313,16 +326,19 @@ def msg_handler(msg, etcdcli):
                     if (temp['Host_name'] == msg['host'] and
                             temp['Con_id'] == msg['ID']):
                         exist = True
-                        etcdcli.write(child.key, vnf)
+                        etcdcli.write('/VNF/'+child.key, vnf)
                         break
                 if (not exist):
                     etcdcli.write("/VNF", vnf, append=True)
             except Exception, ex:
                 etcdcli.write("/VNF", vnf, append=True)
+                
+            influx.log_vnf(msg['ID'],
+                           msg['image'],
+                           msg['host'],
+                           msg['status'])
 
             # build graph object from chain info when the VNF status changed
-            etcdcli.write('/Chain/test', None)
-            etcdcli.delete("/Chain/", recursive=True)
             etcdcli.write('/Chain/test', None)
             etcdcli.delete('/Chain/test')
             r = etcdcli.read('/VNF', recursive=True, sorted=True)
@@ -364,10 +380,32 @@ def msg_handler(msg, etcdcli):
             print subgraphs
             try:
                 for g in subgraphs:
-                    etcdcli.write(
-                        "/Chain",
-                        json.dumps(json_graph.node_link_data(g)),
-                        append=True)
+                    g.graph['available'] = True
+                    g.graph['created'] = datetime.now().isoformat()
+                    nodesA = set(g.nodes())
+                    print nodesA
+                    try:
+                        r = etcdcli.read("/Chain", recursive=True, sorted=True)
+                        exist = False
+                        for child in r.children:
+                            temp = json_graph.node_link_graph(json.loads(child.value))
+                            nodesB = set(temp.nodes())
+                            if (nodesA == nodesB):
+                                exist = True
+                                etcdcli.write("/Chain/"+child.key, 
+                                          json.dumps(json_graph.node_link_data(g)))
+                                
+                        if (not exist):
+                            etcdcli.write("/Chain", 
+                                          json.dumps(json_graph.node_link_data(g)),
+                                          append=True)
+                    except Exception, ex:
+                        print ex
+                        traceback.print_exc()
+                        etcdcli.write(
+                            "/Chain",
+                            json.dumps(json_graph.node_link_data(g)),
+                            append=True)
             except Exception, ex:
                 print(ex)
                 traceback.print_exc()
@@ -381,7 +419,7 @@ def msg_handler(msg, etcdcli):
         traceback.print_exc()
 
 
-def main(etcdcli):
+def main(etcdcli,influx):
     # interval: how many seconds before been marked inactive
     interval = 5
     try:
@@ -414,13 +452,13 @@ def main(etcdcli):
     # Socket to receive IPC
     ipc = context.socket(zmq.REP)
     ipc.bind('ipc:///tmp/test.pipe')
-
+    
     while(True):
         try:
             # exhaust the msg queue from Minions
             while(True):
                 msg = syncservice.recv_json(flags=zmq.NOBLOCK)
-                msg_handler(msg, etcdcli)
+                msg_handler(msg, etcdcli,influx)
         except Exception, ex:
             #print("No New Msg from Slave!")
             pass
@@ -444,8 +482,23 @@ def main(etcdcli):
                 if (temp['Active'] == 1 and diff.seconds > interval):
                     temp['Active'] = 0
                     hostname = temp['Host_name']
+                    influx.log_host(temp['Host_name'],
+                                    temp['Host_ip'],
+                                    'inactive')
                     temp = json.dumps(temp)
                     etcdcli.write("/Host/" + hostname, temp)
+                    try:
+                        r = etcdcli.read('/VNF', recursive=True, sorted=True)
+                        for child in r.children:
+                            temp = json.loads(child.value)
+                            if (temp['Host_name'] == hostname):
+                                influx.log_vnf(temp['Con_id'],
+                                               temp['VNF_type'],
+                                               hostname,
+                                               'Host Inactive')
+                    except Exception, ex:
+                        print(ex)
+                        traceback.print_exc()
         except Exception, ex:
             print(ex)
             traceback.print_exc()
@@ -455,13 +508,26 @@ def main(etcdcli):
 if __name__ == '__main__':
     # initialize etcd
     etcdcli = etcd.Client()
+    #initialize influxDB
+    influx = logger.influxwrapper()
+    
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clear", help = "clear etcd database", 
+    parser.add_argument("--clearetcd", help = "clear etcd database", 
+                        action = "store_true")
+    parser.add_argument("--clearlog", help = "clear influx database", 
                         action = "store_true")
     args = parser.parse_args()
-    if (args.clear):
+    if (args.clearetcd):
+        etcdcli.write('/VNF/test', None)
+        etcdcli.write('/Host/test', None)
+        etcdcli.write('/Chain/test', None)
+        etcdcli.write('/source/test', None)
+        etcdcli.write('/link_id', None)
         etcdcli.delete("/VNF", recursive=True)
         etcdcli.delete("/Host", recursive=True)
         etcdcli.delete("/Chain", recursive=True)
-    
-    main(etcdcli)
+        etcdcli.delete("/source", recursive=True)
+        etcdcli.delete("/link_id")
+    if (args.clearlog):
+        influx.clear()
+    main(etcdcli,influx)

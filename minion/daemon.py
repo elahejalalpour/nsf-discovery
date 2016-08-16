@@ -17,7 +17,6 @@ import thread
 import json
 import argparse
 
-
 def initialize_resources(resource_broker):
     resource_broker.register_resource("ContainerDriver",
                                       ContainerDriver, backing_driver="docker")
@@ -117,7 +116,7 @@ class MinionDaemon(object):
                 container_list = []
                 if msg['ID'] == '*':
                     container_list = [
-                        c['Id'].encode() for c in self._container_driver.get_containers()]
+                        c['Id'].encode() for c in self._container_driver.get_containers(full=True)]
                 else:
                     container_list.append(msg['ID'])
                 for container in container_list:
@@ -186,22 +185,24 @@ class MinionDaemon(object):
             status = self._container_driver.guest_status(ID)
             image = c['Image']
             name = c['Names'][0][1:].encode('ascii')
-            # read net_ifs info from partial_view read from discovery module
+            # read net_ifs info from partial_view read from discovery module.
             current_container = [container for container in \
                     partial_view['containers'] if \
                     container['container_id'] == name]
             net_ifs = [] if not current_container else\
                     current_container[0]['net_ifs']
+                    
             msg = {'host': self._minion_hostname, 'ID': ID, 'image': image,
                    'name': name, 'status': status, 'net_ifs': net_ifs}
             if status == 'running': 
                 msg['IP'] = self._container_driver.get_ip(ID)
+
             # Only push update for a VNF if it's status has changed, i.e., the
             # container went from running to paused or paused to running etc.
             if self._vnfs.has_key(ID):
                 if self._vnfs[ID] != status:                   
                     self._vnfs[ID] = status
-                    msg['flag'] = 'changed'
+                    msg['flag'] = 'update'
             else:
                 self._vnfs[ID] = status
                 msg['flag'] = 'new'

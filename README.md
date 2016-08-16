@@ -1,20 +1,12 @@
 # nsf-discovery
 Network Service Function Discovery <br />
-![Build Status](http://cn101.cs.uwaterloo.ca:8080/buildStatus/icon?job=nsf-discovery) <br />
-on master:<br />
-zeromq <br />
-flask <br />
-python-dateutil <br />
-networkx <br />
-etcd <br />
+[![Build Status](http://cn101.cs.uwaterloo.ca:8080/buildStatus/icon?job=nsf-discovery)](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/) 
+[![Coverage Status](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/statusbadges-coverage/icon)](http://cn101.cs.uwaterloo.ca:8080/job/nsf-discovery/) <br />
 
-On minion: <br />
-psutil <br />
-zeromq <br />
+## Installation
+Check the [wiki](https://github.com/WatNFV/nsf-discovery/wiki/Installation-Guide) for installation Guide.
 
-required python packages: zmq, psutil, rollbackcontext, flask, python-dateutil,
-networkx, etcd<br />
-
+## How to run
 Run etcd on the same machine as the master:
 ```
 ./etcd --data-dir /var/etcd
