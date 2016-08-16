@@ -337,6 +337,9 @@ def msg_handler(msg, etcdcli,influx):
                            msg['image'],
                            msg['host'],
                            msg['status'])
+            #check broken chains
+            if (msg['status'] != 'running'):             
+                check_chain(msg['host']+'_'+msg['ID'],etcdcli,influx)
 
             # build graph object from chain info when the VNF status changed
             etcdcli.write('/Chain/test', None)
@@ -350,7 +353,7 @@ def msg_handler(msg, etcdcli,influx):
                 temp = json.loads(child.value)
                 print "Child JSON: "
                 print temp
-                node = temp['Host_name'] + '_' + temp['Con_id']
+                node = temp['Host_name'] + '_' + temp['Con_id'] + '_' + temp['Con_name'].split('_')[-1]
                 G.add_node(node, name = temp['Con_name'], type = temp['VNF_type'])
                 lst = temp['net_ifs']
                 print "lst:"
@@ -365,7 +368,7 @@ def msg_handler(msg, etcdcli,influx):
                         edges[key] = {node: val['if_name']}
             # print(edges)
             '''
-                nodes : [{HostX_VNFX:ethX},{HostX_VNFX:ethX}]
+                nodes : [{HostX_VNFX_chain_id:ethX},{HostX_VNFX_chain_id:ethX}]
                 edges : {nodes,link_type,link_id}
             '''
             for key in edges:
@@ -377,13 +380,13 @@ def msg_handler(msg, etcdcli,influx):
             data = json_graph.node_link_data(G)
             print(data)
             subgraphs = list(nx.connected_component_subgraphs(G))
-            print subgraphs
             try:
                 for g in subgraphs:
                     g.graph['available'] = True
-                    g.graph['created'] = datetime.now().isoformat()
+                    g.graph['Last_seen'] = datetime.now().isoformat()
                     nodesA = set(g.nodes())
-                    print nodesA
+                    chain_id = g.nodes()[0].split('_')[-1]
+                    g.graph['chain_id'] = chain_id
                     try:
                         r = etcdcli.read("/Chain", recursive=True, sorted=True)
                         exist = False
@@ -406,6 +409,7 @@ def msg_handler(msg, etcdcli,influx):
                             "/Chain",
                             json.dumps(json_graph.node_link_data(g)),
                             append=True)
+                        influx.log_chain(chain_id,'created')
             except Exception, ex:
                 print(ex)
                 traceback.print_exc()
@@ -418,6 +422,24 @@ def msg_handler(msg, etcdcli,influx):
         print(ex)
         traceback.print_exc()
 
+def check_chain(node_name,etcdcli,influx):
+    try:
+        chains = etcdcli.read('/Chain', recursive=True, sorted=True)
+        for chain in chains.children:
+            temp = json_graph.node_link_graph(json.loads(chain.value))
+            nodes = temp.nodes()
+            contain = False
+            for node in nodes:
+                if (node == node_name):
+                    contain = True
+            if (contain):
+                temp.graph['available'] = False
+                etcdcli.write("/Chain/"+chain.key, 
+                              json.dumps(json_graph.node_link_data(temp)))
+                influx.log_chain(temp.graph['chain_id'],'broken')
+    except Exception, ex:
+        print(ex)
+        traceback.print_exc()
 
 def main(etcdcli,influx):
     # interval: how many seconds before been marked inactive
@@ -474,9 +496,9 @@ def main(etcdcli,influx):
             pass
         # check for zombie host
         try:
-            r = etcdcli.read('/Host', recursive=True, sorted=True)
-            for child in r.children:
-                temp = json.loads(child.value)
+            hosts = etcdcli.read('/Host', recursive=True, sorted=True)
+            for host in hosts.children:
+                temp = json.loads(host.value)
                 diff = datetime.now() - \
                     dateutil.parser.parse(temp['Last_seen'])
                 if (temp['Active'] == 1 and diff.seconds > interval):
@@ -488,14 +510,17 @@ def main(etcdcli,influx):
                     temp = json.dumps(temp)
                     etcdcli.write("/Host/" + hostname, temp)
                     try:
-                        r = etcdcli.read('/VNF', recursive=True, sorted=True)
-                        for child in r.children:
-                            temp = json.loads(child.value)
+                        VNF = etcdcli.read('/VNF', recursive=True, sorted=True)
+                        for vnf in VNF.children:
+                            temp = json.loads(vnf.value)
+                            vnf_name = temp['Con_name']
                             if (temp['Host_name'] == hostname):
                                 influx.log_vnf(temp['Con_id'],
                                                temp['VNF_type'],
                                                hostname,
                                                'Host Inactive')
+                                #any chain contain this vnf should be marked as unavailable
+                                check_chain(hostname+'_'+temp['Con_id'],etcdcli,influx)
                     except Exception, ex:
                         print(ex)
                         traceback.print_exc()
