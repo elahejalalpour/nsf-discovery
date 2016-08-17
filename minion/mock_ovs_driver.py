@@ -8,10 +8,13 @@ class MockOVSDriver:
         # self.attach_interface_to_ovs("ovs0", "gre0")
 
     def get_bridges(self):
-        return self._bridges
+        bridges = ['Bridge "' + bridge + '"' for bridge in self._bridges]
+        return bridges
 
     def get_ports(self, bridge):
-        return self._ports[bridge]
+        if self._ports.has_key(bridge):
+            return 0, "\n".join(self._ports[bridge]), ""
+        return -1, "", "ovs-vsctl: no bridge named " + bridge
 
     def create_bridge(self, ovs_bridge_name):
         if ovs_bridge_name in self._bridges:
@@ -26,13 +29,11 @@ class MockOVSDriver:
     def delete_bridge(self, ovs_bridge_name):
         if ovs_bridge_name not in self._bridges:
             return -1, "", "ovs-vsctl: no bridge named " + ovs_bridge_name
-        print self._bridges
         self._bridges.remove(ovs_bridge_name)
         if self._ports.has_key(ovs_bridge_name):
             del self._ports[ovs_bridge_name] 
         if self._rules.has_key(ovs_bridge_name):
             del self._rules[ovs_bridge_name]
-        print self._bridges
         return 0, "", ""
 
     def set_bridge_of_version(self, ovs_bridge_name, of_version="OpenFlow13"):

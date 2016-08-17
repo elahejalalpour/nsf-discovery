@@ -4,7 +4,7 @@ import commandwrapper
 odriver = MockOVSDriver()
 
 def __execute_pipe_command(pipe_command, pipe_stdin):
-    pipe_cmd = commandwrapper.WrapCommand(pipe_command)
+    pipe_cmd = commandwrapper.WrapCommand(pipe_command, shell=True)
     pipe_cmd.stdin = pipe_stdin
     pipe_cmd.start()
     pipe_cmd.join()
@@ -29,7 +29,6 @@ def execute_bash_command(bash_command):
         elif subcommand == "del-br":
             args = tokens[0]
             ret, out, err = odriver.delete_bridge(args)
-            print args, ret, out, err
         elif subcommand == "show":
             pipe_command = ""
             if len(tokens) > 0:
@@ -49,7 +48,7 @@ def execute_bash_command(bash_command):
             pipe_command = ""
             if len(tokens) > 0:
                 pipe_command = " ".join(tokens[1:])
-            ports = "\n".join(odriver.get_ports(bridge))
-            out, err = __execute_pipe_command(pipe_command, ports)
-            ret = 0
+            ret, out, err = odriver.get_ports(bridge)
+            if not ret and len(pipe_command) > 0:
+                out, err = __execute_pipe_command(pipe_command, out)
     return (ret, out, err)

@@ -200,7 +200,7 @@ class OVSDriver():
 
     def get_ovs_bridges_and_ports(self):
         bridges_and_ports = {}
-        bash_command = 'sudo ovs-vsctl show | grep -o Bridge.*".*" ' + \
+        bash_command = 'sudo ovs-vsctl show | grep -o Bridge.*\\".*\\" ' + \
             ' | grep -o \\".*\\"'
         (return_code, output, errput) = self._bash_wrapper.execute_bash_command(bash_command)
         if return_code != 0:

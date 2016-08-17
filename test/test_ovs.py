@@ -17,7 +17,6 @@ def test_create_bridge():
         odriver.create_bridge("ovs-0")
         assert(True == False)
     except Exception as ex:
-        print ex[1]
         expected = "ovs-vsctl: cannot create a bridge named ovs-0 because a bridge named ovs-0 already exists"
         assert(ex[1] == expected)
     odriver.delete_bridge("ovs-0")
