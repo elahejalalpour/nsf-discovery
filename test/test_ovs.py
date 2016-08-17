@@ -93,6 +93,22 @@ def test_detach_interface():
 
     odriver.delete_bridge("ovs-0")
 
+def test_get_ovs_bridges_and_ports():
+    odriver.create_bridge("ovs-0")
+    assert(odriver.is_bridge_created("ovs-0") == True)
+    odriver.attach_interface_to_ovs("ovs-0", "port-0")
+    assert(odriver.is_interface_attached("ovs-0", "port-0") == True)
+    odriver.create_bridge("ovs-1")
+    assert(odriver.is_bridge_created("ovs-1") == True)
+    odriver.attach_interface_to_ovs("ovs-1", "port-1")
+    assert(odriver.is_interface_attached("ovs-1", "port-1") == True)
+    bp = odriver.get_ovs_bridges_and_ports()
+    bridges = {'ovs-0' : ['port-0'], 'ovs-1' : ['port-1']}
+    for (key, value) in bp.iteritems():
+        assert(bridges.has_key(key) == True)
+        for v in value:
+            assert((v in bridges[key]) == True)
+    
 def get_openflow_port_number():
     odriver.create_bridge("ovs-0")
     assert(odriver.is_bridge_created("ovs-0") == True)
