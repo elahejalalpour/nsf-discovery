@@ -347,28 +347,37 @@ def construct_chain(etcdcli,influx):
             chain_id = g.nodes()[0].split('_')[-1]
             g.graph['chain_id'] = chain_id
             try:
-                r = etcdcli.read("/Chain", recursive=True, sorted=True)
-                exist = False
-                for child in r.children:
-                    temp = json_graph.node_link_graph(json.loads(child.value))
-                    nodesB = set(temp.nodes())
-                    if (nodesA == nodesB):
-                        exist = True
-                        etcdcli.write("/Chain/"+child.key, 
+                r = etcdcli.read("/Chain/"+chain_id)
+                etcdcli.write("/Chain/"+chain_id, 
                                   json.dumps(json_graph.node_link_data(g)))
+                influx.log_chain(chain_id,'updated')
+                #r = etcdcli.read("/Chain", recursive=True, sorted=True)
+                #exist = False
+                #for child in r.children:
+                #    temp = json_graph.node_link_graph(json.loads(child.value))
+                #    nodesB = set(temp.nodes())
+                #    if (nodesA == nodesB):
+                #        exist = True
+                #        etcdcli.write("/Chain/"+chain_id, 
+                #                  json.dumps(json_graph.node_link_data(g)))
+                #        influx.log_chain(chain_id,'updated')
                         
-                if (not exist):
-                    etcdcli.write("/Chain", 
-                                  json.dumps(json_graph.node_link_data(g)),
-                                  append=True)
+                #if (not exist):
+                #    etcdcli.write("/Chain", 
+                #                  json.dumps(json_graph.node_link_data(g)),
+                #                  append=True)
+                #    influx.log_chain(chain_id,'created')
             except Exception, ex:
                 print ex
                 traceback.print_exc()
-                etcdcli.write(
-                    "/Chain",
-                    json.dumps(json_graph.node_link_data(g)),
-                    append=True)
+                etcdcli.write("/Chain/"+chain_id, 
+                                  json.dumps(json_graph.node_link_data(g)))
                 influx.log_chain(chain_id,'created')
+                #etcdcli.write(
+                #    "/Chain",
+                #    json.dumps(json_graph.node_link_data(g)),
+                #    append=True)
+                #influx.log_chain(chain_id,'created')
     except Exception, ex:
         print(ex)
         traceback.print_exc()
@@ -407,7 +416,7 @@ def update_vnf(msg, etcdcli,influx):
                    msg['status'])
     #check broken chains
     if (msg['status'] != 'running'):             
-        check_chain(msg['host']+'_'+msg['ID']+'_'+msg['Con_name'].split('_')[-1],etcdcli,influx)
+        check_chain(msg['host']+'_'+msg['ID']+'_'+msg['name'].split('_')[-1],etcdcli,influx)
 
 def msg_handler(msg, etcdcli,influx):
     """
@@ -444,14 +453,16 @@ def check_chain(node_name,etcdcli,influx):
             temp = json_graph.node_link_graph(json.loads(chain.value))
             nodes = temp.nodes()
             contain = False
+            print "nodes:"
+            print nodes
             for node in nodes:
                 print(node_name)
                 print(node)
                 if (node == node_name):
                     contain = True
-            if (contain):
+            if (contain and temp.graph['available'] == True):
                 temp.graph['available'] = False
-                etcdcli.write("/Chain/"+chain.key, 
+                etcdcli.write("/Chain/"+node_name.split('_')[-1], 
                               json.dumps(json_graph.node_link_data(temp)))
                 influx.log_chain(temp.graph['chain_id'],'broken')
     except Exception, ex:
@@ -550,6 +561,22 @@ def main(etcdcli,influx):
         check_hosts(etcdcli,influx)
         time.sleep(sleeping)
 
+def etcd_clear(etcdcli):
+    try:
+        etcdcli.write('/VNF/test', None)
+        etcdcli.write('/Host/test', None)
+        etcdcli.write('/Chain/test', None)
+        etcdcli.write('/source/test', None)
+        etcdcli.write('/link_id', None)
+        etcdcli.delete("/VNF", recursive=True)
+        etcdcli.delete("/Host", recursive=True)
+        etcdcli.delete("/Chain", recursive=True)
+        etcdcli.delete("/source", recursive=True)
+        etcdcli.delete("/link_id")
+    except Exception as ex:
+        print ex
+        traceback.print_exc()
+
 if __name__ == '__main__':
     # initialize etcd
     etcdcli = etcd.Client()
@@ -563,16 +590,7 @@ if __name__ == '__main__':
                         action = "store_true")
     args = parser.parse_args()
     if (args.clearetcd):
-        etcdcli.write('/VNF/test', None)
-        etcdcli.write('/Host/test', None)
-        etcdcli.write('/Chain/test', None)
-        etcdcli.write('/source/test', None)
-        etcdcli.write('/link_id', None)
-        etcdcli.delete("/VNF", recursive=True)
-        etcdcli.delete("/Host", recursive=True)
-        etcdcli.delete("/Chain", recursive=True)
-        etcdcli.delete("/source", recursive=True)
-        etcdcli.delete("/link_id")
+        etcd_clear(etcdcli)
     if (args.clearlog):
         influx.clear()
     main(etcdcli,influx)
