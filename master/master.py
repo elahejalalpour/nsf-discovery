@@ -43,7 +43,7 @@ class MasterMonitor():
             host['cpus'] = None
             host['network'] = None
             host['images'] = None
-        except Exception, ex:
+        except Exception as ex:
             # entry does not exist
             resource = {}
             resource['bandwidth'] = 10000
@@ -92,7 +92,7 @@ class MasterMonitor():
             host['cpus'] = msg['cpus']
             host['network'] = msg['network']
             host['images'] = msg['images']
-        except Exception, ex:
+        except Exception as ex:
             print(ex)
             traceback.print_exc()
             resource = {}
@@ -146,7 +146,7 @@ class MasterMonitor():
                     self._etcdcli.write("/Chain/" + node_name.split('_')[-1],
                                         json.dumps(json_graph.node_link_data(temp)))
                     self._influx.log_chain(temp.graph['chain_id'], 'broken')
-        except Exception, ex:
+        except Exception as ex:
             print(ex)
             traceback.print_exc()
 
@@ -174,7 +174,7 @@ class MasterMonitor():
                     break
             if (not exist):
                 self._etcdcli.write("/VNF", vnf, append=True)
-        except Exception, ex:
+        except Exception as ex:
             self._etcdcli.write("/VNF", vnf, append=True)
 
         self._influx.log_vnf(msg['ID'],
@@ -210,7 +210,7 @@ class MasterMonitor():
                     print "val:"
                     print val
                     key = val['link_type'] + '_' + val['link_id']
-                    if (edges.has_key(key)):
+                    if (key in edges):
                         edges[key][node] = val['if_name']
                     else:
                         edges[key] = {node: val['if_name']}
@@ -256,7 +256,7 @@ class MasterMonitor():
                     #                  json.dumps(json_graph.node_link_data(g)),
                     #                  append=True)
                     #    self._influx.log_chain(chain_id,'created')
-                except Exception, ex:
+                except Exception as ex:
                     print ex
                     traceback.print_exc()
                     self._etcdcli.write("/Chain/" + chain_id,
@@ -267,7 +267,7 @@ class MasterMonitor():
                     #    json.dumps(json_graph.node_link_data(g)),
                     #    append=True)
                     # self._influx.log_chain(chain_id,'created')
-        except Exception, ex:
+        except Exception as ex:
             print(ex)
             traceback.print_exc()
 
@@ -293,7 +293,7 @@ class MasterMonitor():
             else:
                 # print(msg)
                 pass
-        except Exception, ex:
+        except Exception as ex:
             print(ex)
             traceback.print_exc()
 
@@ -360,7 +360,7 @@ class MasterMonitor():
                 memory = chain[ID]['memory']
                 bandwidth = chain[ID]['aggregate_band']
                 for host in range(len(hosts)):
-                    if (hosts[host]['resource']['memory'] == None):
+                    if (hosts[host]['resource']['memory'] is None):
                         hosts[host]['resource']['memory'] = hosts[
                             host]['Host_avail_mem'] / 1024 / 1024
                     avail_memory = hosts[host]['Host_avail_mem'] / 1024 / 1024
@@ -378,7 +378,7 @@ class MasterMonitor():
                         hosts[host]['resource']['cpus'][k] -= cpu_share
                         chain[ID]['cpuset_cpus'] = k
                         break
-                    if (chain[ID]['cpuset_cpus'] == None):
+                    if (chain[ID]['cpuset_cpus'] is None):
                         print "No CPU found\n"
                         continue
                     hosts[host]['resource']['memory'] = avail_memory - memory
@@ -388,7 +388,7 @@ class MasterMonitor():
                     unique_hosts.add(chain[ID]['host'])
                     break
 
-                if (chain[ID]['host'] == None):
+                if (chain[ID]['host'] is None):
                     is_possible = False
                     break
 
@@ -423,7 +423,8 @@ class MasterMonitor():
                                     ['tunnel_endpoint'] = chain[link['target']]['host_ip']
                                 targets = chain[link['target']]['net_ifs']
                                 for idx in range(len(targets)):
-                                    if targets[idx]['link_id'] == source[index]['link_id']:
+                                    if targets[idx]['link_id'] == source[
+                                            index]['link_id']:
                                         source[index]['remote_container_ip'] = targets[
                                             idx]['ip_address']
                                         break
@@ -437,7 +438,8 @@ class MasterMonitor():
                                     ['tunnel_endpoint'] = chain[link['source']]['host_ip']
                                 sources = chain[link['source']]['net_ifs']
                                 for idx in range(len(sources)):
-                                    if sources[idx]['link_id'] == target[index]['link_id']:
+                                    if sources[idx]['link_id'] == target[
+                                            index]['link_id']:
                                         target[index]['remote_container_ip'] = sources[
                                             idx]['ip_address']
                                         break
@@ -452,7 +454,7 @@ class MasterMonitor():
             else:
                 print("Insufficient Resource!")
 
-        except Exception, ex:
+        except Exception as ex:
             print(ex)
             traceback.print_exc()
 
@@ -475,7 +477,7 @@ class MasterMonitor():
                         if (temp['Host_name'] == msg['host'] and
                                 temp['Con_id'] == msg['ID']):
                             self._etcdcli.delete(child.key)
-            except Exception, ex:
+            except Exception as ex:
                 print(ex)
                 traceback.print_exc()
 
@@ -511,10 +513,10 @@ class MasterMonitor():
                                 # as unavailable
                                 self.check_chain(
                                     hostname + '_' + temp['Con_id'] + '_' + vnf_name.split('_')[-1])
-                    except Exception, ex:
+                    except Exception as ex:
                         print(ex)
                         traceback.print_exc()
-        except Exception, ex:
+        except Exception as ex:
             print(ex)
             traceback.print_exc()
             pass
@@ -529,7 +531,7 @@ class MasterMonitor():
                 while(True):
                     msg = self._syncservice.recv_json(flags=zmq.NOBLOCK)
                     self.msg_handler(msg)
-            except Exception, ex:
+            except Exception as ex:
                 #print("No New Msg from Slave!")
                 pass
             try:
@@ -539,7 +541,7 @@ class MasterMonitor():
                     ipc.send('')
                     print(msg)
                     self.ipc_handler(msg)
-            except Exception, ex:
+            except Exception as ex:
                 #print("No New Msg from IPC!")
                 pass
             # check for zombie host
@@ -567,7 +569,7 @@ def etcd_clear(etcdcli):
 def init_etcd(etcdcli):
     try:
         etcdcli.read('link_id')
-    except Exception, ex:
+    except Exception as ex:
         etcdcli.write('link_id', 0)
     try:
         #etcdcli.delete('/Host', recursive=True)
@@ -575,7 +577,7 @@ def init_etcd(etcdcli):
         etcdcli.delete('/Host/test')
         etcdcli.write('/VNF/test', None)
         etcdcli.delete('/VNF/test')
-    except Exception, ex:
+    except Exception as ex:
         print(ex)
         traceback.print_exc()
 
