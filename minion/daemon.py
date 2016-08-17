@@ -106,8 +106,10 @@ class MinionDaemon(object):
 
     def command_handler(self, msg):
         try:
-            if msg['host'] == self._hostname or msg['host'] == '*':
+            print msg
+            if msg['host'] == self._minion_hostname or msg['host'] == '*':
                 action = msg['action']
+                print("!!!!!!!!!!!!!")
                 if action == 'create_chain':
                     self._provisioning_agent.provision_local_chain(msg['data'])
                 elif action == 'deploy':
@@ -156,7 +158,7 @@ class MinionDaemon(object):
             # exhaust the msg queue
             while(True):
                 msg = self._subscriber.recv_json(flags=zmq.NOBLOCK)
-                self._command_handler(msg)
+                self.command_handler(msg)
         except Exception as ex:
             return
 
