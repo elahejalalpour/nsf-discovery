@@ -17,6 +17,7 @@ import thread
 import json
 import argparse
 
+
 def initialize_resources(resource_broker):
     resource_broker.register_resource("BashWrapper", "bash_wrapper")
     resource_broker.register_resource("ContainerDriver",
@@ -26,10 +27,12 @@ def initialize_resources(resource_broker):
     resource_broker.register_resource("ChainDriver",
                                       ChainDriver, resource_broker)
 
+
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915,  # SIOCGIFADDR
                                         struct.pack('256s', ifname[:15]))[20:24])
+
 
 class MinionDaemon(object):
 
@@ -53,6 +56,7 @@ class MinionDaemon(object):
     @param discovery_agent A DiscoveryAgent object that is used to discover the
         VNFs and the links in between them.
     """
+
     def __init__(self,
                  resource_broker,
                  sleep_interval,
@@ -78,7 +82,7 @@ class MinionDaemon(object):
         self._provisioning_agent = provisioning_agent
         self._discovery_agent = discovery_agent
         self._context, self._subscriber, self._syncclient =\
-                self.__init_zeromq()
+            self.__init_zeromq()
         self._vnfs = {}
 
     def __init_zeromq(self):
@@ -88,8 +92,10 @@ class MinionDaemon(object):
         return context, subscriber, syncclient
 
     def __connect_to_master(self):
-        subscriber_con_str = "tcp://" + str(self._master_ip) + ":" + str(self._master_subs_port)
-        syncclient_con_str = "tcp://" + str(self._master_ip) + ":" + str(self._master_sync_port)
+        subscriber_con_str = "tcp://" + \
+            str(self._master_ip) + ":" + str(self._master_subs_port)
+        syncclient_con_str = "tcp://" + \
+            str(self._master_ip) + ":" + str(self._master_sync_port)
         self._subscriber.connect(subscriber_con_str)
         self._subscriber.setsockopt(zmq.SUBSCRIBE, '')
         self._syncclient.connect(syncclient_con_str)
@@ -134,10 +140,11 @@ class MinionDaemon(object):
                     elif action == 'unpause':
                         self._container_driver.unpause(container)
                     elif action == 'destroy':
-                        reply = {'host' : self._minion_hostname,
+                        reply = {'host': self._minion_hostname,
                                  'ID': container}
-                        if self._vnfs.has_key(container):
-                            self._container_driver.destroy(container, force = True)
+                        if container in self._vnfs:
+                            self._container_driver.destroy(
+                                container, force=True)
                             del self._vnfs[container]
                             reply['flag'] = 'removed'
                         else:
@@ -189,11 +196,11 @@ class MinionDaemon(object):
             image = c['Image']
             name = c['Names'][0][1:].encode('ascii')
             # read net_ifs info from partial_view read from discovery module.
-            current_container = [container for container in \
-                    partial_view['containers'] if \
-                    container['container_id'] == name]
+            current_container = [container for container in
+                                 partial_view['containers'] if
+                                 container['container_id'] == name]
             net_ifs = [] if not current_container else\
-                    current_container[0]['net_ifs']
+                current_container[0]['net_ifs']
             msg = {'host': self._minion_hostname, 'ID': ID, 'image': image,
                    'name': name, 'status': status, 'net_ifs': net_ifs}
             if status == 'running':
@@ -201,14 +208,14 @@ class MinionDaemon(object):
 
             # Only push update for a VNF if it's status has changed, i.e., the
             # container went from running to paused or paused to running etc.
-            if self._vnfs.has_key(ID):
+            if ID in self._vnfs:
                 if self._vnfs[ID] != status:
                     self._vnfs[ID] = status
                     msg['flag'] = 'update'
             else:
                 self._vnfs[ID] = status
                 msg['flag'] = 'new'
-            if msg.has_key('flag'):
+            if 'flag' in msg:
                 self._syncclient.send_json(msg)
                 print(msg)
         # push system resource info
@@ -245,12 +252,12 @@ if __name__ == '__main__':
     resource_broker = ResourceBroker()
     initialize_resources(resource_broker)
     provisioning_agent = ProvisioningAgent(
-            resource_broker,
-            default_ovs_bridge,
-            default_tunnel_interface)
+        resource_broker,
+        default_ovs_bridge,
+        default_tunnel_interface)
     discovery_agent = DiscoveryAgent(
-            resource_broker,
-            default_ovs_bridge)
+        resource_broker,
+        default_ovs_bridge)
     ovs_driver = resource_broker.get_resource("OVSDriver")
     if not ovs_driver.is_bridge_created(default_ovs_bridge):
         ovs_driver.create_bridge(default_ovs_bridge)
