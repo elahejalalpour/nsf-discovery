@@ -494,7 +494,8 @@ class MasterMonitor():
             print mssg
             self.create_chain(mssg)
         else:
-            publisher.send_json(msg)
+            print mssg
+            self._publisher.send_json(mssg)
             try:
                 if (msg['action'] == 'destroy'):
                     r = self._etcdcli.read('/VNF', recursive=True, sorted=True)
@@ -571,10 +572,10 @@ class MasterMonitor():
                 while(True):
                     msg = ipc.recv_json(flags=zmq.NOBLOCK)
                     ipc.send('')
-                    print(msg)
                     self.ipc_handler(msg)
             except Exception as ex:
                 #print("No New Msg from IPC!")
+                #print ex
                 pass
             # check for zombie host
             self.check_hosts()
