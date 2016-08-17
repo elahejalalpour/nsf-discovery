@@ -28,6 +28,11 @@ class MasterMonitor():
         self._ipc = ipc
 
     def host_register(self, msg):
+        """
+        Register host with master
+
+        @param msg a valid message from minion
+        """
         try:
             # entry exists
             host = self._etcdcli.read('/Host/' + msg['host']).value
@@ -73,6 +78,11 @@ class MasterMonitor():
         self._etcdcli.write('/Host/' + msg['host'], host)
 
     def update_host(self, msg):
+        """
+        Update host info stored in etcd
+
+        @param msg a valid message from minion
+        """
         try:
             host = self._etcdcli.read('/Host/' + msg['host']).value
             host = json.loads(host)
@@ -151,6 +161,12 @@ class MasterMonitor():
             traceback.print_exc()
 
     def update_vnf(self, msg):
+        """
+        Update vnf info stored in etcd and log
+
+        @param msg a valid message from minion
+        """
+
         if (msg['status'] == 'running'):
             IP = msg['IP']
         else:
@@ -187,6 +203,11 @@ class MasterMonitor():
                              '_' + msg['name'].split('_')[-1])
 
     def construct_chain(self):
+        """
+        Construct chain by using info stored in /VNF
+        only running vnf are considered
+
+        """
         # build graph object from chain info when the VNF status changed
         self._etcdcli.write('/Chain/test', None)
         self._etcdcli.delete('/Chain/test')
@@ -298,6 +319,11 @@ class MasterMonitor():
             traceback.print_exc()
 
     def create_chain(self, mssg):
+        """
+        Create chain from a json query
+
+        @param mssg a valid json message contain chain info
+        """
         try:
             base_ip = ipaddress.ip_address(u'192.168.0.2')
             chain = {}
@@ -468,7 +494,8 @@ class MasterMonitor():
             print mssg
             self.create_chain(mssg)
         else:
-            publisher.send_json(msg)
+            print mssg
+            self._publisher.send_json(mssg)
             try:
                 if (msg['action'] == 'destroy'):
                     r = self._etcdcli.read('/VNF', recursive=True, sorted=True)
@@ -482,6 +509,12 @@ class MasterMonitor():
                 traceback.print_exc()
 
     def check_hosts(self):
+        """
+        Mark zombie hosts and break chain if it contains vnf located
+        on the zombie host
+
+        """
+
         # interval: how many seconds before been marked inactive
         interval = 5
         try:
@@ -539,10 +572,10 @@ class MasterMonitor():
                 while(True):
                     msg = ipc.recv_json(flags=zmq.NOBLOCK)
                     ipc.send('')
-                    print(msg)
                     self.ipc_handler(msg)
             except Exception as ex:
                 #print("No New Msg from IPC!")
+                #print ex
                 pass
             # check for zombie host
             self.check_hosts()
@@ -550,6 +583,12 @@ class MasterMonitor():
 
 
 def etcd_clear(etcdcli):
+    """
+        Clear etcd database
+
+        @param etcdcli a etcd client object
+    """
+
     try:
         etcdcli.write('/VNF/test', None)
         etcdcli.write('/Host/test', None)
@@ -567,6 +606,11 @@ def etcd_clear(etcdcli):
 
 
 def init_etcd(etcdcli):
+    """
+        initilize etcd database
+
+        @param etcdcli a etcd client object
+        """
     try:
         etcdcli.read('link_id')
     except Exception as ex:
@@ -583,6 +627,10 @@ def init_etcd(etcdcli):
 
 
 def init_zmq():
+    """
+        initialize zmq
+
+    """
     context = zmq.Context()
     # Socket to broadcast to clients
     publisher = context.socket(zmq.PUB)
