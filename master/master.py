@@ -1,4 +1,4 @@
-#Master
+# Master
 from __future__ import division
 import copy
 import zmq
@@ -16,18 +16,18 @@ import argparse
 import logger
 import uuid
 
+
 class MasterMonitor():
 
-    def __init__(self,sleeping,etcdcli,influx,publisher,syncservice,ipc):
+    def __init__(self, sleeping, etcdcli, influx, publisher, syncservice, ipc):
         self._sleeping = sleeping
         self._etcdcli = etcdcli
         self._influx = influx
         self._publisher = publisher
         self._syncservice = syncservice
         self._ipc = ipc
-    
-    
-    def host_register(self,msg):
+
+    def host_register(self, msg):
         try:
             # entry exists
             host = self._etcdcli.read('/Host/' + msg['host']).value
@@ -53,26 +53,26 @@ class MasterMonitor():
             while (i < msg['cpus']):
                 resource['cpus'].append(150)
                 i += 1
-            host = {'Host_name': msg['host'], 
+            host = {'Host_name': msg['host'],
                     'Host_ip': msg['host_ip'],
-                    'Host_cpu': None, 
+                    'Host_cpu': None,
                     'Host_total_mem': None,
-                    'Host_avail_mem': None, 
+                    'Host_avail_mem': None,
                     'Host_used_mem': None,
-                    'Last_seen': datetime.now().isoformat(), 
+                    'Last_seen': datetime.now().isoformat(),
                     'Active': True,
-                    'cpus': None, 
-                    'network': None, 
-                    'images': None, 
+                    'cpus': None,
+                    'network': None,
+                    'images': None,
                     'resource': resource}
-                    
+
         self._influx.log_host(host['Host_name'],
-                        host['Host_ip'],
-                        'registered')
+                              host['Host_ip'],
+                              'registered')
         host = json.dumps(host)
         self._etcdcli.write('/Host/' + msg['host'], host)
-    
-    def update_host(self,msg):
+
+    def update_host(self, msg):
         try:
             host = self._etcdcli.read('/Host/' + msg['host']).value
             host = json.loads(host)
@@ -80,7 +80,7 @@ class MasterMonitor():
                 influx.log_host(host['Host_name'],
                                 host['Host_ip'],
                                 'reconnected')
-                                
+
             host['Host_name'] = msg['host']
             host['Host_ip'] = msg['host_ip']
             host['Host_cpu'] = msg['cpu']
@@ -103,26 +103,26 @@ class MasterMonitor():
             while (i < len(msg['cpus'])):
                 resource['cpus'].append(150)
                 i += 1
-            host = {'Host_name': msg['host'], 
+            host = {'Host_name': msg['host'],
                     'Host_ip': msg['host_ip'],
                     'Host_cpu': msg['cpu'],
                     'Host_total_mem': msg['mem_total'],
-                    'Host_avail_mem': msg['mem_available'], 
+                    'Host_avail_mem': msg['mem_available'],
                     'Host_used_mem': msg['used'],
-                    'Last_seen': datetime.now().isoformat(), 
+                    'Last_seen': datetime.now().isoformat(),
                     'Active': 1, 'cpus': msg['cpus'],
-                    'network': msg['network'], 
-                    'images': msg['images'], 
+                    'network': msg['network'],
+                    'images': msg['images'],
                     'resource': resource}
-                    
-        self._influx.log_cpu(host['Host_name'],host['Host_cpu'])
-        
+
+        self._influx.log_cpu(host['Host_name'], host['Host_cpu'])
+
         self._influx.log_mem(host['Host_name'],
-                       host['Host_used_mem']/host['Host_total_mem'])
+                             host['Host_used_mem'] / host['Host_total_mem'])
         host = json.dumps(host)
         self._etcdcli.write('/Host/' + msg['host'], host)
-    
-    def check_chain(self,node_name):
+
+    def check_chain(self, node_name):
         '''
             @param node_name node name of a vnf
             @brief check any chain contains this vnf
@@ -143,14 +143,14 @@ class MasterMonitor():
                         contain = True
                 if (contain and temp.graph['available'] == True):
                     temp.graph['available'] = False
-                    self._etcdcli.write("/Chain/"+node_name.split('_')[-1], 
+                    self._etcdcli.write("/Chain/" + node_name.split('_')[-1],
                                         json.dumps(json_graph.node_link_data(temp)))
-                    self._influx.log_chain(temp.graph['chain_id'],'broken')
+                    self._influx.log_chain(temp.graph['chain_id'], 'broken')
         except Exception, ex:
             print(ex)
             traceback.print_exc()
-    
-    def update_vnf(self,msg):
+
+    def update_vnf(self, msg):
         if (msg['status'] == 'running'):
             IP = msg['IP']
         else:
@@ -170,21 +170,22 @@ class MasterMonitor():
                 if (temp['Host_name'] == msg['host'] and
                         temp['Con_id'] == msg['ID']):
                     exist = True
-                    self._etcdcli.write('/VNF/'+child.key, vnf)
+                    self._etcdcli.write('/VNF/' + child.key, vnf)
                     break
             if (not exist):
                 self._etcdcli.write("/VNF", vnf, append=True)
         except Exception, ex:
             self._etcdcli.write("/VNF", vnf, append=True)
-            
+
         self._influx.log_vnf(msg['ID'],
                              msg['image'],
                              msg['host'],
                              msg['status'])
-        #check broken chains
-        if (msg['status'] != 'running'):             
-            self.check_chain(msg['host']+'_'+msg['ID']+'_'+msg['name'].split('_')[-1])
-    
+        # check broken chains
+        if (msg['status'] != 'running'):
+            self.check_chain(msg['host'] + '_' + msg['ID'] +
+                             '_' + msg['name'].split('_')[-1])
+
     def construct_chain(self):
         # build graph object from chain info when the VNF status changed
         self._etcdcli.write('/Chain/test', None)
@@ -199,8 +200,9 @@ class MasterMonitor():
             print "Child JSON: "
             print temp
             if (temp['VNF_status'] == 'running'):
-                node = temp['Host_name'] + '_' + temp['Con_id'] + '_' + temp['Con_name'].split('_')[-1]
-                G.add_node(node, name = temp['Con_name'], type = temp['VNF_type'])
+                node = temp['Host_name'] + '_' + temp['Con_id'] + \
+                    '_' + temp['Con_name'].split('_')[-1]
+                G.add_node(node, name=temp['Con_name'], type=temp['VNF_type'])
                 lst = temp['net_ifs']
                 print "lst:"
                 print lst
@@ -234,43 +236,42 @@ class MasterMonitor():
                 chain_id = g.nodes()[0].split('_')[-1]
                 g.graph['chain_id'] = chain_id
                 try:
-                    r = self._etcdcli.read("/Chain/"+chain_id)
-                    self._etcdcli.write("/Chain/"+chain_id, 
-                                      json.dumps(json_graph.node_link_data(g)))
-                    self._influx.log_chain(chain_id,'updated')
+                    r = self._etcdcli.read("/Chain/" + chain_id)
+                    self._etcdcli.write("/Chain/" + chain_id,
+                                        json.dumps(json_graph.node_link_data(g)))
+                    self._influx.log_chain(chain_id, 'updated')
                     #r = self._etcdcli.read("/Chain", recursive=True, sorted=True)
                     #exist = False
-                    #for child in r.children:
+                    # for child in r.children:
                     #    temp = json_graph.node_link_graph(json.loads(child.value))
                     #    nodesB = set(temp.nodes())
                     #    if (nodesA == nodesB):
                     #        exist = True
-                    #        self._etcdcli.write("/Chain/"+chain_id, 
+                    #        self._etcdcli.write("/Chain/"+chain_id,
                     #                  json.dumps(json_graph.node_link_data(g)))
                     #        influx.log_chain(chain_id,'updated')
-                            
-                    #if (not exist):
-                    #    self._etcdcli.write("/Chain", 
+
+                    # if (not exist):
+                    #    self._etcdcli.write("/Chain",
                     #                  json.dumps(json_graph.node_link_data(g)),
                     #                  append=True)
                     #    self._influx.log_chain(chain_id,'created')
                 except Exception, ex:
                     print ex
                     traceback.print_exc()
-                    self._etcdcli.write("/Chain/"+chain_id, 
+                    self._etcdcli.write("/Chain/" + chain_id,
                                         json.dumps(json_graph.node_link_data(g)))
-                    self._influx.log_chain(chain_id,'created')
-                    #self._etcdcli.write(
+                    self._influx.log_chain(chain_id, 'created')
+                    # self._etcdcli.write(
                     #    "/Chain",
                     #    json.dumps(json_graph.node_link_data(g)),
                     #    append=True)
-                    #self._influx.log_chain(chain_id,'created')
+                    # self._influx.log_chain(chain_id,'created')
         except Exception, ex:
             print(ex)
             traceback.print_exc()
 
-    
-    def msg_handler(self,msg):
+    def msg_handler(self, msg):
         """
                 handles messages recv from minions
         """
@@ -280,11 +281,11 @@ class MasterMonitor():
                 # A new Host joined in the management network
                 print('New Host Registered: ' + msg['host'])
                 self.host_register(msg)
-                
+
             elif(msg['flag'] == 'sysinfo'):
                 # A Host pushed system resource info
                 self.update_host(msg)
-                
+
             elif(msg['flag'] == 'new' or msg['flag'] == 'update'):
                 # A new VNF is detected or a status change in existing VNF
                 self.update_vnf(msg)
@@ -295,8 +296,8 @@ class MasterMonitor():
         except Exception, ex:
             print(ex)
             traceback.print_exc()
-        
-    def create_chain(self,msg):
+
+    def create_chain(self, mssg):
         try:
             base_ip = ipaddress.ip_address(u'192.168.0.2')
             chain = {}
@@ -308,10 +309,10 @@ class MasterMonitor():
             print hosts
             nodes = mssg['data']['nodes']
             links = mssg['data']['links']
-            
+
             unique = str(uuid.uuid4())
             for node in nodes:
-                temp = {'container_name': node['vnf_name']+'_'+unique,
+                temp = {'container_name': node['vnf_name'] + '_' + unique,
                         'cpu_share': node['cpu_share'],
                         'cpuset_cpus': None,
                         'memory': node['memory'],
@@ -325,6 +326,7 @@ class MasterMonitor():
                 chain[node['id']] = temp
 
             for link in range(len(links)):
+                k = 0
                 link_id = json.loads(self._etcdcli.read('/link_id').value)
                 temp = {'if_name': None,
                         'link_type': None,
@@ -394,9 +396,9 @@ class MasterMonitor():
                 # update resource info
                 for host in hosts:
                     self._etcdcli.write(
-                            '/Host/' +
-                            host['Host_name'],
-                            json.dumps(host))
+                        '/Host/' +
+                        host['Host_name'],
+                        json.dumps(host))
 
                 for link in links:
                     if (chain[link['source']]['host'] ==
@@ -452,9 +454,9 @@ class MasterMonitor():
 
         except Exception, ex:
             print(ex)
-            traceback.print_exc()               
-    
-    def ipc_handler(self,msg):
+            traceback.print_exc()
+
+    def ipc_handler(self, msg):
         """
                 handles messages from IPC(typically commands)
         """
@@ -462,7 +464,7 @@ class MasterMonitor():
         if mssg['action'] == 'create_chain':
             k = 0
             print mssg
-            create_chain(mssg)
+            self.create_chain(mssg)
         else:
             publisher.send_json(msg)
             try:
@@ -476,7 +478,7 @@ class MasterMonitor():
             except Exception, ex:
                 print(ex)
                 traceback.print_exc()
-    
+
     def check_hosts(self):
         # interval: how many seconds before been marked inactive
         interval = 5
@@ -490,12 +492,13 @@ class MasterMonitor():
                     temp['Active'] = 0
                     hostname = temp['Host_name']
                     self._influx.log_host(temp['Host_name'],
-                                    temp['Host_ip'],
-                                    'inactive')
+                                          temp['Host_ip'],
+                                          'inactive')
                     temp = json.dumps(temp)
                     self._etcdcli.write("/Host/" + hostname, temp)
                     try:
-                        VNF = self._etcdcli.read('/VNF', recursive=True, sorted=True)
+                        VNF = self._etcdcli.read(
+                            '/VNF', recursive=True, sorted=True)
                         for vnf in VNF.children:
                             temp = json.loads(vnf.value)
                             vnf_name = temp['Con_name']
@@ -504,8 +507,10 @@ class MasterMonitor():
                                                      temp['VNF_type'],
                                                      hostname,
                                                      'Host Inactive')
-                                #any chain contain this vnf should be marked as unavailable
-                                self.check_chain(hostname+'_'+temp['Con_id']+'_'+vnf_name.split('_')[-1])
+                                # any chain contain this vnf should be marked
+                                # as unavailable
+                                self.check_chain(
+                                    hostname + '_' + temp['Con_id'] + '_' + vnf_name.split('_')[-1])
                     except Exception, ex:
                         print(ex)
                         traceback.print_exc()
@@ -513,7 +518,7 @@ class MasterMonitor():
             print(ex)
             traceback.print_exc()
             pass
-    
+
     def start(self):
         '''
             master starts to wrok
@@ -533,16 +538,15 @@ class MasterMonitor():
                     msg = ipc.recv_json(flags=zmq.NOBLOCK)
                     ipc.send('')
                     print(msg)
-                    ipc_handler(msg, etcdcli, publisher)
+                    self.ipc_handler(msg)
             except Exception, ex:
                 #print("No New Msg from IPC!")
                 pass
             # check for zombie host
             self.check_hosts()
             time.sleep(sleeping)
-        
-        
-        
+
+
 def etcd_clear(etcdcli):
     try:
         etcdcli.write('/VNF/test', None)
@@ -559,6 +563,7 @@ def etcd_clear(etcdcli):
         print ex
         traceback.print_exc()
 
+
 def init_etcd(etcdcli):
     try:
         etcdcli.read('link_id')
@@ -574,6 +579,7 @@ def init_etcd(etcdcli):
         print(ex)
         traceback.print_exc()
 
+
 def init_zmq():
     context = zmq.Context()
     # Socket to broadcast to clients
@@ -587,30 +593,31 @@ def init_zmq():
     # Socket to receive IPC
     ipc = context.socket(zmq.REP)
     ipc.bind('ipc:///tmp/test.pipe')
-    return publisher,syncservice,ipc
-                
+    return publisher, syncservice, ipc
+
 if __name__ == '__main__':
     # sleeping time while wait new mesg
     sleeping = 1
-    
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clearetcd", help = "clear etcd database", 
-                        action = "store_true")
-    parser.add_argument("--clearlog", help = "clear influx database", 
-                        action = "store_true")
+    parser.add_argument("--clearetcd", help="clear etcd database",
+                        action="store_true")
+    parser.add_argument("--clearlog", help="clear influx database",
+                        action="store_true")
     args = parser.parse_args()
-    
-    #initialize etcd
+
+    # initialize etcd
     etcdcli = etcd.Client()
     if (args.clearetcd):
         etcd_clear(etcdcli)
     init_etcd(etcdcli)
-    #initialize influxDB
+    # initialize influxDB
     influx = logger.influxwrapper()
     if (args.clearlog):
         influx.clear()
-    #init zeromq
-    publisher,syncservice,ipc = init_zmq()
-    
-    mastermonitor = MasterMonitor(sleeping,etcdcli,influx,publisher,syncservice,ipc)
+    # init zeromq
+    publisher, syncservice, ipc = init_zmq()
+
+    mastermonitor = MasterMonitor(
+        sleeping, etcdcli, influx, publisher, syncservice, ipc)
     mastermonitor.start()
