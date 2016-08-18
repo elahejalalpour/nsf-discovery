@@ -159,6 +159,7 @@ class MinionDaemon(object):
                         self._syncclient.send_json(reply)
         except Exception as ex:
             print ex
+            traceback.print_exc()
 
     def pull(self):
         try:

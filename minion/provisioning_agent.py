@@ -42,8 +42,8 @@ class ProvisioningAgent():
         self.__container_driver.deploy(
             image_name=vnf_config['vnf_type'],
             vnf_name=vnf_config['container_name'],
-            host_config=host_config)
-        container_name = "sr2chowd-" + vnf_config['container_name']
+            h_config=host_config)
+        container_name = vnf_config['container_name']
         chain_rollback.push(self.__container_driver.destroy,
                             self.__container_driver, container_name)
 
