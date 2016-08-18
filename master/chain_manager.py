@@ -11,7 +11,6 @@ import ipaddress
 import networkx as nx
 from networkx.readwrite import json_graph
 from copy import deepcopy
-import argparse
 import logger
 import uuid
 
