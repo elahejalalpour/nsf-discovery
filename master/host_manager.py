@@ -36,10 +36,13 @@ class HostManager():
             host['Host_avail_mem'] = None
             host['Host_used_mem'] = None
             host['Last_seen'] = datetime.now().isoformat()
-            host['Active'] = None
+            host['Active'] = True
             host['cpus'] = None
             host['network'] = None
             host['images'] = None
+            self._influx.log_host(host['Host_name'],
+                                  host['Host_ip'],
+                                  'reconnected')
         except Exception as ex:
             # entry does not exist
             resource = {}
