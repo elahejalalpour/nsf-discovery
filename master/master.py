@@ -29,9 +29,9 @@ class MasterMonitor():
 
     def host_register(self, msg):
         """
-        Register host with master
+            Register host with master
 
-        @param msg a valid message from minion
+            @param msg a valid message from minion
         """
         try:
             # entry exists
@@ -79,9 +79,9 @@ class MasterMonitor():
 
     def update_host(self, msg):
         """
-        Update host info stored in etcd
+            Update host info stored in etcd
 
-        @param msg a valid message from minion
+            @param msg a valid message from minion
         """
         try:
             host = self._etcdcli.read('/Host/' + msg['host']).value
@@ -162,9 +162,9 @@ class MasterMonitor():
 
     def update_vnf(self, msg):
         """
-        Update vnf info stored in etcd and log
+            Update vnf info stored in etcd and log
 
-        @param msg a valid message from minion
+            @param msg a valid message from minion
         """
 
         if (msg['status'] == 'running'):
@@ -204,8 +204,8 @@ class MasterMonitor():
 
     def construct_chain(self):
         """
-        Construct chain by using info stored in /VNF
-        only running vnf are considered
+            Construct chain by using info stored in /VNF
+            only running vnf are considered
 
         """
         # build graph object from chain info when the VNF status changed
@@ -294,7 +294,7 @@ class MasterMonitor():
 
     def msg_handler(self, msg):
         """
-                handles messages recv from minions
+            handles messages recv from minions
         """
         # print(msg)
         try:
@@ -320,9 +320,9 @@ class MasterMonitor():
 
     def create_chain(self, mssg):
         """
-        Create chain from a json query
+            Create chain from a json query
 
-        @param mssg a valid json message contain chain info
+            @param mssg a valid json message contain chain info
         """
         try:
             base_ip = ipaddress.ip_address(u'192.168.0.2')
@@ -486,7 +486,7 @@ class MasterMonitor():
 
     def ipc_handler(self, msg):
         """
-                handles messages from IPC(typically commands)
+            handles messages from IPC(typically commands)
         """
         mssg = copy.deepcopy(msg)
         if mssg['action'] == 'create_chain':
@@ -510,8 +510,8 @@ class MasterMonitor():
 
     def check_hosts(self):
         """
-        Mark zombie hosts and break chain if it contains vnf located
-        on the zombie host
+            Mark zombie hosts and break chain if it contains vnf located
+            on the zombie host
 
         """
 
@@ -610,7 +610,7 @@ def init_etcd(etcdcli):
         initilize etcd database
 
         @param etcdcli a etcd client object
-        """
+    """
     try:
         etcdcli.read('link_id')
     except Exception as ex:
