@@ -85,6 +85,7 @@
             <nav class="" role="navigation">
               <div class="nav toggle">
                 <a id="menu_toggle"><i class="fa fa-bars"></i> </a>
+                <a></a>
               </div>
             </nav>
           </div>
@@ -99,22 +100,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Host Stats</h2>
-                  <ul class="nav navbar-right panel_toolbox">
-                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                    </li>
-                    <li class="dropdown">
-                      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                      <ul class="dropdown-menu" role="menu">
-                        <li><a href="#">Settings 1</a>
-                        </li>
-                        <li><a href="#">Settings 2</a>
-                        </li>
-                      </ul>
-                    </li>
-                    <li><a class="close-link"><i class="fa fa-close"></i></a>
-                    </li>
-                  </ul>
+                  <h2>Host Statistics</h2>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -140,6 +126,11 @@
                         </table>
                       </td>
                     </tr>
+                    <tr>
+                      <td colspan="2" class="h3">
+                        Total Hosts: <a href="hosts.html">5</a>
+                      </td>
+                    </tr>
                   </table>
                 </div>
               </div>
@@ -148,22 +139,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Chain Stats</h2>
-                  <ul class="nav navbar-right panel_toolbox">
-                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                    </li>
-                    <li class="dropdown">
-                      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                      <ul class="dropdown-menu" role="menu">
-                        <li><a href="#">Settings 1</a>
-                        </li>
-                        <li><a href="#">Settings 2</a>
-                        </li>
-                      </ul>
-                    </li>
-                    <li><a class="close-link"><i class="fa fa-close"></i></a>
-                    </li>
-                  </ul>
+                  <h2>Chain Statistics</h2>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -182,9 +158,15 @@
                           </tr>
                           <tr>
                             <td>
+                              <p><i class="fa fa-square orange"></i>Paused </p>
+                            </td>
+                            <td>25%</td>
+                          </tr>
+                          <tr>
+                            <td>
                               <p><i class="fa fa-square red"></i>Down </p>
                             </td>
-                            <td>50%</td>
+                            <td>25%</td>
                           </tr>
                         </table>
                       </td>
@@ -197,22 +179,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>VNF Stats</h2>
-                  <ul class="nav navbar-right panel_toolbox">
-                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                    </li>
-                    <li class="dropdown">
-                      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                      <ul class="dropdown-menu" role="menu">
-                        <li><a href="#">Settings 1</a>
-                        </li>
-                        <li><a href="#">Settings 2</a>
-                        </li>
-                      </ul>
-                    </li>
-                    <li><a class="close-link"><i class="fa fa-close"></i></a>
-                    </li>
-                  </ul>
+                  <h2>VNF Statistics</h2>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -228,6 +195,12 @@
                               <p><i class="fa fa-square green"></i>Up </p>
                             </td>
                             <td>100%</td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <p><i class="fa fa-square yellow"></i>Paused </p>
+                            </td>
+                            <td>0%</td>
                           </tr>
                           <tr>
                             <td>
@@ -265,6 +238,7 @@
     <script src="js/bootstrap.min.js"></script>
     <!-- Chart.js -->
     <script src="js/Chart.min.js"></script>
+
     <!-- Custom Theme Scripts -->
     <script src="js/custom.js"></script>
 
@@ -306,17 +280,20 @@
           data: {
             labels: [
               "Up",
+              "Paused",
               "Down",
             ],
             datasets: [{
-              data: [50, 50],
+              data: [50, 25, 25],
               backgroundColor: [
                 "#26B99A",
-                "#E74C3C",
+                "#FF6347",
+                "#FF0000",
               ],
               hoverBackgroundColor: [
                 "#36CAAB",
-                "#E95E4F",
+                "#FF8C00",
+                "#8B0000",
               ]
             }]
           },
@@ -348,6 +325,5 @@
       });
     </script>
     <!-- /Doughnut Chart -->
-    
   </body>
 </html>
