@@ -1,5 +1,5 @@
 from influxdb import InfluxDBClient
-
+import importlib
 
 class influxwrapper:
     """
@@ -8,15 +8,13 @@ class influxwrapper:
     This class provides methods for logging all events to influxDB.
     """
 
-    def __init__(self, influxcli=None):
+    def __init__(self, backing_driver='influxdb'):
         """
         @brief Instantiate the wrapper class
         """
-        if (influxcli is not None):
-            self.influxcli = influxcli
-        else:
-            self.influxcli = InfluxDBClient(
-                'localhost', 8086, 'root', 'root', 'NSF')
+        self.backing_driver = importlib.import_module(backing_driver)
+        self.influxcli = self.backing_driver.InfluxDBClient(
+            'localhost', 8086, 'root', 'root', 'NSF')
         self.influxcli.create_database('NSF')
 
     def clear(self):
