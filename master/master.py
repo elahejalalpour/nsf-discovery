@@ -19,13 +19,14 @@ import uuid
 
 class MasterMonitor():
 
-    def __init__(self, sleeping, etcdcli, influx, publisher, syncservice, ipc):
+    def __init__(self, sleeping, etcdcli, influx, publisher, syncservice, ipc, interval):
         self._sleeping = sleeping
         self._etcdcli = etcdcli
         self._influx = influx
         self._publisher = publisher
         self._syncservice = syncservice
         self._ipc = ipc
+        self._interval = interval
 
     def host_register(self, msg):
         """
@@ -515,15 +516,13 @@ class MasterMonitor():
 
         """
 
-        # interval: how many seconds before been marked inactive
-        interval = 5
         try:
             hosts = self._etcdcli.read('/Host', recursive=True, sorted=True)
             for host in hosts.children:
                 temp = json.loads(host.value)
                 diff = datetime.now() - \
                     dateutil.parser.parse(temp['Last_seen'])
-                if (temp['Active'] == 1 and diff.seconds > interval):
+                if (temp['Active'] == 1 and diff.seconds > self._interval):
                     temp['Active'] = 0
                     hostname = temp['Host_name']
                     self._influx.log_host(temp['Host_name'],
@@ -579,7 +578,7 @@ class MasterMonitor():
                 pass
             # check for zombie host
             self.check_hosts()
-            time.sleep(sleeping)
+            time.sleep(self._sleeping)
 
 
 def etcd_clear(etcdcli):
@@ -626,34 +625,45 @@ def init_etcd(etcdcli):
         traceback.print_exc()
 
 
-def init_zmq():
+def init_zmq(host,pub_port,sync_port):
     """
-        initialize zmq
-
+        initialize zeromq
+        
+        @param host Interface which master should listen on
+        @param Port for publisher (push msg to minion)
+        @param sync_port Port for sync (pull msg from minion)
     """
     context = zmq.Context()
     # Socket to broadcast to clients
     publisher = context.socket(zmq.PUB)
     # set SNDHWM, so we don't drop messages for slow subscribers
     publisher.sndhwm = 1100000
-    publisher.bind('tcp://*:5561')
+    publisher.bind('tcp://'+host+':'+pub_port)
     # Socket to receive signals
     syncservice = context.socket(zmq.PULL)
-    syncservice.bind('tcp://*:5562')
+    syncservice.bind('tcp://'+host+':'+sync_port)
     # Socket to receive IPC
     ipc = context.socket(zmq.REP)
     ipc.bind('ipc:///tmp/test.pipe')
     return publisher, syncservice, ipc
 
 if __name__ == '__main__':
-    # sleeping time while wait new mesg
-    sleeping = 1
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--clearetcd", help="clear etcd database",
                         action="store_true")
     parser.add_argument("--clearlog", help="clear influx database",
                         action="store_true")
+    parser.add_argument("--host", help="Interface which master should listen on",
+                        default="0.0.0.0")
+    parser.add_argument("--pub_port", help="Port for publisher socket (push msg to minion)",
+                        default="5561")
+    parser.add_argument("--sync_port", help="Port for sync socket (pull msg from minion)",
+                        default="5562")
+    parser.add_argument("--sleeping", help="sleeping time while wait new mesg",
+                        default=1)
+    parser.add_argument("--interval", help="# of seconds before host been marked inactive",
+                        default=5)
     args = parser.parse_args()
 
     # initialize etcd
@@ -666,8 +676,15 @@ if __name__ == '__main__':
     if (args.clearlog):
         influx.clear()
     # init zeromq
-    publisher, syncservice, ipc = init_zmq()
-
-    mastermonitor = MasterMonitor(
-        sleeping, etcdcli, influx, publisher, syncservice, ipc)
+    publisher, syncservice, ipc = init_zmq(args.host,
+                                           args.pub_port,
+                                           args.sync_port)
+    #create mastermonitor object
+    mastermonitor = MasterMonitor(args.sleeping, 
+                                  etcdcli, 
+                                  influx, 
+                                  publisher, 
+                                  syncservice, 
+                                  ipc, 
+                                  args.interval)
     mastermonitor.start()
