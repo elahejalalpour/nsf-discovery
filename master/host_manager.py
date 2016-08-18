@@ -12,11 +12,12 @@ from copy import deepcopy
 import logger
 
 class HostManager():
-    def __init__(self, etcdcli, influx, syncservice, interval):
+    def __init__(self, etcdcli, influx, syncservice, interval, chainmanager):
         self._etcdcli = etcdcli
         self._influx = influx
         self._syncservice = syncservice
         self._interval = interval
+        self._chainmanager = chainmanager
         
     def host_register(self, msg):
         """
@@ -157,7 +158,7 @@ class HostManager():
                                                      'Host Inactive')
                                 # any chain contain this vnf should be marked
                                 # as unavailable
-                                self.check_chain(
+                                self._chainmanager.check_chain(
                                     hostname + '_' + temp['Con_id'] + '_' + vnf_name.split('_')[-1])
                     except Exception as ex:
                         print(ex)
