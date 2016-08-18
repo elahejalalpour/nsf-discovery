@@ -14,7 +14,7 @@ def test_log_host():
 def test_log_cpu():
     influx.log_cpu('nfio',0.5)
     
-def test_log_host():
+def test_log_mem():
     influx.log_mem('nfio',0.6)
     
 def test_log_vnf():
