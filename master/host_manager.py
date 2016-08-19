@@ -155,6 +155,9 @@ class HostManager():
                             temp = json.loads(vnf.value)
                             vnf_name = temp['Con_name']
                             if (temp['Host_name'] == hostname):
+                                temp['status'] = 'Host_inactive'
+                                self._etcdcli.write('/VNF/'+vnf.key,
+                                                    json.dumps(temp))
                                 self._influx.log_vnf(temp['Con_id'],
                                                      temp['VNF_type'],
                                                      hostname,
