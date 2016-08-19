@@ -313,9 +313,12 @@ class ChainManager():
                 g.graph['chain_id'] = chain_id
                 try:
                     r = self._etcdcli.read("/Chain/" + chain_id)
-                    self._etcdcli.write("/Chain/" + chain_id,
-                                        json.dumps(json_graph.node_link_data(g)))
-                    self._influx.log_chain(chain_id, 'updated')
+                    temp = json_graph.node_link_graph(json.loads(r))
+                    nodesB = set(temp.nodes())
+                    if (nodesA == nodesB):
+                        self._etcdcli.write("/Chain/" + chain_id,
+                                            json.dumps(json_graph.node_link_data(g)))
+                        self._influx.log_chain(chain_id, 'updated')
                     #r = self._etcdcli.read("/Chain", recursive=True, sorted=True)
                     #exist = False
                     # for child in r.children:
