@@ -84,7 +84,7 @@ class HostManager():
             # minion lost connection for a while,
             # should ask minion push all VNF info
             if (not host['Active']):
-                self._chainmanager.report(host['Host_name')
+                self._chainmanager.report(host['Host_name'])
                 self._influx.log_host(host['Host_name'],
                                       host['Host_ip'],
                                       'reconnected')

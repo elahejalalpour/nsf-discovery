@@ -121,7 +121,7 @@ class MinionDaemon(object):
                 elif action == 'deploy':
                     ret = self._container_driver.deploy(
                         msg['user'], msg['image_name'], msg['vnf_name'])
-                elif action == 'report'
+                elif action == 'report':
                     self._vnfs = {}
                     return
 
