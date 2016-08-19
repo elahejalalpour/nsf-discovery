@@ -157,8 +157,8 @@ class HostManager():
                         for vnf in VNF.children:
                             temp = json.loads(vnf.value)
                             vnf_name = temp['Con_name']
-                            if (temp['Host_name'] == hostname):
-                                temp['status'] = 'Unknown'
+                            if (temp['Host_name'] == hostname and temp['VNF_status'] != 'Unknown'):
+                                temp['VNF_status'] = 'Unknown'
                                 self._etcdcli.write('/VNF/'+vnf.key,
                                                     json.dumps(temp))
                                 self._influx.log_vnf(temp['Con_id'],

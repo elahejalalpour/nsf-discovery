@@ -21,7 +21,7 @@ class ChainManager():
         self._publisher = publisher
         self._syncservice = syncservice
     
-    def report(host):
+    def report(self,host):
         """
             Force a host to report all VNF info
         """
@@ -323,7 +323,11 @@ class ChainManager():
                     r = self._etcdcli.read("/Chain/" + chain_id)
                     temp = json_graph.node_link_graph(json.loads(r.value))
                     nodesB = set(temp.nodes())
-                    if (nodesA == nodesB and temp.graph['available'] == False):
+                    if (nodesB.issubset(nodesA)):
+                        print "nodeA:"
+                        print nodesA
+                        print "nodeB:"
+                        print nodesB
                         self._etcdcli.write("/Chain/" + chain_id,
                                             json.dumps(json_graph.node_link_data(g)))
                         self._influx.log_chain(chain_id, 'updated')
