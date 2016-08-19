@@ -20,7 +20,14 @@ class ChainManager():
         self._influx = influx
         self._publisher = publisher
         self._syncservice = syncservice
-
+    
+    def report(host):
+        """
+            Force a host to report all VNF info
+        """
+        msg = {'host' : host, 'action' : 'report'}
+        self._publisher.send_json(msg)
+    
     def create_chain(self, mssg):
         """
             Create chain from a json query
@@ -270,21 +277,21 @@ class ChainManager():
         G = nx.Graph()
         edges = {}
         for child in r.children:
-            print "Child: "
-            print child
+            #print "Child: "
+            #print child
             temp = json.loads(child.value)
-            print "Child JSON: "
-            print temp
+            #print "Child JSON: "
+            #print temp
             if (temp['VNF_status'] == 'running'):
                 node = temp['Host_name'] + '_' + temp['Con_id'] + \
                     '_' + temp['Con_name'].split('_')[-1]
                 G.add_node(node, name=temp['Con_name'], type=temp['VNF_type'])
                 lst = temp['net_ifs']
-                print "lst:"
-                print lst
+                #print "lst:"
+                #print lst
                 for val in lst:
-                    print "val:"
-                    print val
+                    #print "val:"
+                    #print val
                     key = val['link_type'] + '_' + val['link_id']
                     if (key in edges):
                         edges[key][node] = val['if_name']
@@ -302,6 +309,7 @@ class ChainManager():
                 G.add_edge(t1[0], t1[1], {'nodes': edges[key], 'link_type': t2[0],
                                           'link_id': t2[1]})
         data = json_graph.node_link_data(G)
+        print 'chain construction'
         print(data)
         subgraphs = list(nx.connected_component_subgraphs(G))
         try:

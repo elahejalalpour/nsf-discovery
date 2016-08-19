@@ -26,7 +26,7 @@ class HostManager():
             @param msg a valid message from minion
         """
         try:
-            # entry exists
+            # entry exists--> minion failed and restarted
             host = self._etcdcli.read('/Host/' + msg['host']).value
             host = json.loads(host)
             host['Host_name'] = msg['host']
@@ -44,7 +44,7 @@ class HostManager():
                                   host['Host_ip'],
                                   'reconnected')
         except Exception as ex:
-            # entry does not exist
+            # entry does not exist --> minion first time connected to master
             resource = {}
             resource['bandwidth'] = 10000
             resource['memory'] = None
@@ -66,9 +66,9 @@ class HostManager():
                     'images': None,
                     'resource': resource}
 
-        self._influx.log_host(host['Host_name'],
-                              host['Host_ip'],
-                              'registered')
+            self._influx.log_host(host['Host_name'],
+                                  host['Host_ip'],
+                                  'registered')
         host = json.dumps(host)
         self._etcdcli.write('/Host/' + msg['host'], host)
 
@@ -81,7 +81,10 @@ class HostManager():
         try:
             host = self._etcdcli.read('/Host/' + msg['host']).value
             host = json.loads(host)
+            # minion lost connection for a while,
+            # should ask minion push all VNF info
             if (not host['Active']):
+                self._chainmanager.report(host['Host_name')
                 self._influx.log_host(host['Host_name'],
                                       host['Host_ip'],
                                       'reconnected')
@@ -155,7 +158,7 @@ class HostManager():
                             temp = json.loads(vnf.value)
                             vnf_name = temp['Con_name']
                             if (temp['Host_name'] == hostname):
-                                temp['status'] = 'Host_inactive'
+                                temp['status'] = 'Unknown'
                                 self._etcdcli.write('/VNF/'+vnf.key,
                                                     json.dumps(temp))
                                 self._influx.log_vnf(temp['Con_id'],
