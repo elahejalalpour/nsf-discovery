@@ -25,7 +25,7 @@ python web/server.py
 Run minion:
 
 ```
-python minon/daemon.py --master <master's_ip_address> --interface <ethernet_interface_to_use>
+python minion/daemon.py --master <master's_ip_address> --interface <ethernet_interface_to_use>
 ```
 
 Use provided chain.json file as the chain configuration. 
